@@ -3,8 +3,9 @@ import LoadingSkeleton from "@/components/Loading";
 import { generatePostAction } from "@/redux/slice/generatePost";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { InfinitySpin } from "react-loader-spinner";
 
 const Page = () => {
   const [userInput, setUserInput] = useState({
@@ -13,13 +14,44 @@ const Page = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [generationStep, setGenerationStep] = useState(0);
+  const [generationComplete, setGenerationComplete] = useState(false);
   const dispatch = useDispatch();
   const navigate = useRouter();
+
+  // Simulate generation steps for better UX
+  useEffect(() => {
+    let interval;
+    if (loading) {
+      // Slower progression to match actual generation time
+      interval = setInterval(() => {
+        setGenerationStep((prev) => {
+          if (prev < 5) return prev + 1;
+          return prev;
+        });
+      }, 4000); // Increased to 4 seconds per step
+    } else {
+      setGenerationStep(0);
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
+
+  // Redirect after generation is complete
+  useEffect(() => {
+    if (generationComplete) {
+      const timer = setTimeout(() => {
+        navigate.push("/post/create");
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [generationComplete, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setGenerationStep(0);
+    setGenerationComplete(false);
 
     try {
       const promptString = `Write a comprehensive, detailed blog post about ${userInput.prompt}. 
@@ -61,7 +93,7 @@ const Page = () => {
         })
       );
 
-      navigate.push("/post/create");
+      setGenerationComplete(true);
       setUserInput({
         title: "",
         prompt: "",
@@ -74,13 +106,72 @@ const Page = () => {
     }
   };
 
+  const getGenerationStepText = () => {
+    switch (generationStep) {
+      case 0:
+        return "Analyzing your prompt...";
+      case 1:
+        return "Researching the topic...";
+      case 2:
+        return "Structuring the content...";
+      case 3:
+        return "Writing the introduction...";
+      case 4:
+        return "Developing the main sections...";
+      case 5:
+        return "Finalizing the content...";
+      default:
+        return "Generating your blog post...";
+    }
+  };
+
   return (
     <section className="padding relative min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-3 sm:py-4 bg-white dark:bg-dark-100">
       {loading && (
         <div className="absolute w-full flex-col h-full bg-[rgba(0,0,0,0.4)] top-0 left-0 center">
-          <LoadingSkeleton />
+          <div className="bg-white dark:bg-dark-100 p-8 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4 text-center text-black dark:text-white">
+              {generationComplete ? "Generation Complete!" : "Generating Your Blog Post"}
+            </h3>
+            
+            {!generationComplete ? (
+              <>
+                <div className="mb-6">
+                  <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700">
+                    <div 
+                      className="h-2 bg-blue-600 rounded-full transition-all duration-500" 
+                      style={{ width: `${(generationStep / 5) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <p className="text-center text-gray-700 dark:text-gray-300 mb-4">
+                  {getGenerationStepText()}
+                </p>
+                <div className="flex justify-center">
+                  <InfinitySpin
+                    visible={true}
+                    width="200"
+                    color="#4F46E5"
+                    ariaLabel="infinity-spin-loading"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="text-center">
+                <div className="mb-4">
+                  <svg className="mx-auto h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-gray-700 dark:text-gray-300">
+                  Your blog post has been generated successfully! Redirecting to create page...
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
+      
       <h2 className="title_heading">Generate Blog Post</h2>
       <p className="para">
         Discover personalized content tailored to your interests with our
