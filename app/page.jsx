@@ -6,6 +6,7 @@ import { postActions } from "@/redux/slice/post";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import BlogPost from "@/components/BlogPost";
+import { InfinitySpin } from "react-loader-spinner";
 
 import Loading from "./loading";
 import useFetch from "@/hooks/useFetch";
@@ -17,6 +18,7 @@ export default function Home() {
   const [searchInput, setSearchInput] = useState("");
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [noMoreData, setNoMoreData] = useState(false);
+  const [showInitialLoader, setShowInitialLoader] = useState(true);
   const skipRef = useRef(1);
   const dispatch = useDispatch();
 
@@ -37,6 +39,17 @@ export default function Home() {
       dispatch(darkModeActions.toggleDarkMode(true));
     }
   }, []);
+
+  // Handle initial loading animation
+  useEffect(() => {
+    if (data) {
+      // Brief delay before hiding the loader
+      const timer = setTimeout(() => {
+        setShowInitialLoader(false);
+      }, 800); // Short 800ms delay
+      return () => clearTimeout(timer);
+    }
+  }, [data]);
 
   //initial post fetch
   useEffect(() => {
@@ -115,6 +128,16 @@ export default function Home() {
 
   return (
     <section className="app center relative bg-white dark:bg-dark-100">
+      {/* Initial loading overlay */}
+      {(loading && showInitialLoader) && (
+        <div className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-dark-200 rounded-lg p-8 shadow-xl flex flex-col items-center gap-4">
+            <InfinitySpin width="200" color="#4F46E5" />
+            <p className="text-black dark:text-white text-sm animate-pulse">Loading amazing content...</p>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-5xl sm:text-7xl primary text-center md:text-9xl mt-6 uppercase font-bold text-black dark:text-white">
         The blog GPT
       </h1>
@@ -123,23 +146,21 @@ export default function Home() {
         Really.
       </p>
 
-      <div className="relative center w-fit mt-2 h-auto mb-8 ">
+      <div className="relative center w-fit mt-2 h-auto mb-8">
         <input
           type="text"
           name="search"
           value={searchInput}
           onChange={handleInputChange}
           placeholder="Search for a Blogs..."
-          className=" text-sm   font-medium focus:ring-0  border-black dark:border-white dark:text-white  
-        border bg-transparent shadow-lg 
-        rounded-md sm:w-96 focus:outline-none  focus:border-black pl-4 pr-12 py-2 sm:py-3"
+          className="text-sm font-medium focus:ring-0 border-black dark:border-white dark:text-white  
+          border bg-transparent shadow-lg 
+          rounded-md sm:w-96 focus:outline-none focus:border-black pl-4 pr-12 py-2 sm:py-3"
           id=""
         />
       </div>
       <hr className="hr" />
-      {/* background animation style */}
 
-      {loading && <LoadingSkeleton count={3} />}
       <div className="flex flex-col sm:flex-row items-center justify-center flex-wrap gap-6 sm:gap-x-10 lg:gap-x-16">
         {displaySearchResult && searchResult?.length > 0 && (
           searchResult.map((post, i) => <BlogPost key={i} {...post} />)
@@ -151,7 +172,13 @@ export default function Home() {
         )}
         {!displaySearchResult && posts?.map((post, i) => <BlogPost key={i} {...post} />)}
       </div>
-      {isLoadingMore && <LoadingSkeleton count={2} />}
+      
+      {isLoadingMore && (
+        <div className="w-full flex flex-col items-center justify-center mt-4">
+          <InfinitySpin width="200" color="#4F46E5" />
+          <LoadingSkeleton count={2} />
+        </div>
+      )}
       {noMoreData && (
         <p className="text-center text-gray-600 dark:text-gray-400 my-4">
           No more posts to load
