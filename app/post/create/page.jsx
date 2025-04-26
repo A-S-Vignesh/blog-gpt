@@ -24,15 +24,17 @@ const Page = () => {
 
   //for ai generated post
   useEffect(() => {
-    {
-      generatePost &&
-        setPost({
-          ...post,
-          title: generatePost.title,
-          content: generatePost.content,
-        });
+    if (generatePost) {
+      setPost({
+        ...post,
+        title: generatePost.title || "",
+        content: generatePost.content || "",
+        slug: generatePost.slug || "",
+        tag: generatePost.tag || "",
+      });
     }
-  }, [generatePost && generatePost]);
+  }, [generatePost]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);

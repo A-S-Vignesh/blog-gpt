@@ -46,6 +46,31 @@ const Page = () => {
     }
   }, [generationComplete, navigate]);
 
+  // Generate a slug from the title
+  const generateSlug = (title) => {
+    return title
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim(); // Trim hyphens from start and end
+  };
+
+  // Generate tags based on the prompt
+  const generateTags = (prompt) => {
+    // Extract key words from the prompt
+    const words = prompt.toLowerCase().split(/\s+/);
+    const commonWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'];
+    
+    // Filter out common words and get unique words
+    const uniqueWords = [...new Set(words.filter(word => 
+      word.length > 3 && !commonWords.includes(word)
+    ))];
+    
+    // Take up to 5 words as tags and format with # symbol
+    return uniqueWords.slice(0, 5).map(word => `#${word.charAt(0).toUpperCase() + word.slice(1)}`).join(', ');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -55,18 +80,31 @@ const Page = () => {
 
     try {
       const promptString = `Write a comprehensive, detailed blog post about ${userInput.prompt}. 
-      
-      Format the content as plain text without any Markdown formatting (no asterisks, no bullet points with *, no special formatting).
-      
-      Structure the post with:
-      1. An engaging introduction (4-5 sentences) that hooks readers and mentions the topic's importance
-      2. At least 4-5 main sections with descriptive headings
-      3. Each section should be substantial (at least 3-4 paragraphs) with detailed explanations
-      4. Include 6-8 evidence-backed points with statistics, quotes, or examples
-      5. A thorough conclusion (4-5 sentences) that summarizes key takeaways and includes a call to action
-      
-      Aim for a post length of at least 1200-1500 words. Make it comprehensive and in-depth.
-      Keep the writing clear, informative, and conversational. Avoid using any special formatting characters like * or #.`;
+
+Format the content with these guidelines:
+1. Start with a direct opening paragraph (no heading)
+2. Use **Section Title** format for headings
+3. Each paragraph should be on a new line
+4. Structure the post with:
+   - A compelling opening (4-5 sentences)
+   - 4-5 main sections with bold headings
+   - Each section should have 3-4 paragraphs
+   - Include statistics and examples
+   - End with **Conclusion: Title**
+
+Example format:
+
+Virat Kohli, a name synonymous with aggressive batting, unwavering passion, and relentless pursuit of excellence. He's not just a cricketer; he's a phenomenon that has redefined batting in the modern era. From his early days as a brash youngster to his current status as a seasoned veteran, Kohli's journey has been nothing short of extraordinary.
+
+**The Rise of a Run Machine: Kohli's IPL Journey**
+Kohli's association with the Royal Challengers Bangalore (RCB) since the inaugural IPL season in 2008 has been a testament to his loyalty and leadership. While the elusive IPL trophy has remained just out of reach, his individual brilliance has consistently lit up the tournament.
+
+He initially showcased glimpses of his potential, but it was in the 2011 season that Kohli truly announced his arrival as a force to be reckoned with. Scoring over 500 runs, he cemented his place in the RCB lineup and began his ascent to becoming one of the IPL's most dominant batsmen.
+
+**Conclusion: The King's Legacy**
+While records and achievements tell one part of the story, Kohli's true legacy lies in his impact on the sport and inspiration to millions of aspiring cricketers worldwide.
+
+Aim for 1200-1500 words. Keep the writing engaging and professional.`;
 
       const response = await fetch("/api/post/generate", {
         method: "POST",
@@ -86,10 +124,16 @@ const Page = () => {
         throw new Error("No content received from the API");
       }
 
+      // Generate slug and tags
+      const slug = generateSlug(userInput.title);
+      const tags = generateTags(userInput.prompt);
+
       dispatch(
         generatePostAction.setPost({
           title: userInput.title,
           content: data.content,
+          slug: slug,
+          tag: tags,
         })
       );
 
