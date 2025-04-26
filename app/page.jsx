@@ -127,68 +127,66 @@ export default function Home() {
   }, [posts, displaySearchResult, noMoreData, isLoadingMore, loading]);
 
   return (
-    <section className="app center relative bg-white dark:bg-dark-100">
+    <section className="app center relative bg-white dark:bg-dark-100 min-h-screen">
       {/* Initial loading overlay */}
       {(loading && showInitialLoader) && (
-        <div className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center">
-          <div className="bg-white dark:bg-dark-200 rounded-lg p-8 shadow-xl flex flex-col items-center gap-4">
-            <InfinitySpin width="200" color="#4F46E5" />
-            <p className="text-black dark:text-white text-sm animate-pulse">Loading amazing content...</p>
-          </div>
-        </div>
-      )}
-
-      <h1 className="text-5xl sm:text-7xl primary text-center md:text-9xl mt-6 uppercase font-bold text-black dark:text-white">
-        The blog GPT
-      </h1>
-      <p className="my-2 mb-3 capitalize text-black dark:text-white text-center text-sm sm:text-md font-medium">
-        We smash you with the information that will make your life easier
-        Really.
-      </p>
-
-      <div className="relative center w-fit mt-2 h-auto mb-8">
-        <input
-          type="text"
-          name="search"
-          value={searchInput}
-          onChange={handleInputChange}
-          placeholder="Search for a Blogs..."
-          className="text-sm font-medium focus:ring-0 border-black dark:border-white dark:text-white  
-          border bg-transparent shadow-lg 
-          rounded-md sm:w-96 focus:outline-none focus:border-black pl-4 pr-12 py-2 sm:py-3"
-          id=""
-        />
-      </div>
-      <hr className="hr" />
-
-      <div className="flex flex-col sm:flex-row items-center justify-center flex-wrap gap-6 sm:gap-x-10 lg:gap-x-16">
-        {displaySearchResult && searchResult?.length > 0 && (
-          searchResult.map((post, i) => <BlogPost key={i} {...post} />)
-        )}
-        {displaySearchResult && searchResult?.length === 0 && (
-          <h2 className="text-center sub_heading mt-4 w-full">
-            No results found!
-          </h2>
-        )}
-        {!displaySearchResult && posts?.map((post, i) => <BlogPost key={i} {...post} />)}
-      </div>
-      
-      {isLoadingMore && (
-        <div className="w-full flex flex-col items-center justify-center mt-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center">
           <InfinitySpin width="200" color="#4F46E5" />
-          <LoadingSkeleton count={2} />
         </div>
       )}
-      {noMoreData && (
-        <p className="text-center text-gray-600 dark:text-gray-400 my-4">
-          No more posts to load
+
+      <div className={`${(loading && showInitialLoader) ? 'blur-sm' : ''} transition-all duration-300 min-h-[calc(100vh-80px)] flex flex-col`}>
+        <h1 className="text-5xl sm:text-7xl primary text-center md:text-9xl mt-6 uppercase font-bold text-black dark:text-white">
+          The blog GPT
+        </h1>
+        <p className="my-2 mb-3 capitalize text-black dark:text-white text-center text-sm sm:text-md font-medium">
+          We smash you with the information that will make your life easier
+          Really.
         </p>
-      )}
-      {error && (
-        <div className="text-red-500 text-center my-4">
-          Failed to load posts. Please try again.
+
+        <div className="w-full flex justify-center items-center mt-2 mb-8">
+          <input
+            type="text"
+            name="search"
+            value={searchInput}
+            onChange={handleInputChange}
+            placeholder="Search for a Blogs..."
+            className="text-sm font-medium focus:ring-0 border-black dark:border-white dark:text-white 
+            border bg-transparent shadow-lg max-w-[90%]
+            rounded-md sm:w-96 focus:outline-none focus:border-black pl-4 pr-12 py-2 sm:py-3"
+            id=""
+          />
         </div>
-      )}
+        <hr className="hr" />
+
+        <div className="flex-grow flex flex-col sm:flex-row items-center justify-center flex-wrap gap-6 sm:gap-x-10 lg:gap-x-16 min-h-[400px] w-full">
+          {displaySearchResult && searchResult?.length > 0 && (
+            searchResult.map((post, i) => <BlogPost key={i} {...post} />)
+          )}
+          {displaySearchResult && searchResult?.length === 0 && (
+            <h2 className="text-center sub_heading mt-4 w-full">
+              No results found!
+            </h2>
+          )}
+          {!displaySearchResult && posts?.map((post, i) => <BlogPost key={i} {...post} />)}
+        </div>
+        
+        {isLoadingMore && (
+          <div className="w-full flex items-center justify-center mt-4">
+            <InfinitySpin width="150" color="#4F46E5" />
+          </div>
+        )}
+        {noMoreData && (
+          <p className="text-center text-gray-600 dark:text-gray-400 my-4">
+            No more posts to load
+          </p>
+        )}
+        {error && (
+          <div className="text-red-500 text-center my-4">
+            Failed to load posts. Please try again.
+          </div>
+        )}
+      </div>
     </section>
   );
 }
