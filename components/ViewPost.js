@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Date from "@/components/Date";
 import Tags from "@/components/Tags";
+import ReactMarkdown from "react-markdown";
 
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { useSession } from "next-auth/react";
@@ -161,10 +162,13 @@ const ViewPost = ({ post }) => {
           />
         </div>
         {/* paragraph */}
-        <p style={{ whiteSpace: "pre-wrap" }} className="para  mt-6 sm:mt-10">
-          {" "}
-          {post?.content}{" "}
-        </p>
+        <div className="para mt-6 sm:mt-10 prose dark:prose-invert max-w-none">
+          {post?.content.includes('*') || post?.content.includes('#') ? (
+            <ReactMarkdown>{post?.content}</ReactMarkdown>
+          ) : (
+            <div style={{ whiteSpace: "pre-wrap" }}>{post?.content}</div>
+          )}
+        </div>
         {/* slogan */}
         {post?.slug && (
           <div className="bg-[#F6F6F7] dark:bg-[#242535] mt-8 dark:text-white border-l-4 text-black p-4 rounded-lg text-center capitalize text-lg font-semibold">

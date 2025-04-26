@@ -3,6 +3,7 @@ import Link from "next/link";
 import React from "react";
 import Tags from "./Tags";
 import Date from "./Date";
+import ReactMarkdown from "react-markdown";
 
 const BlogPost = ({ title, _id, creator, content, tag, image, date }) => {
   return (
@@ -36,9 +37,15 @@ const BlogPost = ({ title, _id, creator, content, tag, image, date }) => {
           {title}
         </Link>
         {content ? (
-          <p style={{ fontSize: "19px" }} className="para line-clamp-3">
-            {content}
-          </p>
+          <div className="prose dark:prose-invert line-clamp-3 text-sm">
+            {content.includes('*') || content.includes('#') ? (
+              <ReactMarkdown>{content}</ReactMarkdown>
+            ) : (
+              <div style={{ whiteSpace: "pre-wrap" }} className="line-clamp-3">
+                {content}
+              </div>
+            )}
+          </div>
         ) : (
           <div className="my-5">
             <p className="skeloten_loading w-5/6 my-4 h-4"></p>

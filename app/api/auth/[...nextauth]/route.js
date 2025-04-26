@@ -10,6 +10,7 @@ const handler = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async signIn({ profile }) {
       try {
@@ -47,16 +48,38 @@ const handler = NextAuth({
         }
         return true;
       } catch (error) {
-        console.log(error);
+        console.error("SignIn Error:", error);
+        return false;
       }
     },
     async session({ session }) {
-      const sesstionUser = await User.findOne({ email: session.user.email });
-      session.user.id = sesstionUser._id.toString();
-      session.callbackUrl = "/";
-      return session;
+      try {
+        const sessionUser = await User.findOne({ email: session.user.email });
+        if (!sessionUser) {
+          throw new Error("User not found in database");
+        }
+        session.user.id = sessionUser._id.toString();
+        return session;
+      } catch (error) {
+        console.error("Session Error:", error);
+        return session;
+      }
+    },
+    async jwt({ token, user, account }) {
+      if (account && user) {
+        return {
+          ...token,
+          accessToken: account.access_token,
+        };
+      }
+      return token;
     },
   },
+  pages: {
+    signIn: "/auth/signin",
+    error: "/auth/error",
+  },
+  debug: process.env.NODE_ENV === "development",
 });
 
 export { handler as GET, handler as POST };
