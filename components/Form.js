@@ -9,24 +9,33 @@ const Form = ({ name, submitting, post, setPost, handleSubmit }) => {
 
   const handleUploadImage = (e) => {
     let file = e.target.files[0];
+    if (!file) return;
 
     //base64
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onloadend = () => {
-      setImageUrl(reader.result);
-      setPost({ ...post, image: reader.result });
+      const result = reader.result;
+      if (result) {
+        setImageUrl(result);
+        setPost({ ...post, image: result });
+      }
     };
   };
   const handleDrop = (e) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
+    if (!file) return;
+
     //base64
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onloadend = () => {
-      setImageUrl(reader.result);
-      setPost({ ...post, image: reader.result });
+      const result = reader.result;
+      if (result) {
+        setImageUrl(result);
+        setPost({ ...post, image: result });
+      }
     };
   };
   const handleDragOver = (e) => {
