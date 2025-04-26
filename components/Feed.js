@@ -1,4 +1,4 @@
-"use clinet";
+"use client";
 
 import React, { useEffect, useRef, useState } from "react";
 import BlogPost from "./BlogPost";
