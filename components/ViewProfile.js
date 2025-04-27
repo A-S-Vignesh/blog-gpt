@@ -5,12 +5,12 @@ import Loading from "@/app/loading";
 import { InfinitySpin } from "react-loader-spinner";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 
-const ViewProfile = ({ isMyProfile, userData, userPosts }) => {
+const ViewProfile = ({ isMyProfile, userData, userPosts, error }) => {
   const [profileEdit, setProfileEdit] = useState({
     isProfileEdit: false,
     username: "",
   });
-  const [error, setError] = useState({
+  const [errorState, setErrorState] = useState({
     isError: false,
     message: "",
   });
@@ -30,12 +30,12 @@ const ViewProfile = ({ isMyProfile, userData, userPosts }) => {
       const response = await fetch(url);
       const data = await response.json();
       if (!data.isAvailable) {
-        setError({
+        setErrorState({
           isError: true,
           message: "Username already exist!",
         });
       } else {
-        setError({
+        setErrorState({
           isError: false,
           message: "",
         });
@@ -46,7 +46,11 @@ const ViewProfile = ({ isMyProfile, userData, userPosts }) => {
         });
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error updating profile:", error);
+      setErrorState({
+        isError: true,
+        message: "Failed to update profile",
+      });
     } finally {
       setLoading(false);
     }
@@ -80,6 +84,24 @@ const ViewProfile = ({ isMyProfile, userData, userPosts }) => {
               <LoadingSkeleton count={3} />
             </div>
           </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show error message if there's an error
+  if (error) {
+    return (
+      <section className="padding min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-3 sm:py-4 bg-white dark:bg-dark-100">
+        <div className="flex flex-col items-center justify-center h-[50vh]">
+          <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
+          <p className="text-gray-600 dark:text-gray-400">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-6 black_btn"
+          >
+            Try Again
+          </button>
         </div>
       </section>
     );
@@ -121,10 +143,10 @@ const ViewProfile = ({ isMyProfile, userData, userPosts }) => {
               userData?.username
             )}
           </h2>
-          {error.isError && (
+          {errorState.isError && (
             <div className="alert alert-error text-red-500">
               <span className="font-bold">Error! </span>
-              {error.message}
+              {errorState.message}
             </div>
           )}
           <p className="font-semibold text-gray-500">

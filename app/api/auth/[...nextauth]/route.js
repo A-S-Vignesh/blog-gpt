@@ -54,14 +54,27 @@ const handler = NextAuth({
     },
     async session({ session }) {
       try {
-        const sessionUser = await User.findOne({ email: session.user.email });
+        // Ensure database connection
+        await connectToDB();
+        
+        // Add a timeout to the database query
+        const sessionUser = await Promise.race([
+          User.findOne({ email: session.user.email }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Database query timeout')), 5000)
+          )
+        ]);
+        
         if (!sessionUser) {
-          throw new Error("User not found in database");
+          console.error("User not found in database for session:", session.user.email);
+          return session;
         }
+        
         session.user.id = sessionUser._id.toString();
         return session;
       } catch (error) {
         console.error("Session Error:", error);
+        // Return the session even if there's an error, to prevent complete auth failure
         return session;
       }
     },

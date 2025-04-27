@@ -12,6 +12,7 @@ const Page = () => {
   const [isMyProfile, setIsMyProfile] = useState(false);
   const [userData, setUserData] = useState(null);
   const [userPosts, setUserPosts] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const loginUser = session?.user.id;
@@ -21,32 +22,48 @@ const Page = () => {
       isUser = true;
     }
     setIsMyProfile(isUser);
-  }, [session]);
+  }, [session, params.profileId]);
+
   useEffect(() => {
     const getData = async () => {
-      getRequest(`/api/user/${params.profileId}`)
-        .then((data) => setUserData(data))
-        .catch((err) => console.log(err));
+      try {
+        const data = await getRequest(`/api/user/${params.profileId}`);
+        setUserData(data);
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setError("Failed to load user profile");
+      }
     };
+    
     const getPost = async () => {
-      getRequest(`/api/post`)
-        .then((data) => {
-          const filteredPost = data.data.filter(
+      try {
+        // Use skip=all to get all posts
+        const data = await getRequest(`/api/post?skip=all`);
+        if (data && Array.isArray(data)) {
+          const filteredPost = data.filter(
             (post) => post.creator._id === params.profileId
           );
           setUserPosts(filteredPost);
-        })
-        .catch((err) => console.log(err));
+        } else {
+          console.error("Invalid data format received from server");
+          setError("Failed to load user posts");
+        }
+      } catch (err) {
+        console.error("Error fetching user posts:", err);
+        setError("Failed to load user posts");
+      }
     };
+    
     getData();
     getPost();
-  }, []);
+  }, [params.profileId]);
 
   return (
     <ViewProfile
       userData={userData}
       userPosts={userPosts}
       isMyProfile={isMyProfile}
+      error={error}
     />
   );
 };
