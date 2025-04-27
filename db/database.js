@@ -19,14 +19,15 @@ export const connectToDB = async () => {
   }
 
   try {
-    mongoose.set("strictQuery", true);
-    
     if (mongoose.connection.readyState === 1) {
       isConnect = true;
       console.log("Using existing MongoDB connection");
       return;
     }
+
+    mongoose.set("strictQuery", true);
     
+    // Set up connection event handlers before connecting
     mongoose.connection.on('connected', () => {
       console.log('MongoDB connected successfully');
       isConnect = true;
@@ -41,8 +42,14 @@ export const connectToDB = async () => {
       console.log('MongoDB disconnected');
       isConnect = false;
     });
+
+    // Connect with a timeout
+    const connectPromise = mongoose.connect(uri, options);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection timeout')), 10000)
+    );
     
-    await mongoose.connect(uri, options);
+    await Promise.race([connectPromise, timeoutPromise]);
     console.log("MongoDB connected");
     isConnect = true;
   } catch (error) {

@@ -1,39 +1,29 @@
-import { Schema, model, models } from "mongoose";
+import { model, models, Schema } from "mongoose";
 
-const PostSchema = new Schema({
-  creator: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
+const PostSchema = new Schema(
+  {
+    creator: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    post: {
+      type: String,
+      required: [true, "Post is required."],
+    },
+    tag: {
+      type: String,
+      required: [true, "Tag is required."],
+    },
   },
-  title: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  content: {
-    type: String,
-    required: true,
-  },
-  image: {
-    type: String,
-    default:
-      "https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/how-to-write-a-blog-post.png",
-  },
-  slug: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  tag: {
-    type: String,
-    required: true,
-  },
-  date: {
-    type: Date,
-    default: Date.now, //to get current date ,when created
-    required: true,
-  },
-});
+  { timestamps: true }
+);
 
-const Post = models.Post || model("Post", PostSchema);
+// Ensure the model is only registered once
+let Post;
+try {
+  Post = model("Post", PostSchema);
+} catch (error) {
+  Post = models.Post;
+}
+
 export default Post;

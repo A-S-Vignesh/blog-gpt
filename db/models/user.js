@@ -19,5 +19,12 @@ const UserSchema = new Schema({
   },
 });
 
-const User = models.User || model("User", UserSchema);
+// Ensure the model is only registered once
+let User;
+try {
+  User = model("User", UserSchema);
+} catch (error) {
+  User = models.User;
+}
+
 export default User;
