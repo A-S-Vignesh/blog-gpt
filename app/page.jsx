@@ -64,11 +64,14 @@ export default function Home() {
 
   const fetchAllPosts = async () => {
     try {
-      getRequest("/api/post?skip=all")
-        .then((data) => dispatch(postActions.addSearchCache(data)))
-        .catch((err) => console.log(err));
+      const data = await getRequest("/api/post?skip=all");
+      if (data && Array.isArray(data)) {
+        dispatch(postActions.addSearchCache(data));
+      } else {
+        console.error("Invalid data format received from server");
+      }
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching all posts:", error);
     }
   };
 
@@ -121,7 +124,10 @@ export default function Home() {
             skipRef.current += 1;
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => {
+          console.error("Error loading more posts:", err);
+          setNoMoreData(true); // Prevent infinite retries on error
+        })
         .finally(() => setIsLoadingMore(false));
     }
   }, [posts, displaySearchResult, noMoreData, isLoadingMore, loading]);
