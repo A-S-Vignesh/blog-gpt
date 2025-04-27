@@ -1,31 +1,27 @@
-import { Inter } from "next/font/google";
+import Provider from "@/providers/Provider";
 import "../styles/globals.css";
 import Nav from "@/components/Nav";
 import ReduxProvider from "@/providers/ReduxProvider";
-import Provider from "@/providers/Provider";
 import Footer from "@/components/Footer";
 import { Suspense } from "react";
 
 import Loading from "./loading";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata = {
-  title: "Blog GPT",
-  description: "A blog platform powered by GPT",
+  title: "The Blog GPT",
+  description: "Blog website with CRUD operations",
+  icons: { icon: "./assets/images/favicon.png" },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="h-full">
-      <body className={`${inter.className} h-full`}>
+    <html lang="en">
+      <body className="">
         <ReduxProvider>
           <Provider>
             <Nav />
-            <Suspense fallback={<Loading />}>
-              <main className="min-h-screen w-full bg-white dark:bg-gray-900">
-                {children}
-              </main>
+            <Suspense  fallback={<Loading />}>
+              {children}
             </Suspense>
             <Footer />
           </Provider>
