@@ -1,5 +1,7 @@
 import { connectToDB } from "@/db/database";
 import Post from "@/db/models/post";
+// eslint-disable-next-line no-unused-vars
+import User from "@/db/models/user";
 
 // to get specific post
 
