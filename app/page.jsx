@@ -1,5 +1,7 @@
 "use client";
 
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 import Feed from "@/components/Feed";
 import { darkModeActions } from "@/redux/slice/DarkMode";
 import { postActions } from "@/redux/slice/post";
@@ -199,6 +201,7 @@ export default function Home() {
           </div>
         )}
       </div>
+      <SpeedInsights />
     </section>
   );
 }
