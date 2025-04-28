@@ -4,7 +4,7 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import LoadingSkeleton from "./Loading";
 
-const Form = ({ name, submitting, post, setPost, handleSubmit }) => {
+const Form = ({ name, submitting, post, setPost, handleSubmit, handleCancel }) => {
   const [imageUrl, setImageUrl] = useState(null);
 
   const handleUploadImage = (e) => {
@@ -150,7 +150,13 @@ const Form = ({ name, submitting, post, setPost, handleSubmit }) => {
           required
         />
         <div className="flex items-center my-4 sm:w-[75%] justify-start gap-6 flex-nowrap">
-          <button className="outline_btn">cancel</button>
+          <button 
+            type="button" 
+            className="outline_btn" 
+            onClick={handleCancel}
+          >
+            Cancel
+          </button>
           <input
             disabled={submitting}
             type="submit"

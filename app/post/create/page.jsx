@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 const Page = () => {
   const { data: session } = useSession();
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
   const generatePost = useSelector((state) => state.generatePost.post);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -38,9 +39,21 @@ const Page = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    setError(null);
+    
     try {
+      // Validate required fields
+      if (!post.title || !post.content || !post.slug || !post.tag) {
+        setError("Please fill in all required fields");
+        setSubmitting(false);
+        return;
+      }
+      
       const response = await fetch("/api/post/create", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           userId: session?.user.id,
           title: post.title,
@@ -50,29 +63,49 @@ const Page = () => {
           tag: post.tag,
         }),
       });
+      
+      const data = await response.json();
+      
       if (response.ok) {
         dispatch(generatePostAction.setPost(null));
-        getRequest("/api/post?skip=0")
-          .then((data) => {
-            dispatch(postActions.addPosts(data.data));
-            router.push("/");
-          })
-          .catch((err) => console.log(err));
-        router.push("/");
+        try {
+          const postsData = await getRequest("/api/post?skip=0");
+          dispatch(postActions.addPosts(postsData.data));
+          router.push("/");
+        } catch (err) {
+          console.error("Error fetching posts:", err);
+          // Still navigate even if fetching posts fails
+          router.push("/");
+        }
+      } else {
+        // Handle error response
+        setError(data.error || "Failed to create post");
+        console.error("Error creating post:", data);
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error submitting form:", error);
+      setError("An unexpected error occurred");
     } finally {
       setSubmitting(false);
     }
   };
+  
+  const handleCancel = () => {
+    // Clear any generated post data
+    dispatch(generatePostAction.setPost(null));
+    // Redirect to home page
+    router.push("/");
+  };
+  
   return (
     <Form
       name="Create"
       post={post}
       setPost={setPost}
       handleSubmit={handleSubmit}
+      handleCancel={handleCancel}
       submitting={submitting}
+      error={error}
     />
   );
 };
