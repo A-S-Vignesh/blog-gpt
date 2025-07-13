@@ -61,10 +61,7 @@ const ViewProfile = ({ isMyProfile, userData, userPosts, error }) => {
   if (isLoading) {
     return (
       <section className="padding min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-3 sm:py-4 bg-white dark:bg-dark-100">
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center">
-          <InfinitySpin width="200" color="#4F46E5" />
-        </div>
-        <div className="blur-sm">
+        <div className="">
           <h2 className="title_heading">Profile</h2>
           <p className="text-lg text-slate-500 mt-0">Welcome to Profile Page</p>
           <div className="sm:my-10 my-6 flex sm:gap-20 gap-6 items-start sm:items-center lg:w-[50%]">
@@ -80,7 +77,7 @@ const ViewProfile = ({ isMyProfile, userData, userPosts, error }) => {
           <hr className="hr" />
           <div>
             <h2 className="sub_heading my-4 text-left">All blog posts</h2>
-            <div className="w-full grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="flex-grow flex flex-col sm:flex-row items-center justify-center flex-wrap gap-6 sm:gap-x-10 lg:gap-x-16 min-h-[400px] w-full">
               <LoadingSkeleton count={3} />
             </div>
           </div>

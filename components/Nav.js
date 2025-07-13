@@ -3,18 +3,43 @@
 import { getProviders, signIn, signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import DarkModeToggle from "./DarkModeToggle";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { darkModeActions } from "@/redux/slice/DarkMode";
 import { useRouter } from "next/navigation";
 
 const Nav = () => {
   const [toggleDropdown, setToggleDropdown] = useState(false);
   const [providers, setProviders] = useState(null);
   const { data: session } = useSession();
+  const dropdownRef = useRef(null);
   const router = useRouter();
+  const dispatch = useDispatch();
   // from the redux store
   const isDarkMode = useSelector((state) => state.darkMode.isDarkMode);
+
+  // Add inside useEffect for dark mode (replace your existing dark mode useEffect)
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      dispatch(darkModeActions.setDarkMode(true));
+    } else if (savedTheme === "light") {
+      dispatch(darkModeActions.setDarkMode(false));
+    } else {
+      // If no theme stored, check system preference
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
+      dispatch(darkModeActions.setDarkMode(prefersDark));
+      localStorage.setItem("theme", prefersDark ? "dark" : "light");
+    }
+  }, [dispatch]);
+
+  // Listen for Redux state changes and persist to localStorage
+  useEffect(() => {
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
 
   useEffect(() => {
     //get the providers form the next-auth
@@ -24,9 +49,18 @@ const Nav = () => {
     })();
   }, []);
 
+  //for dark theme
+  useEffect(() => {
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    ) {
+      dispatch(darkModeActions.toggleDarkMode(true));
+    }
+  }, []);
+
   const handleSignIn = async (id) => {
-    await signIn(id)
-     
+    await signIn(id);
   };
 
   return (
@@ -58,42 +92,46 @@ const Nav = () => {
               <button onClick={signOut} className="outline_btn">
                 Sign out
               </button>
-              <Image
-                alt="profile"
-                className="rounded-full cursor-pointer"
-                width={37}
-                height={37}
-                onClick={() => setToggleDropdown((prev) => !prev)}
-                src={session?.user?.image || "/assets/images/default-avatar.png"}
-              />
-              {toggleDropdown && (
-                <div className="dropdown">
-                  <Link
-                    onClick={() => setToggleDropdown((prev) => !prev)}
-                    className="dropdown_link"
-                    href={`/profile/${session.user.id}`}
-                  >
-                    My Profile
-                  </Link>
-                  <Link
-                    onClick={() => setToggleDropdown((prev) => !prev)}
-                    href="/post/generate"
-                    className="dropdown_link"
-                  >
-                    Generate
-                  </Link>
-                  <Link
-                    onClick={() => setToggleDropdown((prev) => !prev)}
-                    className="dropdown_link"
-                    href="/post/create"
-                  >
-                    Create Post
-                  </Link>
-                  <button onClick={signOut} className="w-full black_btn">
-                    Sign Out
-                  </button>
-                </div>
-              )}
+              <div ref={dropdownRef} className="relative">
+                <Image
+                  alt="profile"
+                  className="rounded-full cursor-pointer"
+                  width={37}
+                  height={37}
+                  onClick={() => setToggleDropdown((prev) => !prev)}
+                  src={
+                    session?.user?.image || "/assets/images/default-avatar.png"
+                  }
+                />
+                {toggleDropdown && (
+                  <div className="dropdown">
+                    <Link
+                      onClick={() => setToggleDropdown((prev) => !prev)}
+                      className="dropdown_link"
+                      href={`/profile/${session.user.id}`}
+                    >
+                      My Profile
+                    </Link>
+                    <Link
+                      onClick={() => setToggleDropdown((prev) => !prev)}
+                      href="/post/generate"
+                      className="dropdown_link"
+                    >
+                      Generate
+                    </Link>
+                    <Link
+                      onClick={() => setToggleDropdown((prev) => !prev)}
+                      className="dropdown_link"
+                      href="/post/create"
+                    >
+                      Create Post
+                    </Link>
+                    <button onClick={signOut} className="w-full black_btn">
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <>
@@ -130,7 +168,9 @@ const Nav = () => {
                 width={37}
                 height={37}
                 onClick={() => setToggleDropdown((prev) => !prev)}
-                src={session?.user?.image || "/assets/images/default-avatar.png"}
+                src={
+                  session?.user?.image || "/assets/images/default-avatar.png"
+                }
               />
               {toggleDropdown && (
                 <div className="dropdown">

@@ -32,8 +32,6 @@ export default function Home() {
 
   //for dark theme
   useEffect(() => {
-    //check for device default theme dark or light
-    //if it is dark set theme dark
     if (
       window.matchMedia &&
       window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -136,13 +134,6 @@ export default function Home() {
 
   return (
     <section className="app center relative bg-white dark:bg-dark-100 min-h-screen">
-      {/* Initial loading overlay */}
-      {(loading && showInitialLoader) && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center">
-          <InfinitySpin width="200" color="#4F46E5" />
-        </div>
-      )}
-
       <div className={`${(loading && showInitialLoader) ? 'blur-sm' : ''} transition-all duration-300 min-h-[calc(100vh-80px)] flex flex-col`}>
         <h1 className="text-5xl sm:text-7xl primary text-center md:text-9xl mt-6 uppercase font-bold text-black dark:text-white">
           The blog GPT

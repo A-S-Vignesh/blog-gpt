@@ -1,12 +1,11 @@
-import generatePostSlice from "./slice/generatePost";
+import { configureStore } from "@reduxjs/toolkit";
+import darkModeSlice from "./slice/DarkMode"; // ✅ This already exports just the reducer
 import postSlice from "./slice/post";
-
-const { configureStore } = require("@reduxjs/toolkit");
-const { default: darkModeSlice } = require("./slice/DarkMode");
+import generatePostSlice from "./slice/generatePost";
 
 const store = configureStore({
   reducer: {
-    darkMode: darkModeSlice.reducer,
+    darkMode: darkModeSlice, // ✅ FIXED: removed `.reducer`
     posts: postSlice.reducer,
     generatePost: generatePostSlice.reducer,
   },

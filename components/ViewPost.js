@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect,useRef, useState } from "react";
 import Image from "next/image";
 import Date from "@/components/Date";
 import Tags from "@/components/Tags";
 import ReactMarkdown from "react-markdown";
+import toast from "react-hot-toast";
 
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { useSession } from "next-auth/react";
@@ -28,6 +29,7 @@ import { getRequest } from "@/utils/requestHandlers";
 
 const ViewPost = ({ post }) => {
   const [threedotModel, setThreedotModel] = useState(false);
+  const dropdownRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const [shareUrl, setShareUrl] = useState({
@@ -37,6 +39,19 @@ const ViewPost = ({ post }) => {
   //get the login user data
   const { data: session } = useSession();
   const router = useRouter();
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setThreedotModel(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
 
   useEffect(() => {
     setShareUrl({
@@ -48,7 +63,7 @@ const ViewPost = ({ post }) => {
   const deletePost = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/post/${post._id}`, {
+      const response = await fetch(`/api/post/${post.slug}`, {
         method: "DELETE",
       });
       if (response.ok) {
@@ -78,65 +93,67 @@ const ViewPost = ({ post }) => {
             <Tags tag={post?.tag} />
           </div>
 
-          <button
-            name="threedot"
-            onClick={() => setThreedotModel((prev) => !prev)}
-            className=" ml-4  relative threedot"
-          >
-            <BsThreeDotsVertical
+          <div className="relative" ref={dropdownRef}>
+            <button
               name="threedot"
-              className="w-6 h-6 dark:text-white"
-            />
+              onClick={() => setThreedotModel((prev) => !prev)}
+              className="ml-4 threedot"
+            >
+              <BsThreeDotsVertical className="w-6 h-6 dark:text-white" />
+            </button>
+
             {threedotModel && (
-              <ul className=" w-40  p-4 bg-slate-200 dark:bg-black border-2 dark:border-slate-800  gap-3 absolute cursor-default  flex flex-col justify-start items-center rounded-md  right-0">
-                {/*show edit and delete for post owners */}
-                {session?.user?.id == post?.creator._id && (
+              <ul className="absolute right-0 w-40 p-4 bg-slate-200 dark:bg-black border-2 dark:border-slate-800 flex flex-col gap-3 rounded-md z-10">
+                {/* Owner actions */}
+                {session?.user?.id === post?.creator._id && (
                   <>
                     <Link
-                      href={`/post/edit?postId=${post?._id}`}
-                      className="w-full text-black hover:text-slate-700 dark:hover:text-slate-300 dark:text-white flex justify-start gap-2  items-center font-semibold  text-left cursor-pointer"
+                      href={`/post/edit?slug=${post?.slug}`}
+                      className="w-full flex items-center gap-2 text-left font-semibold text-black hover:text-slate-700 dark:text-white dark:hover:text-slate-300"
                     >
                       <MdEdit /> Edit
                     </Link>
                     <li
                       onClick={deletePost}
-                      className="w-full text-black hover:text-slate-700 dark:hover:text-slate-300 dark:text-white flex justify-start gap-2  items-center font-semibold  text-left cursor-pointer"
+                      className="w-full flex items-center gap-2 text-left font-semibold text-black hover:text-slate-700 dark:text-white dark:hover:text-slate-300 cursor-pointer"
                     >
                       <MdDelete /> Delete
                     </li>
                   </>
                 )}
-                <li className="w-full text-black hover:text-slate-700 dark:hover:text-slate-300 dark:text-white flex justify-start gap-2  items-center font-semibold  text-left cursor-pointer">
-                  <FaShare /> Share
+
+                <li>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast.success("Link copied to clipboard!");
+                    }}
+                    className="w-full flex items-center gap-2 text-left font-semibold text-black hover:text-slate-700 dark:text-white dark:hover:text-slate-300"
+                  >
+                    <FaShare /> Share
+                  </button>
                 </li>
 
-                {/* share buttons */}
-                <ul className="w-full text-black hover:text-slate-700 dark:hover:text-slate-300 dark:text-white flex justify-between gap-2  items-center font-semibold  text-left cursor-pointer">
-                  <li className="w-full text-black hover:text-slate-700 dark:hover:text-slate-300 dark:text-white flex justify-start gap-2  items-center font-semibold  text-left cursor-pointer">
-                    <FacebookShareButton
-                      title={shareUrl.title}
-                      url={shareUrl.url}
-                    >
-                      <FacebookIcon size={32} round />
-                    </FacebookShareButton>
-                  </li>
-                  <li className="w-full text-black hover:text-slate-700 dark:hover:text-slate-300 dark:text-white flex justify-start gap-2  items-center font-semibold  text-left cursor-pointer">
-                    <WhatsappShareButton
-                      url={shareUrl.url}
-                      title={shareUrl.title}
-                    >
-                      <WhatsappIcon size={32} round />
-                    </WhatsappShareButton>
-                  </li>
-                  <li className="w-full text-black hover:text-slate-700 dark:hover:text-slate-300 dark:text-white flex justify-start gap-2  items-center font-semibold  text-left cursor-pointer">
-                    <EmailShareButton title={shareUrl.title} url={shareUrl.url}>
-                      <EmailIcon size={32} round />
-                    </EmailShareButton>
-                  </li>
-                </ul>
+                <div className="flex justify-between gap-2">
+                  <FacebookShareButton
+                    title={shareUrl.title}
+                    url={shareUrl.url}
+                  >
+                    <FacebookIcon size={32} round />
+                  </FacebookShareButton>
+                  <WhatsappShareButton
+                    title={shareUrl.title}
+                    url={shareUrl.url}
+                  >
+                    <WhatsappIcon size={32} round />
+                  </WhatsappShareButton>
+                  <EmailShareButton title={shareUrl.title} url={shareUrl.url}>
+                    <EmailIcon size={32} round />
+                  </EmailShareButton>
+                </div>
               </ul>
             )}
-          </button>
+          </div>
         </div>
 
         {/* title */}
@@ -163,7 +180,7 @@ const ViewPost = ({ post }) => {
         </div>
         {/* paragraph */}
         <div className="para mt-6 sm:mt-10 prose dark:prose-invert max-w-none">
-          {post?.content.includes('*') || post?.content.includes('#') ? (
+          {post?.content.includes("*") || post?.content.includes("#") ? (
             <ReactMarkdown>{post?.content}</ReactMarkdown>
           ) : (
             <div style={{ whiteSpace: "pre-wrap" }}>{post?.content}</div>

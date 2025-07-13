@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { Suspense } from "react";
 import Loading from "./loading";
 import Script from "next/script";
+import { Toaster } from "react-hot-toast";
 
 export const metadata = {
   title: "The Blog GPT",
@@ -19,7 +20,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
+      <body className="min-h-screen flex flex-col">
         {/* ✅ Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-VWS6MTPDHT"
@@ -40,8 +41,12 @@ export default function RootLayout({ children }) {
 
         <ReduxProvider>
           <Provider>
+            {/* ✅ Flex grow wrapper for main content */}
             <Nav />
-            <Suspense fallback={<Loading />}>{children}</Suspense>
+            <Toaster position="top-right" />
+            <main className="flex-grow">
+              <Suspense fallback={<Loading />}>{children}</Suspense>
+            </main>
             <Footer />
           </Provider>
         </ReduxProvider>
