@@ -4,23 +4,30 @@ import Nav from "@/components/Nav";
 import ReduxProvider from "@/providers/ReduxProvider";
 import Footer from "@/components/Footer";
 import { Suspense } from "react";
-
 import Loading from "./loading";
-import Head from "next/head";
+import Script from "next/script";
 
 export const metadata = {
   title: "The Blog GPT",
-  description: "Blog website with CRUD operations",
-  icons: { icon: "./assets/images/favicon.png" },
+  description:
+    "A modern blog website where you can view posts and generate content using AI.",
+  icons: {
+    icon: "/assets/images/favicon.png",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <Head>
-        {/* Google Analytics script */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-VWS6MTPDHT"></script>
-        <script
+      <body>
+        {/* ✅ Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-VWS6MTPDHT"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
@@ -30,14 +37,11 @@ export default function RootLayout({ children }) {
             `,
           }}
         />
-      </Head>
-      <body className="">
+
         <ReduxProvider>
           <Provider>
             <Nav />
-            <Suspense  fallback={<Loading />}>
-              {children}
-            </Suspense>
+            <Suspense fallback={<Loading />}>{children}</Suspense>
             <Footer />
           </Provider>
         </ReduxProvider>
