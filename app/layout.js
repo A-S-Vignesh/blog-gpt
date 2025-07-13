@@ -5,7 +5,6 @@ import ReduxProvider from "@/providers/ReduxProvider";
 import Footer from "@/components/Footer";
 import { Suspense } from "react";
 import Loading from "./loading";
-import Script from "next/script";
 import { Toaster } from "react-hot-toast";
 
 export const metadata = {
@@ -18,17 +17,33 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const initialThemeScript = `
+    (function () {
+      try {
+        const savedTheme = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (_) {}
+    })();
+  `;
+
   return (
-    <html lang="en">
-      <body className="min-h-screen flex flex-col">
-        {/* ✅ Google Analytics */}
-        <Script
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Inject dark mode theme early to avoid flash */}
+        <script dangerouslySetInnerHTML={{ __html: initialThemeScript }} />
+
+        {/* Google Analytics */}
+        <script
+          async
           src="https://www.googletagmanager.com/gtag/js?id=G-VWS6MTPDHT"
-          strategy="afterInteractive"
         />
-        <Script
+        <script
           id="google-analytics"
-          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
@@ -38,10 +53,10 @@ export default function RootLayout({ children }) {
             `,
           }}
         />
-
+      </head>
+      <body className="min-h-screen flex flex-col">
         <ReduxProvider>
           <Provider>
-            {/* ✅ Flex grow wrapper for main content */}
             <Nav />
             <Toaster position="top-right" />
             <main className="flex-grow">

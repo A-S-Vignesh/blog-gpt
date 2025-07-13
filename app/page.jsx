@@ -3,14 +3,13 @@
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 import Feed from "@/components/Feed";
-import { darkModeActions } from "@/redux/slice/DarkMode";
 import { postActions } from "@/redux/slice/post";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import BlogPost from "@/components/BlogPost";
 import { InfinitySpin } from "react-loader-spinner";
 
-import Loading from "./loading";
+// import Loading from "./loading";
 import useFetch from "@/hooks/useFetch";
 import { getRequest } from "@/utils/requestHandlers";
 import { debounce } from "lodash";
@@ -19,6 +18,7 @@ import LoadingSkeleton from "@/components/LoadingSkeleton";
 export default function Home() {
   const [searchInput, setSearchInput] = useState("");
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [loading, setLoading] = useState(true); // not false
   const [noMoreData, setNoMoreData] = useState(false);
   const [showInitialLoader, setShowInitialLoader] = useState(true);
   const skipRef = useRef(1);
@@ -26,19 +26,11 @@ export default function Home() {
 
   const searchCache = useSelector((state) => state.posts.searchCache);
   const searchResult = useSelector((state) => state.posts.searchResult);
-  const displaySearchResult = useSelector((state) => state.posts.displaySearchResult);
+  const displaySearchResult = useSelector(
+    (state) => state.posts.displaySearchResult
+  );
   const posts = useSelector((state) => state.posts.posts);
-  const { data, loading, error } = useFetch("/api/post?skip=0");
-
-  //for dark theme
-  useEffect(() => {
-    if (
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    ) {
-      dispatch(darkModeActions.toggleDarkMode(true));
-    }
-  }, []);
+  const { data, error } = useFetch("/api/post?skip=0");
 
   // Handle initial loading animation
   useEffect(() => {
@@ -53,14 +45,16 @@ export default function Home() {
 
   //initial post fetch
   useEffect(() => {
-    data && dispatch(postActions.addPosts(data.data));
-    const searchTimer = setTimeout(() => {
-      if (data) {
+    if (data) {
+      dispatch(postActions.addPosts(data.data));
+      setLoading(false); // ✅ SET HERE — once posts are dispatched
+      const searchTimer = setTimeout(() => {
         fetchAllPosts();
-      }
-    }, 3000);
-    return () => clearTimeout(searchTimer);
+      }, 3000);
+      return () => clearTimeout(searchTimer);
+    }
   }, [data]);
+
 
   const fetchAllPosts = async () => {
     try {
@@ -76,20 +70,25 @@ export default function Home() {
   };
 
   // Create a memoized version of the search handler
-  const handleSearch = useCallback((searchTerm) => {
-    if (searchTerm.trim().length === 0) {
-      dispatch(postActions.clearSearchResult());
-      return;
-    }
-    const filterPost = searchCache?.filter(
-      (post) =>
-        post?.creator?.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post?.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post?.tag.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    dispatch(postActions.addSearchResult(filterPost));
-  }, [searchCache, dispatch]);
+  const handleSearch = useCallback(
+    (searchTerm) => {
+      if (searchTerm.trim().length === 0) {
+        dispatch(postActions.clearSearchResult());
+        return;
+      }
+      const filterPost = searchCache?.filter(
+        (post) =>
+          post?.creator?.username
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          post?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          post?.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          post?.tag.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      dispatch(postActions.addSearchResult(filterPost));
+    },
+    [searchCache, dispatch]
+  );
 
   // Create a debounced version of the search handler
   const debouncedSearch = useCallback(
@@ -105,8 +104,8 @@ export default function Home() {
   };
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [posts, displaySearchResult, noMoreData, isLoadingMore]);
 
   const handleScroll = useCallback(() => {
@@ -130,11 +129,13 @@ export default function Home() {
         })
         .finally(() => setIsLoadingMore(false));
     }
-  }, [posts, displaySearchResult, noMoreData, isLoadingMore, loading]);
+  }, [posts, displaySearchResult, noMoreData, isLoadingMore]);
 
   return (
     <section className="app center relative bg-white dark:bg-dark-100 min-h-screen">
-      <div className={`${(loading && showInitialLoader) ? 'blur-sm' : ''} transition-all duration-300 min-h-[calc(100vh-80px)] flex flex-col`}>
+      <div
+        className={`transition-all duration-300 min-h-[calc(100vh-80px)] flex flex-col`}
+      >
         <h1 className="text-5xl sm:text-7xl primary text-center md:text-9xl mt-6 uppercase font-bold text-black dark:text-white">
           The blog GPT
         </h1>
@@ -159,23 +160,26 @@ export default function Home() {
         <hr className="hr" />
 
         <div className="flex-grow flex flex-col sm:flex-row items-center justify-center flex-wrap gap-6 sm:gap-x-10 lg:gap-x-16 min-h-[400px] w-full">
-          {loading && showInitialLoader ? (
-            <LoadingSkeleton count={6} />
+          {loading ? (
+            <div className="w-full flex items-center justify-center mt-4">
+              <LoadingSkeleton count={6} />
+              </div>
           ) : (
             <>
-              {displaySearchResult && searchResult?.length > 0 && (
-                searchResult.map((post, i) => <BlogPost key={i} {...post} />)
-              )}
+              {displaySearchResult &&
+                searchResult?.length > 0 &&
+                searchResult.map((post, i) => <BlogPost key={i} {...post} />)}
               {displaySearchResult && searchResult?.length === 0 && (
                 <h2 className="text-center sub_heading mt-4 w-full">
                   No results found!
                 </h2>
               )}
-              {!displaySearchResult && posts?.map((post, i) => <BlogPost key={i} {...post} />)}
+              {!displaySearchResult &&
+                posts?.map((post, i) => <BlogPost key={i} {...post} />)}
             </>
           )}
         </div>
-        
+
         {isLoadingMore && (
           <div className="w-full flex items-center justify-center mt-4">
             <InfinitySpin width="150" color="#4F46E5" />

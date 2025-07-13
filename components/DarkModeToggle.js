@@ -1,23 +1,31 @@
 "use client";
 
 import { darkModeActions } from "@/redux/slice/DarkMode";
-import React, { useEffect} from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 const DarkModeToggle = () => {
   const isDarkMode = useSelector((state) => state.darkMode.isDarkMode);
   const dispatch = useDispatch();
 
+  // ✅ Apply class and persist to localStorage when state changes
+  useEffect(() => {
+    console.log("[DarkMode] Theme changed:", isDarkMode ? "Dark" : "Light");
+    document.documentElement.classList.toggle("dark", isDarkMode);
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
+
   const handleClick = () => {
+    console.log("[DarkMode] Toggle clicked");
     dispatch(darkModeActions.toggleDarkMode());
   };
-  const handleKeyDown = ({ key }) => {
-    if (key === "Enter") return handleClick();
-  };
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", isDarkMode);
-  }, [isDarkMode]);
+  const handleKeyDown = ({ key }) => {
+    if (key === "Enter") {
+      console.log("[DarkMode] Toggle key Enter");
+      handleClick();
+    }
+  };
 
   return (
     <div
@@ -26,7 +34,7 @@ const DarkModeToggle = () => {
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onClick={handleClick}
-      className={`cursor-pointer w-11 h-5 bg-blue-500  dark:bg-gray-800 rounded-full relative px-1.5 flex items-center${
+      className={`cursor-pointer w-11 h-5 bg-blue-500 dark:bg-gray-800 rounded-full relative px-1.5 flex items-center${
         isDarkMode ? "" : " justify-end"
       }`}
     >

@@ -12,35 +12,18 @@ import { useRouter } from "next/navigation";
 const Nav = () => {
   const [toggleDropdown, setToggleDropdown] = useState(false);
   const [providers, setProviders] = useState(null);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const dropdownRef = useRef(null);
   const router = useRouter();
   const dispatch = useDispatch();
   // from the redux store
   const isDarkMode = useSelector((state) => state.darkMode.isDarkMode);
+  const [hasMounted, setHasMounted] = useState(false);
 
-  // Add inside useEffect for dark mode (replace your existing dark mode useEffect)
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      dispatch(darkModeActions.setDarkMode(true));
-    } else if (savedTheme === "light") {
-      dispatch(darkModeActions.setDarkMode(false));
-    } else {
-      // If no theme stored, check system preference
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-      dispatch(darkModeActions.setDarkMode(prefersDark));
-      localStorage.setItem("theme", prefersDark ? "dark" : "light");
-    }
-  }, [dispatch]);
 
-  // Listen for Redux state changes and persist to localStorage
-  useEffect(() => {
-    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
-  }, [isDarkMode]);
-
+useEffect(() => {
+  setHasMounted(true);
+}, []);
   useEffect(() => {
     //get the providers form the next-auth
     (async () => {
@@ -49,39 +32,49 @@ const Nav = () => {
     })();
   }, []);
 
-  //for dark theme
-  useEffect(() => {
-    if (
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    ) {
-      dispatch(darkModeActions.toggleDarkMode(true));
-    }
-  }, []);
+  
 
   const handleSignIn = async (id) => {
     await signIn(id);
   };
+  const NavSkeleton = () => (
+    <div className="animate-pulse flex gap-4 items-center">
+      <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-full" />
+      <div className="h-10 w-28 bg-gray-200 dark:bg-gray-700 rounded-full" />
+      <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-full" />
+      <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-full" />
+    </div>
+  );
+
 
   return (
     <nav className="px-6 sm:px-16 md:px-20 lg:px-28 padding z-10 border-b-2 bg-white dark:bg-dark-100 border-black dark:border-white w-full  top-0  flex-between py-3 bg-transparent">
-      <Link href="/">
-        <Image
-          src={`${
-            isDarkMode
-              ? "/assets/images/LightLogo.png"
-              : "/assets/images/BlackLogo.png"
-          }`}
-          alt="logo"
-          width={175}
-          height={175}
-          className="object-contain  shrink-0 flex"
-        />
+      <Link href="/" className="shrink-0">
+        <div className="w-[175px] h-[60px] relative">
+          {hasMounted ? (
+            <Image
+              src={`${
+                isDarkMode
+                  ? "/assets/images/LightLogo.png"
+                  : "/assets/images/BlackLogo.png"
+              }`}
+              alt="logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md" />
+          )}
+        </div>
       </Link>
+
       <div className="gap-4 sm:gap-6 center">
         {/* Nav links for large devieces */}
         <div className="lg:flex hidden relative">
-          {session?.user ? (
+          {status === "loading" ? (
+            <NavSkeleton />
+          ) : session?.user ? (
             <div className="center gap-x-6">
               <Link href="/post/generate" className="black_btn">
                 Generate
@@ -216,7 +209,11 @@ const Nav = () => {
             </div>
           )}
         </div>
-        <DarkModeToggle />
+        {hasMounted ? (
+          <DarkModeToggle />
+        ) : (
+          <div className="w-11 h-5 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+        )}
       </div>
     </nav>
   );

@@ -36,7 +36,7 @@ const BlogPost = ({ title, slug, creator, content, tag, image, date }) => {
           {title}
         </Link>
         {content ? (
-          <div className="para prose dark:prose-invert line-clamp-3 text-md">
+          <div className="para line-clamp-3 text-md">
             {content.includes("*") || content.includes("#") ? (
               <ReactMarkdown>{content}</ReactMarkdown>
             ) : (

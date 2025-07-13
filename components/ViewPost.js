@@ -22,7 +22,6 @@ import {
   WhatsappIcon,
   WhatsappShareButton,
 } from "react-share";
-import Loading from "@/app/loading";
 import { useDispatch } from "react-redux";
 import { postActions } from "@/redux/slice/post";
 import { getRequest } from "@/utils/requestHandlers";
@@ -82,10 +81,42 @@ const ViewPost = ({ post }) => {
     }
   };
 
+  const ViewPostSkeleton = () => (
+    <section className="app center pb-4 sm:pb-8 bg-white dark:bg-dark-100 animate-pulse">
+      <div className="w-full xl:max-w-[1025px] space-y-6">
+        <div className="flex justify-between items-center">
+          <div className="flex gap-2 flex-wrap">
+            <div className="w-20 h-6 bg-gray-300 dark:bg-slate-700 rounded" />
+            <div className="w-16 h-6 bg-gray-300 dark:bg-slate-700 rounded" />
+          </div>
+          <div className="w-6 h-6 bg-gray-300 dark:bg-slate-700 rounded-full" />
+        </div>
+
+        <div className="h-10 w-3/4 bg-gray-300 dark:bg-slate-700 rounded" />
+        <div className="h-6 w-1/2 bg-gray-300 dark:bg-slate-700 rounded" />
+
+        <div className="w-full sm:w-[400px] lg:h-[400px] lg:max-w-[80%] h-[200px] bg-gray-300 dark:bg-slate-700 rounded-md mx-auto" />
+
+        <div className="space-y-3">
+          <div className="h-4 bg-gray-300 dark:bg-slate-700 rounded w-full" />
+          <div className="h-4 bg-gray-300 dark:bg-slate-700 rounded w-5/6" />
+          <div className="h-4 bg-gray-300 dark:bg-slate-700 rounded w-3/4" />
+          <div className="h-4 bg-gray-300 dark:bg-slate-700 rounded w-full" />
+          <div className="h-4 bg-gray-300 dark:bg-slate-700 rounded w-2/3" />
+        </div>
+
+        <div className="w-48 h-8 bg-gray-300 dark:bg-slate-700 rounded mx-auto" />
+      </div>
+    </section>
+  );
+
+  if (!post || loading) {
+    return <ViewPostSkeleton />;
+  }
+
+
   return (
     <section className="app center pb-4 sm:pb-8  bg-white dark:bg-dark-100">
-      {!post && <Loading />}
-      {loading && <Loading />}
       <div className="w-full xl:max-w-[1025px]">
         {/* tags */}
         <div className="flex justify-between  items-center">
