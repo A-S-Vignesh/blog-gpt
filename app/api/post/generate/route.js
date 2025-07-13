@@ -24,7 +24,7 @@ export const POST = async (req, res) => {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENETATIVE_AI);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],

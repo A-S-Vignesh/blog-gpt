@@ -12,6 +12,7 @@ const Page = () => {
     title: "",
     prompt: "",
   });
+  const [generateImage, setGenerateImage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [generationStep, setGenerationStep] = useState(0);
@@ -19,24 +20,18 @@ const Page = () => {
   const dispatch = useDispatch();
   const navigate = useRouter();
 
-  // Simulate generation steps for better UX
   useEffect(() => {
     let interval;
     if (loading) {
-      // Slower progression to match actual generation time
       interval = setInterval(() => {
-        setGenerationStep((prev) => {
-          if (prev < 5) return prev + 1;
-          return prev;
-        });
-      }, 4000); // Increased to 4 seconds per step
+        setGenerationStep((prev) => (prev < 5 ? prev + 1 : prev));
+      }, 4000);
     } else {
       setGenerationStep(0);
     }
     return () => clearInterval(interval);
   }, [loading]);
 
-  // Redirect after generation is complete
   useEffect(() => {
     if (generationComplete) {
       const timer = setTimeout(() => {
@@ -46,29 +41,42 @@ const Page = () => {
     }
   }, [generationComplete, navigate]);
 
-  // Generate a slug from the title
   const generateSlug = (title) => {
     return title
       .toLowerCase()
-      .replace(/[^\w\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-      .trim(); // Trim hyphens from start and end
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim();
   };
 
-  // Generate tags based on the prompt
   const generateTags = (prompt) => {
-    // Extract key words from the prompt
     const words = prompt.toLowerCase().split(/\s+/);
-    const commonWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'];
-    
-    // Filter out common words and get unique words
-    const uniqueWords = [...new Set(words.filter(word => 
-      word.length > 3 && !commonWords.includes(word)
-    ))];
-    
-    // Take up to 5 words as tags and format with # symbol
-    return uniqueWords.slice(0, 5).map(word => `#${word.charAt(0).toUpperCase() + word.slice(1)}`).join(', ');
+    const commonWords = [
+      "the",
+      "a",
+      "an",
+      "and",
+      "or",
+      "but",
+      "in",
+      "on",
+      "at",
+      "to",
+      "for",
+      "of",
+      "with",
+      "by",
+    ];
+    const uniqueWords = [
+      ...new Set(
+        words.filter((word) => word.length > 3 && !commonWords.includes(word))
+      ),
+    ];
+    return uniqueWords
+      .slice(0, 5)
+      .map((word) => `#${word.charAt(0).toUpperCase() + word.slice(1)}`)
+      .join(", ");
   };
 
   const handleSubmit = async (e) => {
@@ -79,71 +87,54 @@ const Page = () => {
     setGenerationComplete(false);
 
     try {
-      const promptString = `Write a comprehensive, detailed blog post about ${userInput.prompt}. 
+      const slug = generateSlug(userInput.title);
+      const tags = generateTags(userInput.prompt);
 
-Format the content with these guidelines:
-1. Start with a direct opening paragraph (no heading)
-2. Use **Section Title** format for headings
-3. Each paragraph should be on a new line
-4. Structure the post with:
-   - A compelling opening (4-5 sentences)
-   - 4-5 main sections with bold headings
-   - Each section should have 3-4 paragraphs
-   - Include statistics and examples
-   - End with **Conclusion: Title**
+      const promptString = `Write a comprehensive, detailed blog post about ${userInput.prompt}...`;
 
-Example format:
-
-Virat Kohli, a name synonymous with aggressive batting, unwavering passion, and relentless pursuit of excellence. He's not just a cricketer; he's a phenomenon that has redefined batting in the modern era. From his early days as a brash youngster to his current status as a seasoned veteran, Kohli's journey has been nothing short of extraordinary.
-
-**The Rise of a Run Machine: Kohli's IPL Journey**
-Kohli's association with the Royal Challengers Bangalore (RCB) since the inaugural IPL season in 2008 has been a testament to his loyalty and leadership. While the elusive IPL trophy has remained just out of reach, his individual brilliance has consistently lit up the tournament.
-
-He initially showcased glimpses of his potential, but it was in the 2011 season that Kohli truly announced his arrival as a force to be reckoned with. Scoring over 500 runs, he cemented his place in the RCB lineup and began his ascent to becoming one of the IPL's most dominant batsmen.
-
-**Conclusion: The King's Legacy**
-While records and achievements tell one part of the story, Kohli's true legacy lies in his impact on the sport and inspiration to millions of aspiring cricketers worldwide.
-
-Aim for 1200-1500 words. Keep the writing engaging and professional.`;
-
-      const response = await fetch("/api/post/generate", {
+      const textRes = await fetch("/api/post/generate/text", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: promptString }),
       });
 
-      const data = await response.json();
+      let imageData = { image: "" };
+      if (generateImage) {
+        const imageRes = await fetch("/api/post/generate/image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: `An image that best represents: ${userInput.prompt}`,
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error(data.error || data.details || "Failed to generate content");
+        imageData = await imageRes.json();
+
+        if (!imageRes.ok) {
+          throw new Error(imageData.error || "Failed to generate image");
+        }
       }
 
-      if (!data.content) {
-        throw new Error("No content received from the API");
-      }
+      const textData = await textRes.json();
 
-      // Generate slug and tags
-      const slug = generateSlug(userInput.title);
-      const tags = generateTags(userInput.prompt);
+      if (!textRes.ok) {
+        throw new Error(textData.error || "Failed to generate content");
+      }
 
       dispatch(
         generatePostAction.setPost({
           title: userInput.title,
-          content: data.content,
-          slug: slug,
+          content: textData.content,
+          slug,
           tag: tags,
+          image: imageData.image, // May be empty if checkbox is not selected
         })
       );
 
       setGenerationComplete(true);
-      setUserInput({
-        title: "",
-        prompt: "",
-      });
+      setUserInput({ title: "", prompt: "" });
     } catch (error) {
-      console.error("Error generating content:", error);
+      console.error("Error generating content or image:", error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -161,9 +152,9 @@ Aim for 1200-1500 words. Keep the writing engaging and professional.`;
       case 3:
         return "Writing the introduction...";
       case 4:
-        return "Developing the main sections...";
+        return "Generating image and content...";
       case 5:
-        return "Finalizing the content...";
+        return "Finalizing everything...";
       default:
         return "Generating your blog post...";
     }
@@ -175,15 +166,16 @@ Aim for 1200-1500 words. Keep the writing engaging and professional.`;
         <div className="absolute w-full flex-col h-full bg-[rgba(0,0,0,0.4)] top-0 left-0 center">
           <div className="bg-white dark:bg-dark-100 p-8 rounded-lg shadow-lg max-w-md w-full">
             <h3 className="text-xl font-bold mb-4 text-center text-black dark:text-white">
-              {generationComplete ? "Generation Complete!" : "Generating Your Blog Post"}
+              {generationComplete
+                ? "Generation Complete!"
+                : "Generating Your Blog Post"}
             </h3>
-            
             {!generationComplete ? (
               <>
                 <div className="mb-6">
                   <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700">
-                    <div 
-                      className="h-2 bg-blue-600 rounded-full transition-all duration-500" 
+                    <div
+                      className="h-2 bg-blue-600 rounded-full transition-all duration-500"
                       style={{ width: `${(generationStep / 5) * 100}%` }}
                     ></div>
                   </div>
@@ -203,19 +195,30 @@ Aim for 1200-1500 words. Keep the writing engaging and professional.`;
             ) : (
               <div className="text-center">
                 <div className="mb-4">
-                  <svg className="mx-auto h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="mx-auto h-12 w-12 text-green-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
                 <p className="text-gray-700 dark:text-gray-300">
-                  Your blog post has been generated successfully! Redirecting to create page...
+                  Your blog post has been generated successfully! Redirecting to
+                  create page...
                 </p>
               </div>
             )}
           </div>
         </div>
       )}
-      
+
       <h2 className="title_heading">Generate Blog Post</h2>
       <p className="para">
         Discover personalized content tailored to your interests with our
@@ -246,6 +249,7 @@ Aim for 1200-1500 words. Keep the writing engaging and professional.`;
           }
           required
         />
+
         <label className="form_label" htmlFor="prompt">
           Prompt
         </label>
@@ -263,15 +267,32 @@ Aim for 1200-1500 words. Keep the writing engaging and professional.`;
           required
         ></textarea>
 
-        <div className="flex items-center my-4 sm:w-[75%] justify-start gap-6 flex-nowrap">
-          <Link href="/">
-            <button type="button" className="outline_btn">Cancel</button>
-          </Link>
-          <button
-            type="submit"
-            className="black_btn"
-            disabled={loading}
+        <div className="flex items-start gap-3 mt-4">
+          <input
+            type="checkbox"
+            id="generateImage"
+            checked={generateImage}
+            onChange={() => setGenerateImage(!generateImage)}
+            className="mt-1"
+          />
+          <label
+            htmlFor="generateImage"
+            className="text-sm text-gray-700 dark:text-gray-300"
           >
+            Generate an AI image for the blog post.{" "}
+            <span className="text-red-500 font-medium">
+              (Consumes more API credentials)
+            </span>
+          </label>
+        </div>
+
+        <div className="flex items-center my-6 sm:w-[75%] justify-start gap-6 flex-nowrap">
+          <Link href="/">
+            <button type="button" className="outline_btn">
+              Cancel
+            </button>
+          </Link>
+          <button type="submit" className="black_btn" disabled={loading}>
             {loading ? "Generating..." : "Generate"}
           </button>
         </div>

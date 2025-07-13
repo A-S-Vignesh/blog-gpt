@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.0",
+    "@google/genai": "^1.9.0",
     "@reduxjs/toolkit": "^2.2.3",
     "@vercel/speed-insights": "^1.2.0",
     "lodash": "^4.17.21",
