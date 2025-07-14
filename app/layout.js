@@ -63,7 +63,7 @@ export default function RootLayout({ children }) {
             <Nav />
             <Toaster position="top-right" />
             <main className="flex-grow">
-              {children}
+              <Suspense fallback={<p>Loading...</p>}>{children}</Suspense>
             </main>
             <Footer />
           </Provider>
