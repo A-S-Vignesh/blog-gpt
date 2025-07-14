@@ -1,7 +1,17 @@
+"use client";
+
 import React from "react";
+import Link from "next/link";
 
 const Footer = () => {
   const year = new Date().getFullYear();
+
+  const footerLinks = [
+    { name: "Terms of Use", href: "/terms-of-use" },
+    { name: "Privacy Policy", href: "/privacy" },
+    { name: "Cookie Policy", href: "/cookies" },
+  ];
+
   return (
     <footer className="bg-[#E8E8EA] mt-auto dark:bg-[#141624] px-6 sm:px-16 md:px-20 lg:px-28 padding">
       <div className="flex lg:flex-row flex-col-reverse justify-between">
@@ -10,17 +20,17 @@ const Footer = () => {
         </p>
 
         <ul className="flex lg:flex-row flex-col center gap-4 lg:gap-8">
-          {["Terms of Use", "Privacy Policy", "Cookie Policy"].map(
-            (item, i) => (
-              <li
+          {footerLinks.map(({ name, href }) => (
+            <li key={name}>
+              <Link
+                href={href}
                 className="text-[#667085] cursor-pointer dark:hover:text-white hover:text-black
-                 text-justify dark:text-[#C0C5D0] font-semibold text-base"
-                key={i}
+                  dark:text-[#C0C5D0] font-semibold text-base"
               >
-                {item}
-              </li>
-            )
-          )}
+                {name}
+              </Link>
+            </li>
+          ))}
         </ul>
       </div>
     </footer>
