@@ -1,7 +1,7 @@
 import Image from "next/image";
 import React, { useState } from "react";
 import BlogPost from "./BlogPost";
-import Loading from "@/app/loading";
+// import Loading from "@/app/loading";
 import { InfinitySpin } from "react-loader-spinner";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 
@@ -106,7 +106,6 @@ const ViewProfile = ({ isMyProfile, userData, userPosts, error }) => {
 
   return (
     <section className="padding min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-3 sm:py-4 bg-white dark:bg-dark-100">
-      {loading && <Loading />}
       <h2 className="title_heading">Profile</h2>
       <p className="text-lg text-slate-500 mt-0">
         Welcome to {isMyProfile ? "Your Personalized " : ""} Profile Page
