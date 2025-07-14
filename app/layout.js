@@ -4,7 +4,6 @@ import Nav from "@/components/Nav";
 import ReduxProvider from "@/providers/ReduxProvider";
 import Footer from "@/components/Footer";
 import { Suspense } from "react";
-import Loading from "./loading";
 import { Toaster } from "react-hot-toast";
 
 export const metadata = {
@@ -32,7 +31,11 @@ export default function RootLayout({ children }) {
   `;
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className="bg-white dark:bg-dark-100"
+    >
       <head>
         {/* Inject dark mode theme early to avoid flash */}
         <script dangerouslySetInnerHTML={{ __html: initialThemeScript }} />
@@ -60,7 +63,7 @@ export default function RootLayout({ children }) {
             <Nav />
             <Toaster position="top-right" />
             <main className="flex-grow">
-              <Suspense fallback={<Loading />}>{children}</Suspense>
+              {children}
             </main>
             <Footer />
           </Provider>

@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 const LoadingSkeleton = () => {
   const isDarkMode = useSelector((state) => state.darkMode.isDarkMode);
   return (
-    <div className="absolute w-full flex-col h-full bg-[rgba(0,0,0,0.4)] top-0 left-0 center">
+    <div className="absolute w-full flex-col h-full bg-white dark:bg-dark-100 top-0 left-0 center">
       <InfinitySpin
         visible={true}
         width="200"

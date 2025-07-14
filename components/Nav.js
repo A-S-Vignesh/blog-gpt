@@ -6,7 +6,6 @@ import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import DarkModeToggle from "./DarkModeToggle";
 import { useSelector, useDispatch } from "react-redux";
-import { darkModeActions } from "@/redux/slice/DarkMode";
 import { useRouter } from "next/navigation";
 
 const Nav = () => {
@@ -14,8 +13,6 @@ const Nav = () => {
   const [providers, setProviders] = useState(null);
   const { data: session, status } = useSession();
   const dropdownRef = useRef(null);
-  const router = useRouter();
-  const dispatch = useDispatch();
   // from the redux store
   const isDarkMode = useSelector((state) => state.darkMode.isDarkMode);
   const [hasMounted, setHasMounted] = useState(false);
