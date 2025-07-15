@@ -10,10 +10,48 @@ export const metadata = {
   title: "The Blog GPT",
   description:
     "A modern blog website where you can view posts and generate content using AI.",
+  keywords: [
+    "AI blog",
+    "Blog-GPT",
+    "AI content generation",
+    "modern blogging",
+    "AI tools",
+    "Gemini AI blogs",
+  ],
+  authors: [
+    {
+      name: "Vignesh A S",
+      url: "https://a-s-vignesh-portfolio.vercel.app",
+    },
+  ],
   icons: {
     icon: "/assets/images/favicon.png",
   },
+  metadataBase: new URL("https://thebloggpt.vercel.app"),
+  openGraph: {
+    title: "The Blog GPT",
+    description:
+      "A modern blog website where you can view posts and generate content using AI.",
+    url: "https://thebloggpt.vercel.app",
+    siteName: "Blog-GPT",
+    type: "website",
+    locale: "en_US",
+    images: ["/assets/images/og-default.jpg"], // optional
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Blog GPT",
+    description:
+      "A modern blog platform with AI-generated content and creative blogging tools.",
+    images: ["/assets/images/og-default.jpg"], // optional
+  },
+  viewport: "width=device-width, initial-scale=1",
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
+
 
 export default function RootLayout({ children }) {
   const initialThemeScript = `

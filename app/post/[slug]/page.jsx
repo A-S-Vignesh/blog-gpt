@@ -1,13 +1,11 @@
 import ViewPost from "@/components/ViewPost";
 
-// ✅ Dynamic SEO Metadata
+// ✅ Dynamic Metadata for Blog Post
 export async function generateMetadata({ params }) {
   try {
     const res = await fetch(
       `${process.env.NEXTAUTH_URL}/api/post/${params.slug}`,
-      {
-        cache: "no-store",
-      }
+      { cache: "no-store" }
     );
 
     if (!res.ok) {
@@ -19,36 +17,65 @@ export async function generateMetadata({ params }) {
 
     const post = await res.json();
 
+    const plainContent = post.content?.replace(/<[^>]+>/g, "") || "";
+    const shortDescription = plainContent.slice(0, 150).trim();
+
+    const title = `${post.title} | Blog-GPT – AI-Powered Blogging Platform`;
+
+    const tags = post.tag
+      ? post.tag
+          .split(",")
+          .map((tag) => tag.replace(/[#]/g, "").trim())
+          .filter(Boolean)
+      : [];
+
+    const imageUrl = post.image?.startsWith("http")
+      ? post.image
+      : `https://thebloggpt.vercel.app${
+          post.image || "/assets/images/og-default.jpg"
+        }`;
+
     return {
-      title: `${post.title} | Blog-GPT`,
-      description: post.content.slice(0, 150),
+      title,
+      description:
+        shortDescription || "Explore AI-generated blogs on Blog-GPT.",
+      keywords: [...tags, "AI blog", "Blog-GPT", "AI Web Dev"],
       openGraph: {
-        title: post.title,
-        description: post.content.slice(0, 150),
+        title,
+        description: shortDescription,
+        url: `https://thebloggpt.vercel.app/post/${params.slug}`,
+        siteName: "Blog-GPT",
+        type: "article",
         images: [
           {
-            url: post.image || "/default.jpg",
-            width: 800,
-            height: 600,
+            url: imageUrl,
+            width: 1200,
+            height: 630,
+            alt: post.title,
           },
         ],
       },
       twitter: {
         card: "summary_large_image",
-        title: post.title,
-        description: post.content.slice(0, 150),
-        images: [post.image || "/default.jpg"],
+        title,
+        description: shortDescription,
+        images: [imageUrl],
+      },
+      robots: {
+        index: true,
+        follow: true,
       },
     };
   } catch (error) {
+    console.error("Metadata generation failed:", error);
     return {
       title: "Post | Blog-GPT",
-      description: "Explore the latest post on Blog-GPT.",
+      description: "Explore the latest AI-powered blog on Blog-GPT.",
     };
   }
 }
 
-// ✅ Page component
+// ✅ Post View Page
 export default async function Page({ params }) {
   const slug = params.slug;
 
@@ -57,7 +84,7 @@ export default async function Page({ params }) {
   });
 
   if (!res.ok) {
-    return <div className="p-10 text-center">Post not found</div>;
+    return <div className="p-10 text-center text-red-500">Post not found</div>;
   }
 
   const post = await res.json();
