@@ -8,8 +8,8 @@ const Footer = () => {
 
   const footerLinks = [
     { name: "Terms of Use", href: "/terms-of-use" },
-    { name: "Privacy Policy", href: "/privacy" },
-    { name: "Cookie Policy", href: "/cookies" },
+    { name: "Privacy Policy", href: "/privacy-policy" },
+    { name: "Cookie Policy", href: "/cookies-policy" },
   ];
 
   return (

@@ -9,7 +9,7 @@ export async function GET() {
     "terms-of-use",
     "privacy-policy",
     "cookies-policy",
-      "post/generate",
+    "post/generate",
     "post/create",
   ];
 
