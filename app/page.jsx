@@ -4,7 +4,7 @@ import HomeClient from "@/components/HomeClient";
 export const metadata = {
   title: "The Blog GPT | AI-Powered Blog Platform",
   description:
-    "Explore AI-generated blogs using Gemini AI. Discover, read, and generate smart content instantly.",
+    "Discover engaging AI-generated blogs powered by Gemini AI. Read insightful posts, explore trending topics, and generate smart content effortlessly on The Blog GPT.",
   keywords: [
     "AI blog",
     "Blog-GPT",
