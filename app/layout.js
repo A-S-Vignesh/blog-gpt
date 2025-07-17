@@ -95,7 +95,7 @@ export default function RootLayout({ children }) {
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen flex flex-col bg-white dark:bg-dark-100">
         <ReduxProvider>
           <Provider>
             <Nav />
