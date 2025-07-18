@@ -1,37 +1,82 @@
-import { getRequest } from "@/utils/requestHandlers";
+import { connectToDB } from "@/db/database";
+import Post from "@/db/models/post";
 
 export async function GET() {
-  const baseUrl = "https://thebloggpt.vercel.app";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://thebloggpt.vercel.app";
+  const deploymentDate = new Date("2025-07-18T00:00:00.000Z").toISOString();
 
-  // 1. Static routes
-  const staticRoutes = [
-    "",
-    "terms-of-use",
-    "privacy-policy",
-    "cookies-policy",
-    "post/generate",
-    "post/create",
-  ];
+  let allRoutes = [];
 
-  // 2. Fetch all blog posts with slug
-  const posts = await getRequest(`${baseUrl}/api/post?skip=all`);
-  const dynamicRoutes = Array.isArray(posts)
-    ? posts.map((post) => `post/${post.slug}`)
-    : [];
+  try {
+    await connectToDB();
 
-  // 3. Combine all routes
-  const allRoutes = [...staticRoutes, ...dynamicRoutes];
+    // Static routes
+    const staticRoutes = [
+      {
+        path: "",
+        lastmod: new Date().toISOString(),
+        changefreq: "daily",
+        priority: 1.0,
+      },
+      {
+        path: "terms-of-use",
+        lastmod: deploymentDate,
+        changefreq: "yearly",
+        priority: 0.7,
+      },
+      {
+        path: "privacy-policy",
+        lastmod: deploymentDate,
+        changefreq: "yearly",
+        priority: 0.7,
+      },
+      {
+        path: "cookies-policy",
+        lastmod: deploymentDate,
+        changefreq: "yearly",
+        priority: 0.7,
+      },
+      {
+        path: "post/generate",
+        lastmod: deploymentDate,
+        changefreq: "monthly",
+        priority: 0.6,
+      },
+      {
+        path: "post/create",
+        lastmod: deploymentDate,
+        changefreq: "monthly",
+        priority: 0.6,
+      },
+    ];
 
-  // 4. Build XML
+    // Dynamic post routes
+    const posts = await Post.find({}, "slug updatedAt createdAt");
+    const dynamicRoutes = posts.map((post) => ({
+      path: `post/${post.slug}`,
+      lastmod: (post.updatedAt || post.createdAt || new Date()).toISOString(),
+      changefreq: "daily",
+      priority: 0.8,
+    }));
+
+    allRoutes = [...staticRoutes, ...dynamicRoutes];
+  } catch (error) {
+    console.error("❌ Sitemap generation error:", error);
+    allRoutes = []; // fallback to empty sitemap
+  }
+
+  // Generate XML
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${allRoutes
   .map(
-    (route) => `
+    ({ path, lastmod, changefreq = "weekly", priority = 0.5 }) => `
   <url>
-    <loc>${baseUrl}/${route}</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <loc>${baseUrl}/${path}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
   </url>`
   )
   .join("")}
@@ -40,6 +85,7 @@ ${allRoutes
   return new Response(xml, {
     headers: {
       "Content-Type": "application/xml",
+      "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600",
     },
   });
 }
