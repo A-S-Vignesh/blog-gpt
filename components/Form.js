@@ -3,6 +3,13 @@
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import LoadingSkeleton from "./Loading";
+import dynamic from "next/dynamic";
+import "react-markdown-editor-lite/lib/index.css";
+import ReactMarkdown from "react-markdown";
+const MdEditor = dynamic(() => import("react-markdown-editor-lite"), {
+  ssr: false,
+});
+
 
 const Form = ({ name, submitting, post, setPost, handleSubmit, handleCancel }) => {
   const [imageUrl, setImageUrl] = useState(null);
@@ -70,17 +77,13 @@ const Form = ({ name, submitting, post, setPost, handleSubmit, handleCancel }) =
         <label className="form_label" htmlFor="content">
           Content
         </label>
-        <textarea
-          className="form_input"
-          name="content"
+        <MdEditor
+          style={{ height: "500px", marginBottom: "1rem" }}
           value={post?.content}
-          onChange={(e) => setPost({ ...post, content: e.target.value })}
-          placeholder="Write a Post"
-          cols="30"
-          rows="10"
-          required
-          style={{ whiteSpace: "pre-wrap" }}
-        ></textarea>
+          renderHTML={(text) => <ReactMarkdown>{text}</ReactMarkdown>}
+          onChange={({ text }) => setPost({ ...post, content: text })}
+        />
+
         <label className="form_label" htmlFor="slug">
           Slug
         </label>
@@ -113,7 +116,6 @@ const Form = ({ name, submitting, post, setPost, handleSubmit, handleCancel }) =
                 accept="image/*"
                 id="image"
                 hidden
-          
               />
               {!imageUrl && (
                 <>
@@ -150,11 +152,7 @@ const Form = ({ name, submitting, post, setPost, handleSubmit, handleCancel }) =
           required
         />
         <div className="flex items-center my-4 sm:w-[75%] justify-start gap-6 flex-nowrap">
-          <button 
-            type="button" 
-            className="outline_btn" 
-            onClick={handleCancel}
-          >
+          <button type="button" className="outline_btn" onClick={handleCancel}>
             Cancel
           </button>
           <input
