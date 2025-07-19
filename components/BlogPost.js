@@ -9,7 +9,7 @@ import { CldImage } from "next-cloudinary";
 const BlogPost = ({ title, slug, creator, content, tag, image, date }) => {
   return (
     <section
-      className={`flex w-full sm:w-[390px] rounded-md max-h-max gap-2 mb-6 flex-col ${
+      className={`flex w-full md:w-[390px] rounded-md max-h-max gap-2 mb-6 flex-col ${
         !title && "animate-pulse"
       }`}
     >
