@@ -10,7 +10,7 @@ const BlogPost = ({ title, slug, creator, content, tag, image, date }) => {
     <div className="flex flex-col w-full max-w-[390px] sm:w-[390px] rounded-md max-h-max gap-2 mb-6">
       <div className="relative overflow-hidden rounded-md shrink-0 h-[250px] w-full sm:w-auto lg:w-[390px]">
         <Link href={`/post/${slug}`} className="block w-full h-full">
-          {/* <Image
+          <Image
             src={image ? image : "/assets/images/laptop.jpg"}
             alt="post-image"
             fill
@@ -19,7 +19,7 @@ const BlogPost = ({ title, slug, creator, content, tag, image, date }) => {
             } rounded-md object-cover hover:scale-110 transition ease-linear duration-200`}
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 390px"
             loading="lazy"
-          /> */}
+          />
         </Link>
       </div>
 
