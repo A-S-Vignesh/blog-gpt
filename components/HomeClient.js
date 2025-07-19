@@ -120,20 +120,18 @@ export default function HomeClient() {
               <LoadingSkeleton count={6} />
             </div>
           ) : (
-              <div className="w-full flex items-center justify-center mt-2 md:mt-4">
-                <div className="w-full flex flex-col sm:flex-row items-center justify-center flex-wrap gap-6 sm:gap-x-10 lg:gap-x-16">
-                {displaySearchResult &&
-                  searchResult?.length > 0 &&
-                  searchResult.map((post, i) => <BlogPost key={i} {...post} />)}
-                {displaySearchResult && searchResult?.length === 0 && (
-                  <h2 className="text-center sub_heading mt-4 w-full">
-                    No results found!
-                  </h2>
-                )}
-                {!displaySearchResult &&
-                    posts?.map((post, i) => <BlogPost key={i} {...post} />)}
-                  </div>
-              </div>
+            <>
+              {displaySearchResult &&
+                searchResult?.length > 0 &&
+                searchResult.map((post, i) => <BlogPost key={i} {...post} />)}
+              {displaySearchResult && searchResult?.length === 0 && (
+                <h2 className="text-center sub_heading mt-4 w-full">
+                  No results found!
+                </h2>
+              )}
+              {!displaySearchResult &&
+                posts?.map((post, i) => <BlogPost key={i} {...post} />)}
+            </>
           )}
         </div>
 
