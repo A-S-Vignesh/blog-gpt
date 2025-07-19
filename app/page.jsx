@@ -45,7 +45,6 @@ export const metadata = {
     images: ["https://thebloggpt.vercel.app/assets/images/LightLogo.png"],
   },
   metadataBase: new URL("https://thebloggpt.vercel.app"),
-  viewport: "width=device-width, initial-scale=1",
   robots: {
     index: true,
     follow: true,

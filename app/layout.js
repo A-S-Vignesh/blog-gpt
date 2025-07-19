@@ -45,11 +45,16 @@ export const metadata = {
       "A modern blog platform with AI-generated content and creative blogging tools.",
     images: ["/assets/images/og-default.jpg"], // optional
   },
-  viewport: "width=device-width, initial-scale=1",
   robots: {
     index: true,
     follow: true,
   },
+};
+
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 
