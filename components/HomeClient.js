@@ -108,20 +108,18 @@ export default function HomeClient() {
   }, [posts, displaySearchResult, noMoreData, isLoadingMore]);
 
   return (
-    <section className="center relative bg-white dark:bg-dark-100 min-h-screen">
-      <div className="transition-all duration-300 min-h-[calc(100vh-80px)] flex flex-col">
-        <div className="container mx-auto px-6 md:px-2">
-          <Hero />
-          <SearchInput value={searchInput} onChange={handleInputChange} />
-          <hr className="hr" />
+    <section className="padding min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-3 sm:py-4 bg-white dark:bg-dark-100">
+      <div className="transition-all duration-300 min-h-[calc(100vh-80px)] flex flex-col justify-center items-center">
+        <Hero />
+        <SearchInput value={searchInput} onChange={handleInputChange} />
+        <hr className="hr" />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-x-10 lg:gap-x-16 mt-2 md:mt-4">
-            {loading ? (
-              <div className="w-full flex items-center justify-center mt-2 md:mt-4">
-                <LoadingSkeleton count={6} />
-              </div>
-            ) : (
-              <>
+        <>
+          {loading ? (
+            <LoadingSkeleton count={6} />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-x-10 lg:gap-x-16 mt-2 md:mt-4">
                 {displaySearchResult &&
                   searchResult?.length > 0 &&
                   searchResult.map((post, i) => <BlogPost key={i} {...post} />)}
@@ -132,26 +130,26 @@ export default function HomeClient() {
                 )}
                 {!displaySearchResult &&
                   posts?.map((post, i) => <BlogPost key={i} {...post} />)}
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
+        </>
 
-          {isLoadingMore && (
-            <div className="w-full flex items-center justify-center mt-4">
-              <InfinitySpin width="150" color="#4F46E5" />
-            </div>
-          )}
-          {noMoreData && (
-            <p className="text-center text-gray-600 dark:text-gray-400 my-4">
-              No more posts to load
-            </p>
-          )}
-          {error && (
-            <div className="text-red-500 text-center my-4">
-              Failed to load posts. Please try again.
-            </div>
-          )}
-        </div>
+        {isLoadingMore && (
+          <div className="w-full flex items-center justify-center mt-4">
+            <InfinitySpin width="150" color="#4F46E5" />
+          </div>
+        )}
+        {noMoreData && (
+          <p className="text-center text-gray-600 dark:text-gray-400 my-4">
+            No more posts to load
+          </p>
+        )}
+        {error && (
+          <div className="text-red-500 text-center my-4">
+            Failed to load posts. Please try again.
+          </div>
+        )}
       </div>
       <SpeedInsights />
     </section>
