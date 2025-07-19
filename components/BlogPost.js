@@ -4,6 +4,7 @@ import React from "react";
 import Tags from "./Tags";
 import Date from "./Date";
 import ReactMarkdown from "react-markdown";
+import { CldImage } from "next-cloudinary";
 
 const BlogPost = ({ title, slug, creator, content, tag, image, date }) => {
   return (
@@ -14,11 +15,12 @@ const BlogPost = ({ title, slug, creator, content, tag, image, date }) => {
     >
       <div className="image center overflow-hidden rounded-md shrink-0 h-[250px] lg:w-[390px] w-full sm:w-auto">
         <Link href={`/post/${slug}`}>
-          <Image
-            src={image ? image : "/assets/images/laptop.jpg"}
+          <CldImage
+            src={image ? image : "assets/images/laptop.jpg"} // Cloudinary public ID
             width={1080}
             height={520}
             alt="post-image"
+            gravity="auto"
             className={`${
               image ? "" : "bg-gray-200 dark:bg-gray-700"
             } rounded-md object-cover hover:scale-110 transition ease-linear shrink-0 h-full lg:h-[220px] lg:w-[390px] w-full sm:w-auto`}
