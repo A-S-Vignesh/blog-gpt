@@ -7,7 +7,7 @@ import ReactMarkdown from "react-markdown";
 
 const BlogPost = ({ title, slug, creator, content, tag, image, date }) => {
   return (
-    <div className="flex flex-col w-full max-w-[390px] sm:w-[390px] rounded-md max-h-max gap-2 mb-6">
+    <div className="flex flex-col w-full sm:max-w-[390px] sm:w-full rounded-md max-h-max gap-2 mb-6">
       <div className="relative overflow-hidden rounded-md shrink-0 h-[250px] w-full sm:w-auto lg:w-[390px]">
         <Link href={`/post/${slug}`} className="block w-full h-full">
           <Image
