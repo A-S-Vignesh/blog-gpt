@@ -8,7 +8,7 @@ import ReactMarkdown from "react-markdown";
 const BlogPost = ({ title, slug, creator, content, tag, image, date }) => {
   return (
     <div className="flex w-full sm:w-[390px] rounded-md max-h-max gap-2 mb-6  flex-col">
-      <div className="relative w-full min-w-[280px] h-[250px] overflow-hidden rounded-md">
+      <div className="relative overflow-hidden rounded-md shrink-0 h-[250px] w-full sm:w-auto lg:w-[390px]">
         <Link href={`/post/${slug}`} className="block w-full h-full">
           <Image
             src={image ? image : "/assets/images/laptop.jpg"}
@@ -17,8 +17,8 @@ const BlogPost = ({ title, slug, creator, content, tag, image, date }) => {
             className={`${
               image ? "" : "bg-gray-200 dark:bg-gray-700"
             } rounded-md object-cover hover:scale-110 transition ease-linear duration-200`}
-            sizes="(max-width: 768px) 100vw, 390px"
-            priority
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 390px"
+            loading="lazy"
           />
         </Link>
       </div>
