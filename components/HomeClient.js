@@ -114,7 +114,7 @@ export default function HomeClient() {
         <SearchInput value={searchInput} onChange={handleInputChange} />
         <hr className="hr" />
 
-        <div className="flex-grow flex flex-col sm:flex-row items-center justify-center flex-wrap gap-6 sm:gap-x-10 lg:gap-x-16 min-h-[400px] w-full">
+        <div className="flex flex-col sm:flex-row items-center justify-center flex-wrap gap-6 sm:gap-x-10 lg:gap-x-16">
           {loading ? (
             <div className="w-full flex items-center justify-center mt-2 md:mt-4">
               <LoadingSkeleton count={6} />
