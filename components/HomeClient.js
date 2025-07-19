@@ -109,7 +109,7 @@ export default function HomeClient() {
 
   return (
     <section className="app center relative bg-white dark:bg-dark-100 min-h-screen">
-      <div className="transition-all duration-300 min-h-[calc(100vh-80px)] flex flex-col">
+      <div className="transition-all duration-300">
         <Hero />
         <SearchInput value={searchInput} onChange={handleInputChange} />
         <hr className="hr" />

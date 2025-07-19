@@ -51,6 +51,15 @@ export const metadata = {
   },
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  // Also supported but less commonly used
+  // interactiveWidget: 'resizes-visual',
+};
+
 
 export default function RootLayout({ children }) {
   const initialThemeScript = `
@@ -74,7 +83,6 @@ export default function RootLayout({ children }) {
       className="bg-white dark:bg-dark-100"
     >
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
         {/* Inject dark mode theme early to avoid flash */}
         <script dangerouslySetInnerHTML={{ __html: initialThemeScript }} />
 

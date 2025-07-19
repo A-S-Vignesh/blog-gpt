@@ -13,8 +13,7 @@ const BlogPost = ({ title, slug, creator, content, tag, image, date }) => {
           <Image
             src={image ? image : "/assets/images/laptop.jpg"}
             alt="post-image"
-            width={1080}
-            height={520}
+            fill
             className={`${
               image ? "" : "bg-gray-200 dark:bg-gray-700"
             } rounded-md object-cover hover:scale-110 transition ease-linear duration-200`}
