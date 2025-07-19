@@ -74,6 +74,7 @@ export default function RootLayout({ children }) {
       className="bg-white dark:bg-dark-100"
     >
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         {/* Inject dark mode theme early to avoid flash */}
         <script dangerouslySetInnerHTML={{ __html: initialThemeScript }} />
 
