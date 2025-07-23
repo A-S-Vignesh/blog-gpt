@@ -139,12 +139,14 @@ const ViewProfile = ({ isMyProfile, userData, userPosts, error }) => {
               userData?.username
             )}
           </h2>
+
           {errorState.isError && (
             <div className="alert alert-error text-red-500">
               <span className="font-bold">Error! </span>
               {errorState.message}
             </div>
           )}
+
           <p className="font-semibold text-gray-500">
             {userData &&
               (isMyProfile
@@ -153,9 +155,43 @@ const ViewProfile = ({ isMyProfile, userData, userPosts, error }) => {
                   "*".repeat(10) +
                   userData?.email.slice(userData?.email.length - 4))}
           </p>
+
           <p className="capitalize dark:text-white font-semibold my-2 text-2xl">
             {userPosts?.length || 0} <span>Posts</span>
           </p>
+
+          {isMyProfile && (
+            <div className="mt-4">
+              <label
+                htmlFor="apiKey"
+                className="text-sm font-medium text-gray-700 dark:text-white"
+              >
+                Gemini API Key
+              </label>
+
+              {profileEdit.isProfileEdit ? (
+                <input
+                  type="password"
+                  id="apiKey"
+                  value={profileEdit.geminiApiKey || "adiuahiudfhaiufhaiufui"}
+                  onChange={(e) =>
+                    setProfileEdit({
+                      ...profileEdit,
+                      geminiApiKey: e.target.value,
+                    })
+                  }
+                  className="mt-1 p-2 w-full border rounded-md dark:bg-dark-200 dark:border-gray-600"
+                  placeholder="Enter your Gemini API key"
+                />
+              ) : (
+                <p className="mt-1 text-gray-600 dark:text-gray-300 font-mono">
+                  {"*".repeat(
+                    Math.max(0, (userData?.geminiApiKey?.length || 0) - 4)
+                  ) + userData?.geminiApiKey?.slice(-4)}
+                </p>
+              )}
+            </div>
+          )}
 
           {isMyProfile && (
             <div className="flex flex-nowrap gap-x-6">
@@ -165,6 +201,8 @@ const ViewProfile = ({ isMyProfile, userData, userPosts, error }) => {
                     setProfileEdit({
                       ...profileEdit,
                       isProfileEdit: false,
+                      username: userData.username,
+                      geminiApiKey: userData.geminiApiKey,
                     })
                   }
                   className="outline_btn mt-2"
@@ -173,56 +211,18 @@ const ViewProfile = ({ isMyProfile, userData, userPosts, error }) => {
                 </button>
               )}
               <button
-                onClick={() => handleEditProfile(userData?.username)}
+                onClick={() =>
+                  handleEditProfile(
+                    profileEdit.username,
+                    profileEdit.geminiApiKey
+                  )
+                }
                 className="black_btn mt-2"
               >
                 {profileEdit.isProfileEdit ? "Save" : "Edit Profile"}
               </button>
             </div>
           )}
-          {/* {isMyProfile && (
-            <div className="mt-4">
-              <label
-                htmlFor="apiKey"
-                className="text-sm font-medium text-gray-700 dark:text-white"
-              >
-                Gemini API Key
-              </label>
-              <input
-                type="password"
-                id="apiKey"
-                value={userData?.geminiApiKey || ""}
-                onChange={(e) =>
-                  setUserData({ ...userData, geminiApiKey: e.target.value })
-                }
-                className="mt-1 p-2 w-full border rounded-md dark:bg-dark-200 dark:border-gray-600"
-                placeholder="Enter your Gemini API key"
-              />
-              <button
-                className="black_btn mt-2"
-                onClick={async () => {
-                  try {
-                    const res = await fetch("/api/user/update-key", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        userId: userData?._id,
-                        geminiApiKey: userData?.geminiApiKey,
-                      }),
-                    });
-                    const result = await res.json();
-                    if (!res.ok) throw new Error(result.message);
-                    alert("API key updated successfully!");
-                  } catch (err) {
-                    console.error(err);
-                    alert("Failed to update API key");
-                  }
-                }}
-              >
-                Save API Key
-              </button>
-            </div>
-          )} */}
         </div>
       </div>
       <hr className="hr" />

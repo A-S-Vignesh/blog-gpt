@@ -9,52 +9,54 @@ export default async function sitemap() {
   try {
     await connectToDB();
 
-    // Static routes
     const staticRoutes = [
       {
         url: `${baseUrl}/`,
-        lastModified: new Date(),
+        lastModified: new Date().toISOString(),
         changeFrequency: "daily",
         priority: 1.0,
       },
       {
         url: `${baseUrl}/terms-of-use`,
-        lastModified: deploymentDate,
+        lastModified: deploymentDate.toISOString(),
         changeFrequency: "yearly",
         priority: 0.7,
       },
       {
         url: `${baseUrl}/privacy-policy`,
-        lastModified: deploymentDate,
+        lastModified: deploymentDate.toISOString(),
         changeFrequency: "yearly",
         priority: 0.7,
       },
       {
         url: `${baseUrl}/cookies-policy`,
-        lastModified: deploymentDate,
+        lastModified: deploymentDate.toISOString(),
         changeFrequency: "yearly",
         priority: 0.7,
       },
       {
         url: `${baseUrl}/post/generate`,
-        lastModified: deploymentDate,
+        lastModified: deploymentDate.toISOString(),
         changeFrequency: "monthly",
         priority: 0.6,
       },
       {
         url: `${baseUrl}/post/create`,
-        lastModified: deploymentDate,
+        lastModified: deploymentDate.toISOString(),
         changeFrequency: "monthly",
         priority: 0.6,
       },
     ];
 
-    // Dynamic blog post routes
-      const posts = await Post.find({}, "slug updatedAt createdAt").lean();
-      console.log("🔍 Found posts:", posts);
+    // Dynamic blog posts
+    const posts = await Post.find({}, "slug updatedAt createdAt").lean();
+    console.log("📄 Found posts:", posts);
+
     const dynamicRoutes = posts.map((post) => ({
       url: `${baseUrl}/post/${post.slug}`,
-      lastModified: post.updatedAt || post.createdAt || new Date(),
+      lastModified: new Date(
+        post.updatedAt || post.createdAt || Date.now()
+      ).toISOString(),
       changeFrequency: "daily",
       priority: 0.8,
     }));
