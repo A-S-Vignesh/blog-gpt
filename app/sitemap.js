@@ -1,4 +1,3 @@
-import { MetadataRoute } from "next"; // Optional for type safety
 import { connectToDB } from "@/db/database";
 import Post from "@/db/models/post";
 
@@ -12,37 +11,37 @@ export default async function sitemap() {
     const staticRoutes = [
       {
         url: `${baseUrl}/`,
-        lastModified: new Date().toISOString(),
+        lastModified: new Date(),
         changeFrequency: "daily",
-        priority: 0.9,
+        priority: 1.0,
       },
       {
         url: `${baseUrl}/terms-of-use`,
-        lastModified: deploymentDate.toISOString(),
+        lastModified: deploymentDate,
         changeFrequency: "yearly",
-        priority: 0.7,
+        priority: 0.3,
       },
       {
         url: `${baseUrl}/privacy-policy`,
-        lastModified: deploymentDate.toISOString(),
+        lastModified: deploymentDate,
         changeFrequency: "yearly",
-        priority: 0.7,
+        priority: 0.3,
       },
       {
         url: `${baseUrl}/cookies-policy`,
-        lastModified: deploymentDate.toISOString(),
+        lastModified: deploymentDate,
         changeFrequency: "yearly",
-        priority: 0.7,
+        priority: 0.3,
       },
       {
         url: `${baseUrl}/post/generate`,
-        lastModified: deploymentDate.toISOString(),
+        lastModified: deploymentDate,
         changeFrequency: "monthly",
         priority: 0.6,
       },
       {
         url: `${baseUrl}/post/create`,
-        lastModified: deploymentDate.toISOString(),
+        lastModified: deploymentDate,
         changeFrequency: "monthly",
         priority: 0.6,
       },
@@ -52,20 +51,26 @@ export default async function sitemap() {
 
     const dynamicRoutes = posts.map((post) => ({
       url: `${baseUrl}/post/${post.slug}`,
-      lastModified: new Date(
-        post.updatedAt || post.createdAt || Date.now()
-      ).toISOString(),
-      changeFrequency: "daily",
+      lastModified: new Date(post.updatedAt || post.createdAt || Date.now()),
+      changeFrequency: "weekly",
       priority: 0.8,
     }));
 
     return [...staticRoutes, ...dynamicRoutes];
   } catch (error) {
     console.error("❌ Sitemap generation error:", error);
-    return [];
+    return [
+      {
+        url: `${baseUrl}/`,
+        lastModified: new Date(),
+        changeFrequency: "daily",
+        priority: 1.0,
+      },
+    ];
   }
 }
 
-// ✅ These are the important additions for correct sitemap behavior on Vercel:
-export const revalidate = 86400; // Regenerate sitemap every hour
-export const dynamic = "force-static"; // Ensure sitemap is treated as static
+// Note: These exports are conflicting - choose one approach
+// Option 1: Static generation with revalidation (ISR)
+export const revalidate = 86400; // Every 24 hours
+
