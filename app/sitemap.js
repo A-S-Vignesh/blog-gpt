@@ -14,7 +14,7 @@ export default async function sitemap() {
         url: `${baseUrl}/`,
         lastModified: new Date().toISOString(),
         changeFrequency: "daily",
-        priority: 1.0,
+        priority: 0.9,
       },
       {
         url: `${baseUrl}/terms-of-use`,
