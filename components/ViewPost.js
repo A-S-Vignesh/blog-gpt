@@ -5,6 +5,8 @@ import Image from "next/image";
 import Date from "@/components/Date";
 import Tags from "@/components/Tags";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import toast from "react-hot-toast";
 
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -136,10 +138,10 @@ const ViewPost = ({ post }) => {
             {threedotModel && (
               <ul className="absolute right-0 w-40 p-4 bg-slate-200 dark:bg-black border-2 dark:border-slate-800 flex flex-col gap-3 rounded-md z-10">
                 {/* Owner actions */}
-                {session?.user?.id === post?.creator._id && (
+                {session?.user?._id === post?.creator._id && (
                   <>
                     <Link
-                      href={`/post/edit?slug=${post?.slug}`}
+                      href={`/post/${post?.slug}/edit`}
                       className="w-full flex items-center gap-2 text-left font-semibold text-black hover:text-slate-700 dark:text-white dark:hover:text-slate-300"
                     >
                       <MdEdit /> Edit
@@ -210,12 +212,25 @@ const ViewPost = ({ post }) => {
           />
         </div>
         {/* paragraph */}
-        <div className="para mt-6 sm:mt-10 prose dark:prose-invert max-w-none">
-          {post?.content.includes("*") || post?.content.includes("#") ? (
-            <ReactMarkdown>{post?.content}</ReactMarkdown>
-          ) : (
-            <div style={{ whiteSpace: "pre-wrap" }}>{post?.content}</div>
-          )}
+        <div className="para para-page mt-6 sm:mt-10 prose dark:prose-invert max-w-none">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw]}
+            components={{
+              a: ({ href, children, ...props }) => (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...props}
+                >
+                  {children}
+                </a>
+              ),
+            }}
+          >
+            {post?.content}
+          </ReactMarkdown>
         </div>
         {/* slogan */}
         {post?.slug && (

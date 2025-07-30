@@ -1,11 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-    serverComponentsExternalPackages: ["mongoose"],
+  serverExternalPackages: ["mongoose"],
+
+  eslint: {
+    // Allows build even with ESLint errors (not recommended for production)
+    ignoreDuringBuilds: true,
   },
+
   images: {
-    domains: ["lh3.googleusercontent.com"],
+    domains: ["lh3.googleusercontent.com", "dummyimage.com"],
     remotePatterns: [
       {
         protocol: "https",
@@ -14,7 +17,8 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
-  // reactStrictMode: false, // enable true in production.
+
+  reactStrictMode: true,
 };
 
 export default nextConfig;

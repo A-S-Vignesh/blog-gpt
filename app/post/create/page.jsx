@@ -57,7 +57,7 @@ const Page = () => {
     setSubmitting(true);
     setError(null);
 
-    console.log("Creating post with data:", post);
+
 
     try {
       if (
@@ -71,13 +71,12 @@ const Page = () => {
         return;
       }
 
-      if (!session?.user?.id) {
+      if (!session?.user?._id) {
         setError("User not authenticated.");
         console.error("Session ID missing:", session);
         setSubmitting(false);
         return;
       }
-      console.log("Submit triggered");
 
       const response = await fetch("/api/post/create", {
         method: "POST",
@@ -85,7 +84,7 @@ const Page = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: session.user.id,
+          userId: session.user._id,
           title: post.title,
           content: post.content,
           slug: post.slug,
@@ -95,7 +94,6 @@ const Page = () => {
       });
 
       const data = await response.json();
-      console.log("Create response:", data);
 
       if (response.ok) {
         dispatch(generatePostAction.setPost(null));

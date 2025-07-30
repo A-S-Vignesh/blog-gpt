@@ -105,7 +105,7 @@ export default function RootLayout({ children }) {
             <Nav />
             <Toaster position="top-right" />
             <main className="flex-grow">
-              <Suspense fallback={<p>Loading...</p>}>{children}</Suspense>
+              {children}
             </main>
             <Footer />
           </Provider>

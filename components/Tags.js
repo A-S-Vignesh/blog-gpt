@@ -10,27 +10,28 @@ const Tags = ({ tag, limit = 5 }) => {
     "black_tag",
     "red_tag",
   ];
-  const shuffledColors = colors.sort(() => Math.random() - 0.5);
+
+  const tagsArray = (
+    tag ? tag?.split(",") : [null, null, null, null, null]
+  ).slice(0, limit);
+
   return (
     <div className="flex gap-4 flex-wrap">
-      {(tag ? tag?.split(",") : [null, null, null, null, null])
-        .slice(0, limit)
-        .map((tagit, i) =>
-          tagit?.length < 2 ? (
-            ""
-          ) : (
-            <span
-              key={i}
-              className={`${tag ? "" : "skeloten_loading w-14 h-6"} tag ${
-                shuffledColors[i]
-              }`}
-            >
-              {tagit}
-            </span>
-          )
-        )}
+      {tagsArray.map((tagit, i) =>
+        tagit?.length < 2 ? null : (
+          <span
+            key={i}
+            className={`${tag ? "" : "skeloten_loading w-14 h-6"} tag ${
+              colors[i % colors.length]
+            }`}
+          >
+            {tagit.trim()}
+          </span>
+        )
+      )}
     </div>
   );
 };
+
 
 export default Tags;

@@ -10,19 +10,16 @@ const DarkModeToggle = () => {
 
   // ✅ Apply class and persist to localStorage when state changes
   useEffect(() => {
-    console.log("[DarkMode] Theme changed:", isDarkMode ? "Dark" : "Light");
     document.documentElement.classList.toggle("dark", isDarkMode);
     localStorage.setItem("theme", isDarkMode ? "dark" : "light");
   }, [isDarkMode]);
 
   const handleClick = () => {
-    console.log("[DarkMode] Toggle clicked");
     dispatch(darkModeActions.toggleDarkMode());
   };
 
   const handleKeyDown = ({ key }) => {
     if (key === "Enter") {
-      console.log("[DarkMode] Toggle key Enter");
       handleClick();
     }
   };

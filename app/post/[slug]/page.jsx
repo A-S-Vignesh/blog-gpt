@@ -1,7 +1,9 @@
+import PostNotFound from "@/components/PostNotFound";
 import ViewPost from "@/components/ViewPost";
 
 // ✅ Dynamic Metadata for Blog Post
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   try {
     const res = await fetch(
       `${process.env.NEXTAUTH_URL}/api/post/${params.slug}`,
@@ -76,7 +78,8 @@ export async function generateMetadata({ params }) {
 }
 
 // ✅ Post View Page
-export default async function Page({ params }) {
+export default async function Page(props) {
+  const params = await props.params;
   const slug = params.slug;
 
   const res = await fetch(`${process.env.NEXTAUTH_URL}/api/post/${slug}`, {
@@ -84,7 +87,7 @@ export default async function Page({ params }) {
   });
 
   if (!res.ok) {
-    return <div className="p-10 text-center text-red-500">Post not found</div>;
+    return <PostNotFound />;
   }
 
   const post = await res.json();

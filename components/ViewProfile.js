@@ -1,20 +1,38 @@
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import BlogPost from "./BlogPost";
+import { useEffect } from "react";
 // import Loading from "@/app/loading";
 import { InfinitySpin } from "react-loader-spinner";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import { set } from "lodash";
 
-const ViewProfile = ({ isMyProfile, userData, userPosts, error }) => {
+const ViewProfile = ({
+  isMyProfile,
+  userData,
+  userPosts,
+  error,
+  setUserData,
+}) => {
   const [profileEdit, setProfileEdit] = useState({
     isProfileEdit: false,
-    username: "",
+    geminiApiKey: userData?.geminiApiKey || "",
+    username: userData?.username || "",
   });
   const [errorState, setErrorState] = useState({
     isError: false,
     message: "",
   });
   const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (userData) {
+      setProfileEdit({
+        ...profileEdit,
+        username: userData.username,
+        geminiApiKey: userData.geminiApiKey || "",
+      });
+    }
+  }, [userData]);
 
   const handleEditProfile = async (username) => {
     if (!profileEdit.isProfileEdit) {
@@ -43,6 +61,11 @@ const ViewProfile = ({ isMyProfile, userData, userPosts, error }) => {
           ...profileEdit,
           isProfileEdit: false,
           username: "",
+        });
+        setUserData({
+          ...userData,
+          username: profileEdit.username,
+          geminiApiKey: profileEdit.geminiApiKey,
         });
       }
     } catch (error) {
@@ -93,8 +116,8 @@ const ViewProfile = ({ isMyProfile, userData, userPosts, error }) => {
         <div className="flex flex-col items-center justify-center h-[50vh]">
           <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
           <p className="text-gray-600 dark:text-gray-400">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-6 black_btn"
           >
             Try Again

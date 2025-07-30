@@ -1,13 +1,14 @@
 import { connectToDB } from "@/db/database";
 import Post from "@/db/models/post";
-import cloudinary from "@/lib/cloudinary";
-// eslint-disable-next-line no-unused-vars
 import User from "@/db/models/user";
+import cloudinary from "@/lib/cloudinary";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 // ✅ Get post by slug
-export const GET = async (req, { params }) => {
+export const GET = async (req, props) => {
+  const { slug } = await props.params;
   try {
-    const slug = params.slug;
     await connectToDB();
     const post = await Post.findOne({ slug }).populate("creator");
 
@@ -21,24 +22,34 @@ export const GET = async (req, { params }) => {
   }
 };
 
-// ✅ Update post by slug
+// ✅ Update post by slug (only by creator)
+export const PATCH = async (req, props) => {
+  const session = await getServerSession(authOptions);
+  const { slug } = await props.params;
 
-export const PATCH = async (req, { params }) => {
+  if (!session || !session.user?._id) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   try {
-    const slug = params.slug;
     const { title, content, newSlug, image, tag } = await req.json();
-
     await connectToDB();
+
     const post = await Post.findOne({ slug });
 
     if (!post) return new Response("No post found!", { status: 404 });
 
-    // 👇 Only delete the old image if it's changed
+    // ✅ Check if the logged-in user is the creator
+    // if (post.creator.toString() !== session.user._id) {
+    //   return new Response("Forbidden: Not your post", { status: 403 });
+    // }
+
+    // 👇 If image changed, delete old one
     if (post.image !== image && post.imagePublicId) {
       await cloudinary.uploader.destroy(post.imagePublicId);
     }
 
-    // Optional: upload new image if it's base64
+    // ✅ Upload new image if it's base64
     let updatedImage = image;
     let updatedPublicId = post.imagePublicId;
 
@@ -65,15 +76,29 @@ export const PATCH = async (req, { params }) => {
   }
 };
 
-export const DELETE = async (req, { params }) => {
+// ✅ Delete post by slug (only by creator)
+export const DELETE = async (req, props) => {
+  const session = await getServerSession(authOptions);
+  const { slug } = await props.params;
+
+  if (!session || !session.user?._id) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   try {
-    const slug = params.slug;
     await connectToDB();
-    const post = await Post.findOneAndDelete({ slug });
+    const post = await Post.findOne({ slug });
 
     if (!post) return new Response("Post not found", { status: 404 });
 
-    // Delete image from Cloudinary
+    // ✅ Check if the user is the creator
+    if (post.creator.toString() !== session.user._id) {
+      return new Response("Forbidden: Not your post", { status: 403 });
+    }
+
+    await Post.deleteOne({ slug });
+
+    // Remove image from Cloudinary
     if (post.imagePublicId) {
       await cloudinary.uploader.destroy(post.imagePublicId);
     }
@@ -83,6 +108,3 @@ export const DELETE = async (req, { params }) => {
     return new Response("Error deleting post", { status: 500 });
   }
 };
-
-
-

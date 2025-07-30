@@ -98,7 +98,7 @@ useEffect(() => {
                     <Link
                       onClick={() => setToggleDropdown((prev) => !prev)}
                       className="dropdown_link"
-                      href={`/profile/${session.user.id}`}
+                      href={`/profile/${session.user._id}`}
                     >
                       My Profile
                     </Link>
@@ -167,7 +167,7 @@ useEffect(() => {
                   <Link
                     onClick={() => setToggleDropdown((prev) => !prev)}
                     className="dropdown_link"
-                    href={`/profile/${session.user.id}`}
+                    href={`/profile/${session.user._id}`}
                   >
                     My Profile
                   </Link>

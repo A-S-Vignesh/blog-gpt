@@ -4,6 +4,8 @@ import React from "react";
 import Tags from "./Tags";
 import Date from "./Date";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 const BlogPost = ({ title, slug, creator, content, tag, image, date }) => {
   return (
@@ -35,13 +37,12 @@ const BlogPost = ({ title, slug, creator, content, tag, image, date }) => {
 
         {content && (
           <div className="para line-clamp-3 text-md">
-            {content.includes("*") || content.includes("#") ? (
-              <ReactMarkdown>{content}</ReactMarkdown>
-            ) : (
-              <div style={{ whiteSpace: "pre-wrap" }} className="line-clamp-3">
-                {content}
-              </div>
-            )}
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
+            >
+              {content}
+            </ReactMarkdown>
           </div>
         )}
 

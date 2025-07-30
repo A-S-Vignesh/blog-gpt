@@ -61,6 +61,7 @@ const Page = () => {
   return (
     <ViewProfile
       userData={userData}
+      setUserData={setUserData}
       userPosts={userPosts}
       isMyProfile={isMyProfile}
       error={error}
