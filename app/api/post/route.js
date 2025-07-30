@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { connectToDB } from "@/db/database";
 import Post from "@/db/models/post";
 // eslint-disable-next-line no-unused-vars
