@@ -27,12 +27,12 @@ export const metadata = {
   icons: {
     icon: "/assets/images/favicon.png",
   },
-  metadataBase: new URL("https://thebloggpt.vercel.app"),
+  metadataBase: new URL("https://thebloggpt.com"),
   openGraph: {
     title: "The Blog GPT",
     description:
       "A modern blog website where you can view posts and generate content using AI.",
-    url: "https://thebloggpt.vercel.app",
+    url: "https://thebloggpt.com",
     siteName: "Blog-GPT",
     type: "website",
     locale: "en_US",
@@ -55,7 +55,6 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
 };
-
 
 export default function RootLayout({ children }) {
   const initialThemeScript = `
@@ -104,9 +103,7 @@ export default function RootLayout({ children }) {
           <Provider>
             <Nav />
             <Toaster position="top-right" />
-            <main className="flex-grow">
-              {children}
-            </main>
+            <main className="flex-grow">{children}</main>
             <Footer />
           </Provider>
         </ReduxProvider>

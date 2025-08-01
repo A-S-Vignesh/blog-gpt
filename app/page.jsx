@@ -7,7 +7,6 @@ import { connectToDB } from "@/db/database";
 import Post from "@/db/models/post";
 import User from "@/db/models/user";
 
-
 export const metadata = {
   title: "The Blog GPT | AI-Powered Blog Platform",
   description:
@@ -31,13 +30,13 @@ export const metadata = {
     title: "The Blog GPT",
     description:
       "Explore AI-generated blogs using Gemini AI. Discover, read, and generate smart content.",
-    url: "https://thebloggpt.vercel.app",
+    url: "https://thebloggpt.com",
     siteName: "The Blog GPT",
     type: "website",
     locale: "en_US",
     images: [
       {
-        url: "https://thebloggpt.vercel.app/assets/images/favicon.png",
+        url: "https://thebloggpt.com/assets/images/favicon.png",
         width: 1200,
         height: 630,
         alt: "The Blog GPT Banner",
@@ -49,26 +48,24 @@ export const metadata = {
     title: "The Blog GPT",
     description:
       "Smart AI-powered blog content with a modern and responsive design.",
-    images: ["https://thebloggpt.vercel.app/assets/images/favicon.png"],
+    images: ["https://thebloggpt.com/assets/images/favicon.png"],
   },
-  metadataBase: new URL("https://thebloggpt.vercel.app"),
+  metadataBase: new URL("https://thebloggpt.com"),
   robots: {
     index: true,
     follow: true,
   },
 };
 
-
 export const revalidate = 600; // 10 minutes
 
 export default async function HomePage() {
   await connectToDB();
-const docs = await Post.find({})
-  .sort({ date: -1 })
-  .limit(6)
-  .populate("creator", "username") // only fetch username & image
-  .lean();
-
+  const docs = await Post.find({})
+    .sort({ date: -1 })
+    .limit(6)
+    .populate("creator", "username") // only fetch username & image
+    .lean();
 
   // Make sure objects are serializable for RSC
   const initialPosts = docs.map((d) => ({

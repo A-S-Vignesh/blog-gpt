@@ -2,34 +2,34 @@
 
 **The Blog GPT** is a full-stack personal blogging platform where users can write, edit, and share their thoughts. It also includes the ability to generate blog content using **Google Gemini AI**, integrated by the developer.
 
-🔗 **Live Demo:** [thebloggpt.vercel.app](https://thebloggpt.vercel.app)
+🔗 **Live Demo:** [thebloggpt.com](https://thebloggpt.com)
 
 ---
 
 ## 🚀 Features
 
-- ✍️ Create, edit, and delete blog posts  
-- 🤖 Blog content generation using **Google Gemini AI**  
-- 📸 Upload and manage images using Cloudinary  
-- 🔐 Google authentication (NextAuth)  
-- 📄 Markdown editor with live preview  
-- 🧠 AI content generator section  
-- 🔍 SEO-optimized with dynamic metadata  
-- 📊 Personalized dashboard and blog stats  
-- 💬 Clean and responsive UI  
+- ✍️ Create, edit, and delete blog posts
+- 🤖 Blog content generation using **Google Gemini AI**
+- 📸 Upload and manage images using Cloudinary
+- 🔐 Google authentication (NextAuth)
+- 📄 Markdown editor with live preview
+- 🧠 AI content generator section
+- 🔍 SEO-optimized with dynamic metadata
+- 📊 Personalized dashboard and blog stats
+- 💬 Clean and responsive UI
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** Next.js 15 (App Router), Tailwind CSS, Zustand  
-- **Editor:** React Markdown, react-markdown-editor-lite  
-- **Backend:** Node.js, Express.js  
-- **Database:** MongoDB + Mongoose  
-- **Authentication:** NextAuth with Google OAuth  
-- **AI Integration:** Google Gemini API *(used by the developer for blog generation)*  
-- **Image Storage:** Cloudinary  
-- **Deployment:** Vercel  
+- **Frontend:** Next.js 15 (App Router), Tailwind CSS, Zustand
+- **Editor:** React Markdown, react-markdown-editor-lite
+- **Backend:** Node.js, Express.js
+- **Database:** MongoDB + Mongoose
+- **Authentication:** NextAuth with Google OAuth
+- **AI Integration:** Google Gemini API _(used by the developer for blog generation)_
+- **Image Storage:** Cloudinary
+- **Deployment:** Vercel
 
 ---
 
@@ -65,3 +65,4 @@ If you like this project, please consider giving it a ⭐ on GitHub!
 
 
 Let me know if you want badges (e.g., deploy status, license, tech), a contributors section, or acknowledgments.
+```

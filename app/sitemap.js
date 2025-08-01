@@ -1,7 +1,7 @@
 import { connectToDB } from "@/db/database";
 import Post from "@/db/models/post";
 
-const baseUrl = "https://thebloggpt.vercel.app";
+const baseUrl = "https://thebloggpt.com";
 const deploymentDate = new Date("2025-07-18T00:00:00.000Z");
 
 export default async function sitemap() {
@@ -73,4 +73,3 @@ export default async function sitemap() {
 // Note: These exports are conflicting - choose one approach
 // Option 1: Static generation with revalidation (ISR)
 export const revalidate = 86400; // Every 24 hours
-

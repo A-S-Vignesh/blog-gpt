@@ -15,7 +15,7 @@ export async function generateMetadata(props) {
         title: "Post Not Found | Blog-GPT",
         description: "Sorry, the blog post you're looking for doesn't exist.",
         alternates: {
-          canonical: `https://thebloggpt.vercel.app/post/${slug}`,
+          canonical: `https://thebloggpt.com/post/${slug}`,
         },
       };
     }
@@ -36,7 +36,7 @@ export async function generateMetadata(props) {
 
     const imageUrl = post.image?.startsWith("http")
       ? post.image
-      : `https://thebloggpt.vercel.app${
+      : `https://thebloggpt.com${
           post.image || "/assets/images/og-default.jpg"
         }`;
 
@@ -48,7 +48,7 @@ export async function generateMetadata(props) {
       openGraph: {
         title,
         description: shortDescription,
-        url: `https://thebloggpt.vercel.app/post/${slug}`,
+        url: `https://thebloggpt.com/post/${slug}`,
         siteName: "Blog-GPT",
         type: "article",
         images: [
@@ -71,7 +71,7 @@ export async function generateMetadata(props) {
         follow: true,
       },
       alternates: {
-        canonical: `https://thebloggpt.vercel.app/post/${slug}`,
+        canonical: `https://thebloggpt.com/post/${slug}`,
       },
     };
   } catch (error) {
@@ -80,7 +80,7 @@ export async function generateMetadata(props) {
       title: "Post | Blog-GPT",
       description: "Explore the latest AI-powered blog on Blog-GPT.",
       alternates: {
-        canonical: `https://thebloggpt.vercel.app/post/${props.params.slug}`,
+        canonical: `https://thebloggpt.com/post/${props.params.slug}`,
       },
     };
   }

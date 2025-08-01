@@ -5,6 +5,6 @@ export default function robots() {
       allow: "/",
       disallow: "/api/", // Disallow future admin paths
     },
-    sitemap: "https://thebloggpt.vercel.app/sitemap.xml",
+    sitemap: "https://thebloggpt.com/sitemap.xml",
   };
 }
