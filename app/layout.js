@@ -25,7 +25,16 @@ export const metadata = {
     },
   ],
   icons: {
-    icon: "/assets/images/favicon.png",
+    icon: [
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
+  appleWebApp: {
+    title: "Blog GPT",
   },
   metadataBase: new URL("https://thebloggpt.com"),
   openGraph: {
@@ -36,14 +45,28 @@ export const metadata = {
     siteName: "Blog-GPT",
     type: "website",
     locale: "en_US",
-    images: ["/assets/images/og-default.jpg"], // optional
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "The Blog GPT",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "The Blog GPT",
     description:
       "A modern blog platform with AI-generated content and creative blogging tools.",
-    images: ["/assets/images/og-default.jpg"], // optional
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "The Blog GPT",
+      },
+    ],
   },
   robots: {
     index: true,

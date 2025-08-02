@@ -36,8 +36,7 @@ export async function generateMetadata(props) {
 
     const imageUrl = post.image?.startsWith("http")
       ? post.image
-      : `https://thebloggpt.com${
-          post.image || "/assets/images/og-default.jpg"
+      : `https://thebloggpt.com/og-default.jpg"
         }`;
 
     return {

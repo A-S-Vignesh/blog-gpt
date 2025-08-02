@@ -36,10 +36,10 @@ export const metadata = {
     locale: "en_US",
     images: [
       {
-        url: "https://thebloggpt.com/assets/images/favicon.png",
+        url: "https://thebloggpt.com/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "The Blog GPT Banner",
+        alt: "The Blog GPT",
       },
     ],
   },
@@ -48,7 +48,14 @@ export const metadata = {
     title: "The Blog GPT",
     description:
       "Smart AI-powered blog content with a modern and responsive design.",
-    images: ["https://thebloggpt.com/assets/images/favicon.png"],
+    images: [
+      {
+        url: "https://thebloggpt.com/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "The Blog GPT",
+      },
+    ],
   },
   metadataBase: new URL("https://thebloggpt.com"),
   robots: {
