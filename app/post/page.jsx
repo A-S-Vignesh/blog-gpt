@@ -10,17 +10,19 @@ import User from "@/db/models/user";
 import Home from "@/components/Home";
 
 export const metadata = {
-  title: "The Blog GPT | AI-Powered Blog Platform",
+  title: "All Posts | The Blog GPT - AI-Powered Blog Platform",
   description:
-    "Discover engaging AI-generated blogs powered by Gemini AI. Read insightful posts, explore trending topics, and generate smart content effortlessly on The Blog GPT.",
+    "Browse all AI-generated blog posts powered by Gemini AI on The Blog GPT. Explore trending topics, discover insightful content, and get inspired by AI-driven creativity.",
   keywords: [
-    "AI blog",
+    "AI blog posts",
+    "all blogs",
     "Blog-GPT",
     "Gemini AI blog",
-    "Vignesh A S",
     "Next.js blogging",
     "AI content generation",
-    "Modern blog platform",
+    "modern blog platform",
+    "trending blog posts",
+    "AI-written articles",
   ],
   authors: [
     {
@@ -29,10 +31,10 @@ export const metadata = {
     },
   ],
   openGraph: {
-    title: "The Blog GPT",
+    title: "All Posts - The Blog GPT",
     description:
-      "Explore AI-generated blogs using Gemini AI. Discover, read, and generate smart content.",
-    url: "https://thebloggpt.com",
+      "Discover all AI-generated blog posts from The Blog GPT. Explore trending articles and the latest in AI-driven storytelling.",
+    url: "https://thebloggpt.com/post",
     siteName: "The Blog GPT",
     type: "website",
     locale: "en_US",
@@ -41,21 +43,21 @@ export const metadata = {
         url: "https://thebloggpt.com/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "The Blog GPT",
+        alt: "All Posts - The Blog GPT",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "The Blog GPT",
+    title: "All Posts - The Blog GPT",
     description:
-      "Smart AI-powered blog content with a modern and responsive design.",
+      "Browse all AI-generated blog posts on The Blog GPT, powered by Gemini AI.",
     images: [
       {
         url: "https://thebloggpt.com/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "The Blog GPT",
+        alt: "All Posts - The Blog GPT",
       },
     ],
   },
@@ -64,7 +66,11 @@ export const metadata = {
     index: true,
     follow: true,
   },
+  alternates: {
+    canonical: "https://thebloggpt.com/post",
+  },
 };
+
 
 export default async function PostPage() {
   await connectToDB();
