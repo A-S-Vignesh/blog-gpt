@@ -1,11 +1,5 @@
 // app/page.jsx
-import Hero from "@/components/Hero";
-import SearchInput from "@/components/SearchInput";
-import BlogPost from "@/components/BlogPost";
-import LoadMore from "@/components/LoadMore"; // 👇 new client component below
-import { connectToDB } from "@/db/database";
-import Post from "@/db/models/post";
-import User from "@/db/models/user";
+import Home from "@/components/Home";
 
 export const metadata = {
   title: "The Blog GPT | AI-Powered Blog Platform",
@@ -62,45 +56,11 @@ export const metadata = {
     index: true,
     follow: true,
   },
+  alternates: {
+    canonical: "https://thebloggpt.com",
+  },
 };
 
-export const revalidate = 600; // 10 minutes
-
-export default async function HomePage() {
-  await connectToDB();
-  const docs = await Post.find({})
-    .sort({ date: -1 })
-    .limit(6)
-    .populate("creator", "username") // only fetch username & image
-    .lean();
-
-  // Make sure objects are serializable for RSC
-  const initialPosts = docs.map((d) => ({
-    ...d,
-    _id: d._id.toString(),
-    creator: d.creator, // if it’s an ObjectId
-    date: (d.updatedAt || d.date)?.toISOString?.() || d.date,
-  }));
-
-  return (
-    <section className="padding min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-3 sm:py-4 bg-white dark:bg-dark-100">
-      <Hero />
-      <SearchInput />
-      <hr className="hr" />
-
-      {/* SSR: first grid is rendered on server for SEO */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-x-10 lg:gap-x-16 mt-2 md:mt-4">
-        {initialPosts.length > 0 ? (
-          initialPosts.map((post) => <BlogPost key={post._id} {...post} />)
-        ) : (
-          <h2 className="text-center sub_heading mt-4 w-full">
-            No blog posts found!
-          </h2>
-        )}
-      </div>
-
-      {/* Client side continues loading more pages + keeps your UX */}
-      <LoadMore initialSkip={1} />
-    </section>
-  );
+export default function HomePage() {
+  return <Home />;
 }

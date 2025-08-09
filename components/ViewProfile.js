@@ -1,267 +1,329 @@
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
+import {
+  FaUser,
+  FaEnvelope,
+  FaPencilAlt,
+  FaTwitter,
+  FaLinkedin,
+  FaGithub,
+  FaCalendarAlt,
+  FaQuoteLeft,
+  FaEdit,
+  FaAt,
+  FaChartLine,
+} from "react-icons/fa";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import React, { use, useState } from "react";
 import BlogPost from "./BlogPost";
 import { useEffect } from "react";
-// import Loading from "@/app/loading";
-import { InfinitySpin } from "react-loader-spinner";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
-import { set } from "lodash";
 
-const ViewProfile = ({
-  isMyProfile,
-  userData,
-  userPosts,
-  error,
-  setUserData,
-}) => {
-  const [profileEdit, setProfileEdit] = useState({
-    isProfileEdit: false,
-    geminiApiKey: userData?.geminiApiKey || "",
-    username: userData?.username || "",
-  });
+const ViewProfile = ({ isMyProfile, data, userPosts }) => {
+  const [userData, setUserData] = useState(data);
+  // const [showApiKey, setShowApiKey] = useState(false);
   const [errorState, setErrorState] = useState({
     isError: false,
     message: "",
   });
   const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    if (userData) {
-      setProfileEdit({
-        ...profileEdit,
-        username: userData.username,
-        geminiApiKey: userData.geminiApiKey || "",
-      });
-    }
-  }, [userData]);
-
-  const handleEditProfile = async (username) => {
-    if (!profileEdit.isProfileEdit) {
-      return setProfileEdit({
-        ...profileEdit,
-        isProfileEdit: true,
-        username: username,
-      });
-    }
-    setLoading(true);
-    try {
-      const url = `/api/user/check?username=${profileEdit.username}&userId=${userData?._id}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      if (!data.isAvailable) {
-        setErrorState({
-          isError: true,
-          message: "Username already exist!",
-        });
-      } else {
-        setErrorState({
-          isError: false,
-          message: "",
-        });
-        setProfileEdit({
-          ...profileEdit,
-          isProfileEdit: false,
-          username: "",
-        });
-        setUserData({
-          ...userData,
-          username: profileEdit.username,
-          geminiApiKey: profileEdit.geminiApiKey,
-        });
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      setErrorState({
-        isError: true,
-        message: "Failed to update profile",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const isLoading = !userData || !userPosts;
-
-  if (isLoading) {
-    return (
-      <section className="padding min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-3 sm:py-4 bg-white dark:bg-dark-100">
-        <div className="">
-          <h2 className="title_heading">Profile</h2>
-          <p className="text-lg text-slate-500 mt-0">Welcome to Profile Page</p>
-          <div className="sm:my-10 my-6 flex sm:gap-20 gap-6 items-start sm:items-center lg:w-[50%]">
-            <div className="relative md:h-[150px] sm:h-[75px] md:w-[150px] sm:w-[75px] h-[50px] w-[50px] mt-4 sm:mt-0">
-              <div className="absolute inset-0 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
-            </div>
-            <div className="flex flex-col gap-4">
-              <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-              <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-              <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-            </div>
-          </div>
-          <hr className="hr" />
-          <div>
-            <h2 className="sub_heading my-4 text-left">All blog posts</h2>
-            <div className="flex-grow flex flex-col sm:flex-row items-center justify-center flex-wrap gap-6 sm:gap-x-10 lg:gap-x-16 min-h-[400px] w-full">
-              <LoadingSkeleton count={3} />
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Show error message if there's an error
-  if (error) {
-    return (
-      <section className="padding min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-3 sm:py-4 bg-white dark:bg-dark-100">
-        <div className="flex flex-col items-center justify-center h-[50vh]">
-          <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
-          <p className="text-gray-600 dark:text-gray-400">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-6 black_btn"
-          >
-            Try Again
-          </button>
-        </div>
-      </section>
-    );
-  }
 
   return (
-    <section className="padding min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-3 sm:py-4 bg-white dark:bg-dark-100">
-      <h2 className="title_heading">Profile</h2>
-      <p className="text-lg text-slate-500 mt-0">
-        Welcome to {isMyProfile ? "Your Personalized " : ""} Profile Page
-      </p>
-      <div className="sm:my-10 my-6 flex sm:gap-20 gap-6 items-start sm:items-center lg:w-[50%]">
-        <div className="relative md:h-[150px] sm:h-[75px] md:w-[150px] sm:w-[75px] h-[50px] w-[50px] mt-4 sm:mt-0">
-          <Image
-            src={userData?.image}
-            width={100}
-            height={100}
-            alt="profile image"
-            className="h-full w-full p-1 rounded-full"
-          />
+    <>
+      <section className="py-16 px-6 sm:px-16 md:px-20 lg:px-28 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800">
+        <div className="max-w-6xl mx-auto text-center">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+            {isMyProfile ? "Your" : `${userData?.name}`}{" "}
+            <span className="text-blue-600 dark:text-blue-400">Profile</span>
+          </h1>
+          <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
+            {isMyProfile
+              ? "Manage your profile and showcase your work"
+              : "Explore content created by this author"}
+          </p>
         </div>
+      </section>
+      <section className="min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-8 sm:py-10 bg-white dark:bg-dark-100">
+        <div className="max-w-6xl mx-auto">
+          {/* Profile Card */}
+          <div className="bg-white dark:bg-dark-100 rounded-2xl shadow-lg overflow-hidden mb-12 border-2 border-gray-200 dark:border-gray-700">
+            <div className="relative">
+              {/* Profile Banner */}
+              <div className="h-40 bg-gradient-to-r from-blue-500 to-purple-600"></div>
 
-        <div className="flex flex-col">
-          <h2 className="capitalize dark:text-white w-full sm:whitespace-nowrap font-semibold mb-2 text-3xl">
-            {profileEdit.isProfileEdit ? (
-              <input
-                type="text"
-                value={profileEdit.username}
-                onChange={(e) =>
-                  setProfileEdit({
-                    ...profileEdit,
-                    username: e.target.value,
-                  })
-                }
-                className="border dark:ring-white dark:border-white ring-1 dark:bg-dark-100 ring-black p-2 text-2xl border-black rounded-md"
-              />
-            ) : (
-              userData?.username
+              {/* Profile Content */}
+              <div className="px-6 pb-8 sm:px-10">
+                {/* Profile Image */}
+                <div className="relative -mt-20 mb-6">
+                  <div className="w-32 h-32 sm:w-40 sm:h-40 mx-auto bg-white dark:bg-dark-100 rounded-full p-1 shadow-lg">
+                    <div className="relative h-full w-full rounded-full overflow-hidden border-4 border-white dark:border-dark-100">
+                      <Image
+                        src={
+                          userData?.image || "/assets/images/default-avatar.png"
+                        }
+                        alt="profile image"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Profile Info */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Left Column - Personal Info */}
+                  <div className="md:col-span-1">
+                    <div className="text-center md:text-left">
+                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                        {userData?.name || "Anonymous User"}
+                      </h2>
+                      <div className="flex items-center justify-center md:justify-start text-blue-600 dark:text-blue-400 mb-4">
+                        <FaAt className="mr-1" />
+                        <span className="font-medium">
+                          {userData?.username}
+                        </span>
+                      </div>
+
+                      <div className="space-y-4 mb-6">
+                        <div className="flex items-center">
+                          <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg mr-3">
+                            <FaEnvelope className="text-gray-600 dark:text-gray-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              Email
+                            </p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {userData?.email}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center">
+                          <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg mr-3">
+                            <FaPencilAlt className="text-gray-600 dark:text-gray-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              Posts
+                            </p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {userPosts?.length || 0}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center">
+                          <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg mr-3">
+                            <FaCalendarAlt className="text-gray-600 dark:text-gray-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              Joined
+                            </p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {new Date(userData?.createdAt).toLocaleDateString(
+                                "en-US",
+                                { month: "long", year: "numeric" }
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Middle Column - Bio */}
+                  <div className="md:col-span-2">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 h-full">
+                      <div className="flex items-start justify-between mb-4">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                          <FaQuoteLeft className="mr-2 text-blue-600 dark:text-blue-400" />
+                          Bio
+                        </h3>
+                        {isMyProfile && (
+                          <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition">
+                            <FaEdit />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="text-gray-700 dark:text-gray-300">
+                        {userData?.bio ? (
+                          <p>{userData.bio}</p>
+                        ) : (
+                          <div className="italic text-gray-500 dark:text-gray-400">
+                            {isMyProfile
+                              ? "You haven't added a bio yet. Tell others about yourself!"
+                              : "This user hasn't added a bio yet."}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Social Links */}
+                <div className="flex justify-center gap-4 mt-8 mb-6">
+                  <a
+                    href={userData?.socials?.twitter || "#"}
+                    target="_blank"
+                    className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                  >
+                    <FaTwitter size={18} />
+                  </a>
+                  <a
+                    href={userData?.socials?.linkedin || "#"}
+                    target="_blank"
+                    className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                  >
+                    <FaLinkedin size={18} />
+                  </a>
+                  <a
+                    href={userData?.socials?.github || "#"}
+                    target="_blank"
+                    className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                  >
+                    <FaGithub size={18} />
+                  </a>
+                </div>
+
+                {isMyProfile && (
+                  <div className="flex justify-center gap-4">
+                    <Link
+                      href={"/settings"}
+                      className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
+                    >
+                      Edit Profile
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {errorState.isError && (
+              <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg p-4 mb-6 mx-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-red-600 dark:text-red-400"
+                      fill="none"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                      Error
+                    </h3>
+                    <div className="mt-1 text-sm text-red-700 dark:text-red-300">
+                      <p>{errorState.message}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
-          </h2>
+          </div>
 
-          {errorState.isError && (
-            <div className="alert alert-error text-red-500">
-              <span className="font-bold">Error! </span>
-              {errorState.message}
-            </div>
-          )}
-
-          <p className="font-semibold text-gray-500">
-            {userData &&
-              (isMyProfile
-                ? userData?.email
-                : userData?.email.slice(0, 3) +
-                  "*".repeat(10) +
-                  userData?.email.slice(userData?.email.length - 4))}
-          </p>
-
-          <p className="capitalize dark:text-white font-semibold my-2 text-2xl">
-            {userPosts?.length || 0} <span>Posts</span>
-          </p>
-
-          {isMyProfile && (
-            <div className="mt-4">
-              <label
-                htmlFor="apiKey"
-                className="text-sm font-medium text-gray-700 dark:text-white"
-              >
-                Gemini API Key
-              </label>
-
-              {profileEdit.isProfileEdit ? (
-                <input
-                  type="password"
-                  id="apiKey"
-                  value={profileEdit.geminiApiKey || "adiuahiudfhaiufhaiufui"}
-                  onChange={(e) =>
-                    setProfileEdit({
-                      ...profileEdit,
-                      geminiApiKey: e.target.value,
-                    })
-                  }
-                  className="mt-1 p-2 w-full border rounded-md dark:bg-dark-200 dark:border-gray-600"
-                  placeholder="Enter your Gemini API key"
-                />
-              ) : (
-                <p className="mt-1 text-gray-600 dark:text-gray-300 font-mono">
-                  {"*".repeat(
-                    Math.max(0, (userData?.geminiApiKey?.length || 0) - 4)
-                  ) + userData?.geminiApiKey?.slice(-4)}
-                </p>
-              )}
-            </div>
-          )}
-
-          {isMyProfile && (
-            <div className="flex flex-nowrap gap-x-6">
-              {profileEdit.isProfileEdit && (
-                <button
-                  onClick={() =>
-                    setProfileEdit({
-                      ...profileEdit,
-                      isProfileEdit: false,
-                      username: userData.username,
-                      geminiApiKey: userData.geminiApiKey,
-                    })
-                  }
-                  className="outline_btn mt-2"
+          {/* Blog Posts Section */}
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                <FaPencilAlt className="mr-3 text-blue-600 dark:text-blue-400" />
+                {isMyProfile ? "Your Blog Posts" : "Published Content"}
+              </h2>
+              {isMyProfile && (
+                <Link
+                  href="/post/create"
+                  className="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition"
                 >
-                  Cancel
-                </button>
+                  <FaPencilAlt className="mr-2" />
+                  Create New Post
+                </Link>
               )}
-              <button
-                onClick={() =>
-                  handleEditProfile(
-                    profileEdit.username,
-                    profileEdit.geminiApiKey
-                  )
-                }
-                className="black_btn mt-2"
-              >
-                {profileEdit.isProfileEdit ? "Save" : "Edit Profile"}
-              </button>
             </div>
-          )}
-        </div>
-      </div>
-      <hr className="hr" />
-      <div>
-        <h2 className="sub_heading my-4 text-left">All blog posts</h2>
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-x-10 lg:gap-x-16 mt-2 md:mt-4">
-          {userPosts && userPosts.length < 1 ? (
-            <div className="col-span-full center h-full w-full">
-              <h2 className="text-xl text-slate-500">No Posts</h2>
+
+            {userPosts && userPosts.length < 1 ? (
+              <div className="bg-gray-50 dark:bg-dark-100 rounded-2xl p-12 text-center border-2 border-gray-200 dark:border-gray-700">
+                <div className="mx-auto w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+                  <FaPencilAlt className="text-3xl text-gray-400 dark:text-gray-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  No Posts Yet
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                  {isMyProfile
+                    ? "You haven't created any blog posts yet. Start sharing your ideas with the world!"
+                    : "This user hasn't published any content yet."}
+                </p>
+                {isMyProfile && (
+                  <div className="mt-6">
+                    <Link
+                      href="/post/create"
+                      className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition"
+                    >
+                      Create Your First Post
+                    </Link>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {userPosts
+                  ?.slice()
+                  .sort((a, b) => new Date(b.date) - new Date(a.date))
+                  .map((post) => (
+                    <BlogPost key={post._id} {...post} />
+                  ))}
+              </div>
+            )}
+          </div>
+
+          {/* Stats Section */}
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-2xl p-8 mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+              <FaChartLine className="mr-3 text-blue-600 dark:text-blue-400" />
+              Engagement Statistics
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="bg-white dark:bg-dark-100 rounded-xl p-6 shadow-sm">
+                <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  5.2K
+                </div>
+                <div className="text-gray-600 dark:text-gray-400">
+                  Total Views
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-dark-100 rounded-xl p-6 shadow-sm">
+                <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  1.8K
+                </div>
+                <div className="text-gray-600 dark:text-gray-400">
+                  Total Reads
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-dark-100 rounded-xl p-6 shadow-sm">
+                <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  324
+                </div>
+                <div className="text-gray-600 dark:text-gray-400">Comments</div>
+              </div>
             </div>
-          ) : (
-            userPosts?.map((post, i) => <BlogPost key={i} {...post} />)
-          )}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 };
 

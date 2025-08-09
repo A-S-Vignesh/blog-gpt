@@ -157,3 +157,9 @@
 .title_heading {
   @apply sm:text-5xl text-4xl font-bold text-black dark:text-white capitalize my-4
 }
+
+
+/* styles/editor.css */
+.editor {
+  @apply w-full h-[500px] sm:h-[600px] md:h-[700px] lg:h-[800px] xl:h-[900px] bg-white dark:bg-black rounded-lg shadow-md
+}

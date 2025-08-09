@@ -1,6 +1,13 @@
 "use client";
-
-import Image from "next/image";
+import {
+  FaUpload,
+  FaTimes,
+  FaSave,
+  FaTag,
+  FaLink,
+  FaImage,
+  FaPencilAlt,
+} from "react-icons/fa";
 import React, { useEffect, useState } from "react";
 import LoadingSkeleton from "./Loading";
 import dynamic from "next/dynamic";
@@ -53,119 +60,209 @@ const Form = ({ name, submitting, post, setPost, handleSubmit, handleCancel }) =
   }, [post]);
 
   return (
-    <section className="padding relative px-6 sm:px-16 md:px-20 lg:px-28 py-3 sm:py-4 bg-white dark:bg-dark-100">
-      {submitting && <LoadingSkeleton />}
-      <h2 className="title_heading">{name} Post</h2>
-      <p className="para">
-        Craft and share captivating blog posts to unleash your creativity and
-        connect with the world. Let your imagination soar as you inspire and
-        engage your audience with your unique voice and perspective. Feel free
-        to Customize it!.
-      </p>
-      <form className="flex flex-col" onSubmit={handleSubmit}>
-        <label className="form_label" htmlFor="titile">
-          Title
-        </label>
-        <input
-          placeholder="Write the Title"
-          className="form_input"
-          type="text"
-          value={post?.title}
-          onChange={(e) => setPost({ ...post, title: e.target.value })}
-          required
-        />
-        <label className="form_label" htmlFor="content">
-          Content
-        </label>
-        <MdEditor
-          style={{ height: "500px", marginBottom: "1rem" }}
-          value={post?.content}
-          renderHTML={(text) => <ReactMarkdown>{text}</ReactMarkdown>}
-          onChange={({ text }) => setPost({ ...post, content: text })}
-        />
-
-        <label className="form_label" htmlFor="slug">
-          Slug
-        </label>
-        <textarea
-          className="form_input"
-          placeholder="Enter the Slug"
-          name="slug"
-          value={post?.slug}
-          onChange={(e) => setPost({ ...post, slug: e.target.value })}
-          cols="30"
-          rows="3"
-          required
-        ></textarea>
-        <label className="mb-6" id="input-image" htmlFor="image">
-          <h2 className="form_label">Image</h2>
-
-          {/* image drag and drop */}
-          <div className="center text-center  w-full sm:w-[75%]">
-            <div
-              style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : {}}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              className="sm:p-6 object-cover  cursor-pointer bg-no-repeat bg-center bg-contain 
-               p-4 center flex-col shadow-md flex-nowrap rounded-md h-[300px] w-full   lg:w-[55%] 
-               bg-[#f7f8ff] border-2 border-dashed dark:bg-gray-600 text-black dark:text-white font-semibold"
-            >
-              <input
-                onChange={handleUploadImage}
-                type="file"
-                accept="image/*"
-                id="image"
-                hidden
-              />
-              {!imageUrl && (
-                <>
-                  <Image
-                    className="mt-6 rounded-md"
-                    src="/assets/images/upload.png"
-                    width={45}
-                    height={45}
-                    alt="upload png"
-                  />
-                  <p className=" text-md">
-                    Drag and Drop or click here to upload image
-                  </p>
-                  <span className="block  dark:text-gray-800 text-sm text-[#777] mt-4">
-                    Upload any image form desktop
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-        </label>
-        <label className="form_label" htmlFor="tag">
-          tag{" "}
-          <span className="text-base text-slate-500">
-            (Ex: #Education , #Health, #Finance)
-          </span>
-        </label>
-        <input
-          placeholder="Enter the tag"
-          className="form_input"
-          type="text"
-          value={post?.tag}
-          onChange={(e) => setPost({ ...post, tag: e.target.value })}
-          required
-        />
-        <div className="flex items-center my-4 sm:w-[75%] justify-start gap-6 flex-nowrap">
-          <button type="button" className="outline_btn" onClick={handleCancel}>
-            Cancel
-          </button>
-          <input
-            disabled={submitting}
-            type="submit"
-            name={submitting ? `${name}...` : name}
-            className="black_btn"
-            value={name}
-            required
-          />
+    <>
+      <section className="py-16 px-6 sm:px-16 md:px-20 lg:px-28 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800">
+        <div className="max-w-6xl mx-auto text-center">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+            {name === "Create" ? "Craft Your" : "Refine Your"}{" "}
+            <span className="text-blue-600 dark:text-blue-400">
+              {name === "Create" ? "Masterpiece" : "Creation"}
+            </span>
+          </h1>
+          <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
+            {name === "Create"
+              ? "Share your insights with the world. Create something amazing!"
+              : "Perfect your post and make it shine."}
+          </p>
         </div>
-      </form>
-    </section>
+      </section>
+      <section className="px-6 sm:px-16 md:px-20 lg:px-28 py-8 sm:py-10 bg-white dark:bg-dark-100">
+        {submitting && <LoadingSkeleton />}
+        <div className="max-w-4xl mx-auto">
+
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Title Section */}
+            <div className="bg-white dark:bg-dark-100 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6">
+              <div className="flex items-center mb-4">
+                <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg mr-3">
+                  <FaPencilAlt className="text-blue-600 dark:text-blue-400" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Blog Title
+                </h2>
+              </div>
+              <input
+                placeholder="Craft a compelling title that captures attention..."
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                type="text"
+                value={post?.title}
+                onChange={(e) => setPost({ ...post, title: e.target.value })}
+                required
+              />
+            </div>
+
+            {/* Content Editor */}
+            <div className="bg-white dark:bg-dark-100 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6">
+              <div className="flex items-center mb-4">
+                <div className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg mr-3">
+                  <FaPencilAlt className="text-purple-600 dark:text-purple-400" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Content
+                </h2>
+              </div>
+              <div className="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-dark-100 text-white dark:text-dark-100">
+                <MdEditor
+                  className="bg-white dark:bg-dark-100 rounded-lg"
+                  style={{ height: "500px", backgroundColor: "white", }}
+                  value={post?.content}
+                  renderHTML={(text) => <ReactMarkdown>{text}</ReactMarkdown>}
+                  onChange={({ text }) => setPost({ ...post, content: text })}
+                />
+              </div>
+            </div>
+
+            {/* Slug Section */}
+            <div className="bg-white dark:bg-dark-100 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6">
+              <div className="flex items-center mb-4">
+                <div className="bg-green-100 dark:bg-green-900 p-2 rounded-lg mr-3">
+                  <FaLink className="text-green-600 dark:text-green-400" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  URL Slug
+                  <span className="block text-sm font-normal text-gray-500 dark:text-gray-400 mt-1">
+                    (Ex: your-blog-post-title)
+                  </span>
+                </h2>
+              </div>
+              <textarea
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                placeholder="Enter a unique URL slug for your post"
+                name="slug"
+                value={post?.slug}
+                onChange={(e) => setPost({ ...post, slug: e.target.value })}
+                rows="3"
+                required
+              ></textarea>
+            </div>
+
+            {/* Image Upload */}
+            <div className="bg-white dark:bg-dark-100 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6">
+              <div className="flex items-center mb-4">
+                <div className="bg-amber-100 dark:bg-amber-900 p-2 rounded-lg mr-3">
+                  <FaImage className="text-amber-600 dark:text-amber-400" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Featured Image
+                </h2>
+              </div>
+
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                className={`relative group border-2 border-dashed rounded-xl overflow-hidden transition-all duration-300
+                ${
+                  imageUrl
+                    ? "border-gray-300 dark:border-gray-600 h-80"
+                    : "border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 h-64 cursor-pointer"
+                }`}
+              >
+                {imageUrl ? (
+                  <div
+                    className="w-full h-full bg-cover bg-center"
+                    style={{ backgroundImage: `url(${imageUrl})` }}
+                  >
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <label
+                        htmlFor="image"
+                        className="bg-white dark:bg-dark-100 px-4 py-2 rounded-lg text-gray-900 dark:text-white flex items-center cursor-pointer"
+                      >
+                        <FaUpload className="mr-2" />
+                        Change Image
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <label
+                    htmlFor="image"
+                    className="w-full h-full flex flex-col items-center justify-center p-6 text-center cursor-pointer"
+                  >
+                    <div className="bg-blue-100 dark:bg-blue-900 p-4 rounded-full mb-4">
+                      <FaUpload className="text-blue-600 dark:text-blue-400 text-2xl" />
+                    </div>
+                    <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                      Drag & Drop or Click to Upload
+                    </p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Recommended size: 1200x630 pixels
+                    </p>
+                    <span className="block text-sm text-gray-500 dark:text-gray-400 mt-4">
+                      Supports JPG, PNG, WEBP (Max 5MB)
+                    </span>
+                  </label>
+                )}
+
+                <input
+                  onChange={handleUploadImage}
+                  type="file"
+                  accept="image/*"
+                  id="image"
+                  className="hidden"
+                />
+              </div>
+            </div>
+
+            {/* Tags Section */}
+            <div className="bg-white dark:bg-dark-100 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6">
+              <div className="flex items-center mb-4">
+                <div className="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-lg mr-3">
+                  <FaTag className="text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Tags
+                  <span className="block text-sm font-normal text-gray-500 dark:text-gray-400 mt-1">
+                    (Ex: #Education, #Health, #Finance)
+                  </span>
+                </h2>
+              </div>
+              <input
+                placeholder="Add relevant tags to help readers find your content"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                type="text"
+                value={post?.tag}
+                onChange={(e) => setPost({ ...post, tag: e.target.value })}
+                required
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition flex items-center justify-center"
+              >
+                <FaTimes className="mr-2" />
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:opacity-90 transition flex items-center justify-center disabled:opacity-70"
+              >
+                <FaSave className="mr-2" />
+                {submitting ? `${name}...` : name}
+              </button>
+            </div>
+          </form>
+          <div className="mt-6 text-center text-gray-500 dark:text-gray-400">
+            {name === "Create"
+              ? "Your post make take time around 10 to 15 min to get visible to the user"
+              : "Your changes will be saved and visible to users shortly."}
+            </div>
+        </div>
+      </section>
+    </>
   );
 };
 

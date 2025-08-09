@@ -80,6 +80,7 @@ const TermsOfUsePage = () => {
         us at{" "}
         <a
           href="mailto:support@thebloggpt.com"
+          target="_blank"
           className="underline text-blue-600 dark:text-blue-400"
         >
           support@thebloggpt.com

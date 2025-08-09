@@ -1,5 +1,13 @@
 import EditPostClient from "@/components/EditPostClient";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
+import { redirect } from "next/navigation";
 
-export default function EditPostPage({ params }) {
+export default async function EditPostPage({ params }) {
+    const session = await getServerSession(authOptions);
+
+  if (!session) {
+    redirect("/auth/signin");
+  }
   return <EditPostClient slug={params.slug} />;
 }

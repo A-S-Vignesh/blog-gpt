@@ -1,8 +1,17 @@
 import { connectToDB } from "@/db/database";
 import Post from "@/db/models/post";
 import cloudinary from "@/lib/cloudinary";
+import { revalidatePath } from "next/cache"; 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 export async function POST(request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user?._id) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   try {
     const { userId, title, content, slug, image, tag } = await request.json();
 
@@ -16,7 +25,7 @@ export async function POST(request) {
     await connectToDB();
 
     let imageUrl =
-      "https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/how-to-write-a-blog-post.png";
+      "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.jpg";
     let publicId = "";
 
     // ✅ Upload base64 image to Cloudinary
@@ -42,6 +51,9 @@ export async function POST(request) {
     });
 
     await newPost.save();
+    revalidatePath(`/post/${newPost.slug}`);
+    revalidatePath("/post");
+    revalidatePath(`/profile/${session.user.username}`);
 
     return new Response(JSON.stringify(newPost), { status: 201 });
   } catch (error) {

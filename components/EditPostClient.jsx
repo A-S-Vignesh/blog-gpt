@@ -26,7 +26,6 @@ export default function EditPostClient({ slug }) {
           router.push("/unauthorized"); // or show error/toast
           return;
         }
-        console.log(session?.user._id);
 
         setPost({
           title: data.title,

@@ -35,7 +35,9 @@ export default function LoadMore({ initialSkip = 1, initialCount = 6 }) {
     const onScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } =
         document.documentElement;
-      if (scrollTop + clientHeight >= scrollHeight - 50) fetchMore();
+      if (scrollTop + clientHeight >= scrollHeight - 50) {
+        fetchMore();
+      }
     };
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);

@@ -3,10 +3,10 @@ import { GoogleGenAI, Modality } from "@google/genai";
 export const POST = async (req) => {
   try {
     const { prompt } = await req.json();
-
     if (!prompt) {
       return new Response(JSON.stringify({ error: "Prompt is required" }), {
         status: 400,
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -15,39 +15,42 @@ export const POST = async (req) => {
     });
 
     const result = await genAI.models.generateContent({
-      model: "gemini-1.5-pro", // or "gemini-1.5-flash" if you want faster response
+      model: "gemini-2.0-flash-preview-image-generation",
       contents: prompt,
       config: {
-        responseModalities: [Modality.IMAGE], // 🔥 Important for image generation
+        responseModalities: [Modality.TEXT, Modality.IMAGE],
       },
     });
 
     const parts = result?.candidates?.[0]?.content?.parts || [];
-
-    const imagePart = parts.find((part) => part.inlineData?.data);
-
-    if (!imagePart) {
-      throw new Error("No image returned from Gemini API.");
+    const imagePart = parts.find((p) => p.inlineData?.data);
+    if (!imagePart || !imagePart.inlineData?.data) {
+      return new Response(JSON.stringify({ error: "No image returned" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    const imageBase64 = imagePart.inlineData.data;
-    const mimeType = imagePart.inlineData.mimeType || "image/png";
+    const { data: base64, mimeType = "image/png" } = imagePart.inlineData;
 
     return new Response(
-      JSON.stringify({ image: `data:${mimeType};base64,${imageBase64}` }),
+      JSON.stringify({ image: `data:${mimeType};base64,${base64}` }),
       {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }
     );
-  } catch (error) {
-    console.error("Image generation error:", error);
+  } catch (err) {
+    console.error("Image generation error:", err);
     return new Response(
       JSON.stringify({
-        error: "Image generation failed.",
-        details: error.message,
+        error: "Image generation failed",
+        details: err.message,
       }),
-      { status: 500 }
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
     );
   }
 };

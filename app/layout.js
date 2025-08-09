@@ -105,7 +105,7 @@ export default function RootLayout({ children }) {
         <script dangerouslySetInnerHTML={{ __html: initialThemeScript }} />
 
         {/* Google Analytics */}
-        <script
+        {/* <script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-VWS6MTPDHT"
         />
@@ -119,7 +119,7 @@ export default function RootLayout({ children }) {
               gtag('config', 'G-VWS6MTPDHT');
             `,
           }}
-        />
+        /> */}
       </head>
       <body className="min-h-screen flex flex-col bg-white dark:bg-dark-100">
         <ReduxProvider>

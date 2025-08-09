@@ -1,6 +1,7 @@
 import { connectToDB } from "@/db/database";
 import Post from "@/db/models/post";
 import User from "@/db/models/user";
+import { revalidatePath } from "next/cache"; 
 import cloudinary from "@/lib/cloudinary";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
@@ -10,7 +11,7 @@ export const GET = async (req, props) => {
   const { slug } = await props.params;
   try {
     await connectToDB();
-    const post = await Post.findOne({ slug }).populate("creator");
+    const post = await Post.findOne({ slug }).populate("creator", "name username");
 
     if (!post) {
       return new Response("Post not found", { status: 404 });
@@ -39,11 +40,6 @@ export const PATCH = async (req, props) => {
 
     if (!post) return new Response("No post found!", { status: 404 });
 
-    // ✅ Check if the logged-in user is the creator
-    // if (post.creator.toString() !== session.user._id) {
-    //   return new Response("Forbidden: Not your post", { status: 403 });
-    // }
-
     // 👇 If image changed, delete old one
     if (post.image !== image && post.imagePublicId) {
       await cloudinary.uploader.destroy(post.imagePublicId);
@@ -69,6 +65,11 @@ export const PATCH = async (req, props) => {
     post.tag = tag;
 
     await post.save();
+
+    // ✅ Trigger revalidation for this specific post page
+    revalidatePath(`/post/${post.slug}`);
+    revalidatePath("/post");
+    revalidatePath(`/profile/${session.user.username}`);
 
     return new Response(JSON.stringify(post), { status: 200 });
   } catch (error) {
@@ -97,6 +98,10 @@ export const DELETE = async (req, props) => {
     }
 
     await Post.deleteOne({ slug });
+
+    revalidatePath("/posts");
+    revalidatePath(`/post/${params.slug}`);
+    revalidatePath(`/profile/${session.user.username}`);
 
     // Remove image from Cloudinary
     if (post.imagePublicId) {

@@ -9,11 +9,12 @@ const Date = ({ date, creator }) => {
         !date ? "skeloten_loading w-52 h-4" : ""
       } font-semibold capitalize  text-[15px] mb-4 text-light-purple `}
     >
-      <Link href={`/profile/${creator?._id}`}>
+      <Link href={`/profile/${creator?.username}`}>
         <span className="">{creator?.username}</span>
+
+        {" - "}
+        {date && formattedDate(date)}
       </Link>
-      {" - "}
-      {date && formattedDate(date)}
     </p>
   );
 };
