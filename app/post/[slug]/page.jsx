@@ -48,6 +48,9 @@ export async function generateMetadata({ params }) {
         images: [post.image || "https://thebloggpt.com/og-default.jpg"],
       },
       robots: { index: true, follow: true },
+      alternates: {
+        canonical: `https://thebloggpt.com/post/${slug}`,
+      },
     };
   } catch {
     return {

@@ -29,13 +29,14 @@ const ViewProfile = ({ isMyProfile, data, userPosts }) => {
     message: "",
   });
   const [loading, setLoading] = useState(false);
+  console.log(userData)
 
   return (
     <>
       <section className="py-16 px-6 sm:px-16 md:px-20 lg:px-28 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-            {isMyProfile ? "Your" : `${userData?.name}`}{" "}
+            {isMyProfile ? "Your" : `${userData?.name||userData?.username}`}{" "}
             <span className="text-blue-600 dark:text-blue-400">Profile</span>
           </h1>
           <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">

@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { generatePostAction } from "@/redux/slice/generatePost";
+import commonWords from "@/utils/CommonWords";
 
 export default function GenerateBlog() {
     const [userInput, setUserInput] = useState({
@@ -60,22 +61,6 @@ export default function GenerateBlog() {
 
     const generateTags = (prompt) => {
       const words = prompt.toLowerCase().split(/\s+/);
-      const commonWords = [
-        "the",
-        "a",
-        "an",
-        "and",
-        "or",
-        "but",
-        "in",
-        "on",
-        "at",
-        "to",
-        "for",
-        "of",
-        "with",
-        "by",
-      ];
       const uniqueWords = [
         ...new Set(
           words.filter((word) => word.length > 3 && !commonWords.includes(word))
