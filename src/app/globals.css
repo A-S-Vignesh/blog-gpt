@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-dark-100: #090D1F;
+}
+
+@plugin '@tailwindcss/typography';
+
+/* scroll bar */
+/* ::-webkit-scrollbar {
+  width: 10px;
+  background-color: #f5f5f5;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background-color: #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: rgba(195, 195, 195, 1);
+}
+
+.fx {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+  height: 100vh;
+} */
+
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}
+
+/*tag colors */
+.tag {
+  @apply px-2 p-0.5 text-sm font-medium rounded-full inline-block
+}
+
+.paleBlue_tag {
+  @apply text-[#026AA2] bg-[#F0F9FF]
+}
+
+.darkBlue_tag {
+  @apply text-[#3538CD] bg-[#EEF4FF]
+}
+
+.rose_tag {
+  @apply text-[#C11574] bg-[#FDF2FA]
+}
+
+.green_tag {
+  @apply text-[#027A48] bg-[#ECFDF3]
+}
+
+.violet_tag {
+  @apply text-[#6941C6] bg-[#F9F5FF]
+}
+
+.black_tag {
+  @apply text-[#363F72] bg-[#F8F9FC]
+}
+
+.red_tag {
+  @apply text-[#C4320A] bg-[#FFF6ED]
+}
+
+/* text */
+.title_heading {
+  @apply sm:text-5xl text-4xl font-bold text-black dark:text-white capitalize my-4
+}
+
+/* heading */
+.sub_heading {
+  @apply text-[24px] text-black dark:text-white font-semibold capitalize
+}
+
+.para {
+  @apply text-lg sm:text-xl indent-8 mb-4 text-[#667085] text-justify dark:text-[#C0C5D0]
+}
+
+.para-page a{
+  @apply text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors no-underline
+}
+
+.app {
+  @apply flex justify-center items-center flex-col px-6 sm:px-16 md:px-20 lg:px-28
+}
+
