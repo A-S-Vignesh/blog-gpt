@@ -1,6 +1,6 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import Post from "@/models/Post";
-import { NextResponse } from "next/server";
+import { NextResponse,NextRequest } from "next/server";
 
 import { revalidatePath } from "next/cache"; 
 import cloudinary from "@/lib/cloudinary";
@@ -17,16 +17,19 @@ type UpdatePostBody = {
 
 // ✅ Get post by slug
 export async function GET(
-  req: Request,
-  { params }: { params: { slug: string } }
+  request: Request,
+  { params }: { params: Promise<{ slug: string }> }
 ) {
-    const { slug } = params;
-    console.log("Requested slug:", slug);
+  const { slug } =await params;
+  console.log("Requested slug:", slug);
 
   try {
     await connectToDatabase();
-      const post = await Post.findOne({ slug }).populate("creator", "name username");
-      console.log("Fetched post:", post);
+    const post = await Post.findOne({ slug }).populate(
+      "creator",
+      "name username"
+    );
+    console.log("Fetched post:", post);
 
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
@@ -44,10 +47,10 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { slug: string } }
-): Promise<Response> {
+  { params }: { params: Promise<{ slug: string }> }
+) {
   const session = await getServerSession(authOptions);
-  const { slug } = params;
+  const { slug } = await params;
 
   if (!session || !session.user?._id) {
     return new Response("Unauthorized", { status: 401 });
@@ -63,7 +66,7 @@ export async function PATCH(
     if (!post) {
       return new Response("No post found!", { status: 404 });
     }
-    
+
     // ✅ Check if the user is the creator
     if (post.creator.toString() !== session.user._id) {
       return NextResponse.json(
@@ -111,11 +114,11 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { slug: string } }
-): Promise<Response> {
+  request: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
   const session = await getServerSession(authOptions);
-  const { slug } = params;
+  const { slug } =await params;
 
   if (!session || !session.user?._id) {
     return new Response("Unauthorized", { status: 401 });
@@ -155,9 +158,6 @@ export async function DELETE(
     );
   } catch (error) {
     console.error("❌ Error deleting post:", error);
-    return NextResponse.json(
-      { error: "Error deleting post" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error deleting post" }, { status: 500 });
   }
 }

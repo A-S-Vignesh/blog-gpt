@@ -19,7 +19,7 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 
-export const metaData: Metadata = {
+export const metadata: Metadata = {
   title: "The Blog GPT | AI-Powered Blog Platform",
   description:
     "Discover engaging AI-generated blogs powered by Gemini AI. Read insightful posts, explore trending topics, and generate smart content effortlessly on The Blog GPT.",

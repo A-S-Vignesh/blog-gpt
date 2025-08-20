@@ -2,6 +2,7 @@ import BlogPost from "@/components/BlogPost";
 import LoadMore from "@/components/LoadMore";
 import { connectToDatabase } from "@/lib/mongodb";
 import Post, { IPost } from "@/models/Post";
+import { Metadata } from "next";
 
 export const revalidate = 600; // refresh every 10 minutes
 
@@ -13,7 +14,7 @@ interface LeanPost extends Omit<IPost, "creator" | "date" | "_id"> {
 
 
 
-export const metadata = {
+export const metadata:Metadata = {
   title: "All Posts | The Blog GPT - AI-Powered Blog Platform",
   description:
     "Browse all AI-generated blog posts powered by Gemini AI on The Blog GPT. Explore trending topics, discover insightful content, and get inspired by AI-driven creativity.",
