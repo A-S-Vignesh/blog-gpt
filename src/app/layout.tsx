@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/redux/provider";
@@ -107,6 +108,7 @@ export default function RootLayout({
             <CommonFooter />
           </Providers>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

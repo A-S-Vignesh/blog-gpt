@@ -5,12 +5,11 @@ import Post from "@/models/Post";
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params;
   try {
     await connectToDatabase();
-
-    const { slug } = params;
 
     // 1. Find the current post
     const currentPost = await Post.findOne({ slug });
