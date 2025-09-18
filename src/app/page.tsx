@@ -443,7 +443,7 @@ export default function Home() {
           </div>
 
           <div className="w-full md:w-1/3 shadow-2xl rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 transform md:translate-y-6">
-            <div className="bg-gradient-to-br x dark:from-purple-900 dark:to-purple-800 h-64 md:h-80 flex items-center justify-center">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 h-64 md:h-80 flex items-center justify-center">
               <div className="bg-white dark:bg-dark-100 w-4/5 h-4/5 rounded-md shadow-inner p-4 overflow-hidden">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-gray-900 dark:text-white">

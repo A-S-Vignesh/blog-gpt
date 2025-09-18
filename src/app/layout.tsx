@@ -1,5 +1,6 @@
 // app/layout.tsx
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/redux/provider";
@@ -31,18 +32,6 @@ export const metadata: Metadata = {
       url: "https://a-s-vignesh-portfolio.vercel.app",
     },
   ],
-  icons: {
-    icon: [
-      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
-    ],
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
-  },
-  manifest: "/site.webmanifest",
-  appleWebApp: {
-    title: "Blog GPT",
-  },
   metadataBase: new URL("https://thebloggpt.com"),
   openGraph: {
     title: "The Blog GPT",
@@ -92,10 +81,25 @@ export default function RootLayout({
     >
       <head>
         <meta name="color-scheme" content="light dark" />
+        <meta name="apple-mobile-web-app-title" content="Blog GPT" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-VWS6MTPDHT"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-VWS6MTPDHT');
+          `}
+        </Script>
+
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Providers>
             <Navbar />

@@ -9,11 +9,8 @@ import {
   FaPencilAlt,
 } from "react-icons/fa";
 import React, { useEffect, useState } from "react";
-// import LoadingSkeleton from "./Loading";
 import dynamic from "next/dynamic";
-// import "react-markdown-editor-lite/lib/index.css";
 import MarkdownPreview from "@uiw/react-markdown-preview";
-// import ReactMarkdown from "react-markdown";
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
 
 interface FormPropsType{

@@ -68,10 +68,19 @@ export default async function Page({
 }) {
   const { slug } = await params;
 
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/post/${slug}`);
-
+  // fetch main post
+  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/post/${slug}`, {
+    cache: "no-store",
+  });
   if (!res.ok) return <PostNotFound />;
-
   const post = await res.json();
-  return <ViewPost post={post} />;
+
+  // fetch related posts
+  const relatedRes = await fetch(
+    `${process.env.NEXTAUTH_URL}/api/post/related/${slug}`,
+    { cache: "no-store" }
+  );
+  const relatedData = relatedRes.ok ? await relatedRes.json() : { data: [] };
+
+  return <ViewPost post={post} relatedPosts={relatedData.data} />;
 }

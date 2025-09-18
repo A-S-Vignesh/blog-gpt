@@ -28,11 +28,13 @@ import {
 } from "react-share";
 import { useDispatch } from "react-redux";
 import { ClientPost } from "@/types/post";
+import RelatedPosts from "./RelatedPosts";
 // import { postActions } from "@/redux/slice/post";
 // import { getRequest } from "@/utils/requestHandlers";
 
-interface ViewPostProps{
-    post: ClientPost;
+interface ViewPostProps {
+  post: ClientPost;
+  relatedPosts: ClientPost[];
 }
 
 interface ShareData {
@@ -40,16 +42,15 @@ interface ShareData {
   url: string;
 }
 
-const ViewPost:React.FC<ViewPostProps> = ({ post }
-) => {
+const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
   const [threedotModel, setThreedotModel] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
- const [shareUrl, setShareUrl] = useState<ShareData>({
-   title: "Check out this interesting post!",
-   url: "",
- });
+  const [shareUrl, setShareUrl] = useState<ShareData>({
+    title: "Check out this interesting post!",
+    url: "",
+  });
   //get the login user data
   const { data: session } = useSession();
   const router = useRouter();
@@ -69,14 +70,12 @@ const ViewPost:React.FC<ViewPostProps> = ({ post }
     };
   }, []);
 
-
-   useEffect(() => {
-     setShareUrl((prev) => ({
-       ...prev,
-       url: window.location.href, // ✅ safe in client components
-     }));
-   }, []);
-
+  useEffect(() => {
+    setShareUrl((prev) => ({
+      ...prev,
+      url: window.location.href, // ✅ safe in client components
+    }));
+  }, []);
 
   const deletePost = async () => {
     setLoading(true);
@@ -85,7 +84,7 @@ const ViewPost:React.FC<ViewPostProps> = ({ post }
         method: "DELETE",
       });
       if (response.ok) {
-        router.push("/post")
+        router.push("/post");
       }
     } catch (error) {
       console.log(error);
@@ -94,7 +93,7 @@ const ViewPost:React.FC<ViewPostProps> = ({ post }
 
   return (
     <section className="app center pb-4 sm:pb-8  bg-white dark:bg-dark-100">
-      <div className="w-full xl:max-w-[1025px]">
+      <div className="w-full max-w-7xl 2xl:max-w-[85%] mx-auto px-4">
         {/* tags */}
         <div className="flex justify-between  items-center">
           <div className="w-full flex flex-wrap justify-start my-4">
@@ -221,6 +220,7 @@ const ViewPost:React.FC<ViewPostProps> = ({ post }
             {post?.slug}
           </div>
         )}
+        <RelatedPosts posts={relatedPosts} />
       </div>
     </section>
   );
