@@ -168,9 +168,9 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
 
         {/* title */}
 
-        <h2 className="font-bold capitalize text-[#181A2A] dark:text-white text-3xl sm:text-4xl mb-4 w-full text-left">
+        <h1 className="font-bold capitalize text-[#181A2A] dark:text-white text-3xl sm:text-4xl mb-4 w-full text-left">
           {post?.title}
-        </h2>
+        </h1>
 
         {/* Date */}
         <div className="text-left w-full">
