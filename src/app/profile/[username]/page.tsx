@@ -5,7 +5,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import Post from "@/models/Post";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ClientPost } from "@/types/post";
+import { PopulatedClientPost } from "@/types/post";
 import { use } from "react";
 
 // ✅ Type for route params
@@ -20,12 +20,9 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ username: string }>;
-    }) {
-    
-    const { username } = await params;
-  const res = await fetch(
-    `${process.env.NEXTAUTH_URL}/api/user/${username}`
-  );
+}) {
+  const { username } = await params;
+  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/user/${username}`);
 
   if (!res.ok) {
     return { title: "User Not Found" };
@@ -39,10 +36,10 @@ export async function generateMetadata({
   const image = user.image || "/default-profile.jpg";
 
   return {
-    title: `${name} - Blog-GPT`,
+    title: `${name} - TheBlogGPT`,
     description,
     openGraph: {
-      title: `${name} - Blog-GPT`,
+      title: `${name} - TheBlogGPT`,
       description,
       type: "profile",
       images: [
@@ -56,7 +53,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${name} - Blog-GPT`,
+      title: `${name} - TheBlogGPT`,
       description,
       images: [image],
     },
@@ -81,12 +78,13 @@ export default async function ProfilePage({
   // 2️⃣ Fetch posts directly from DB
   await connectToDatabase();
   const postsFromDB = await Post.find({ creator: user._id })
+    .sort({ date: -1 })
     .populate("creator", "name username")
-    .lean<ClientPost[]>();
+    .lean<PopulatedClientPost[]>();
 
-    const isMyProfile = session?.user?.username === username;
-    const posts = JSON.parse(JSON.stringify(postsFromDB));
-    const plainUser = JSON.parse(JSON.stringify(user));
+  const isMyProfile = session?.user?.username === username;
+  const posts = JSON.parse(JSON.stringify(postsFromDB));
+  const plainUser = JSON.parse(JSON.stringify(user));
 
   return (
     <ViewProfile data={plainUser} userPosts={posts} isMyProfile={isMyProfile} />

@@ -40,10 +40,8 @@ export const authOptions: NextAuthOptions = {
 
       try {
         await connectToDatabase();
-        console.log("profile from login",profile)
 
         const existingUser = await User.findOne({ email: profile.email });
-        console.log("ExistigUser", existingUser);
 
         if (!existingUser) {
           const username = await generateUsername(profile.name);

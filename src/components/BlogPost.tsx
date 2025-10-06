@@ -4,13 +4,13 @@ import React from "react";
 import Tags from "@/components/Tags";
 import Date from "@/components/Date";
 import { IPost } from "@/models/Post";
-import { ClientPost } from "@/types/post";
+import { PopulatedClientPost } from "@/types/post";
 // import ReactMarkdown from "react-markdown";
 // import remarkGfm from "remark-gfm";
 // import rehypeRaw from "rehype-raw";
 
 interface BlogPostProps {
-  post: ClientPost;
+  post: PopulatedClientPost;
 }
 
 const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
@@ -19,7 +19,11 @@ const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
       <div className="relative overflow-hidden rounded-md shrink-0 h-[250px] w-full sm:w-auto">
         <Link href={`/post/${post.slug}`} className="block w-full h-full">
           <Image
-            src={post.image ? post.image : "/assets/images/laptop.jpg"}
+            src={
+              post.image
+                ? post.image
+                : "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.jpg"
+            }
             alt="post-image"
             fill
             className={`${
@@ -42,18 +46,13 @@ const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
         </Link>
 
         {post.content && (
-          <div className="para line-clamp-3 text-md">
-            {/* <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeRaw]}
-            > */}
-            {post.content}
-            {/* </ReactMarkdown> */}
+          <div className="para line-clamp-3 text-md prose">
+
+            
+            {post.excerpt || post.content.slice(0, 200)}
           </div>
         )}
-
-        
-        <Tags limit={4} tags={post.tags} />
+        <Tags limit={3} tags={post.tags} />
       </div>
     </div>
   );

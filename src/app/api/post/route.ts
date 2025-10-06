@@ -30,7 +30,7 @@ export const GET = async (req: NextRequest) => {
 
     const response = await Post.find({})
       .populate("creator")
-      .sort({ updatedAt: -1 })
+      .sort({ updatedAt: -1, date: -1 })
       .skip(skipValue)
       .limit(6)
       .exec();

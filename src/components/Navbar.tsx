@@ -16,10 +16,7 @@ interface UserDataType {
 const Navbar = async () => {
   const session = await getServerSession(authOptions);
 
-  // Typecast session.user to your interface (if needed)
   const user: UserDataType | null = session?.user ?? null;
-
-  // console.log("Session:",session)
 
   return <NavbarClient userData={user} />;
 };

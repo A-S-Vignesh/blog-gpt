@@ -21,7 +21,7 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } =await params;
-  console.log("Requested slug:", slug);
+
 
   try {
     await connectToDatabase();
@@ -29,7 +29,6 @@ export async function GET(
       "creator",
       "name username"
     );
-    console.log("Fetched post:", post);
 
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });

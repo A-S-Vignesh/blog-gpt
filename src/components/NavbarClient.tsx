@@ -39,10 +39,6 @@ const [isOpen, setIsOpen] = useState<boolean>(false);
     const { theme, setTheme } = useTheme();
     // const [isDarkMode,setDarkMode]=use
     const isDarkMode = theme === "dark";
-    // console.log("Darkmode test",isDarkMode)
-// const [providers, setProviders] = useState<Record<LiteralUnion<BuiltInProviderType, string>, ClientSafeProvider> | null>(null);
-
-// const { data: session, status } = useSession();
 
 const mobileMenuRef = useRef<HTMLDivElement | null>(null);
 const profileRef = useRef<HTMLDivElement | null>(null);
@@ -72,10 +68,6 @@ useEffect(() => {
 
 
   
-
-  const handleSignIn = async (id:any) => {
-    await signIn(id);
-  };
   const NavSkeleton = () => (
     <div className="animate-pulse flex gap-4 items-center">
       <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-full" />
@@ -87,12 +79,11 @@ useEffect(() => {
 
   const navLinks = [
     { name: "Home", href: "/", icon: <FaHome /> },
-    { name: "Blog", href: "/post", icon: <FaBlog /> },
-    { name: "About", href: "/about", icon: <FaInfoCircle /> },
-    { name: "Contact", href: "/contact", icon: <FaEnvelope /> },
-    ];
+    { name: "Blog", href: "/post", icon: <FaBlog />},
+    { name: "About", href: "/about", icon: <FaInfoCircle />},
+    { name: "Contact", href: "/contact", icon: <FaEnvelope />},
+  ];
     
-  // console.log("userData",userData)
   return (
     <nav className="sticky top-0 z-50 bg-white dark:bg-dark-100 border-b border-gray-200 dark:border-gray-700 px-6 sm:px-16 md:px-20 lg:px-28 py-3">
       <div className="flex justify-between items-center">

@@ -29,6 +29,7 @@ const DarkModeToggle = () => {
       className={`cursor-pointer w-11 h-5 bg-blue-500 dark:bg-gray-800 rounded-full relative px-1.5 flex items-center${
         isDarkMode ? "" : " justify-end"
       }`}
+      aria-label="Toggle dark mode"
     >
       <div
         className={`w-4 h-4 rounded-full absolute transform duration-200 ease-out bg-white left-0.5 ${

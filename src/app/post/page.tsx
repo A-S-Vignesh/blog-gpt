@@ -2,15 +2,16 @@ import BlogPost from "@/components/BlogPost";
 import LoadMore from "@/components/LoadMore";
 import { connectToDatabase } from "@/lib/mongodb";
 import Post, { IPost } from "@/models/Post";
+import { PopulatedClientPost } from "@/types/post";
 import { Metadata } from "next";
 
 export const revalidate = 600; // refresh every 10 minutes
 
-interface LeanPost extends Omit<IPost, "creator" | "date" | "_id"> {
-  _id: string;
-  creator: { username: string } | string;
-  date: string;
-}
+// interface LeanPost extends Omit<IPost, "creator" | "date" | "_id"> {
+//   _id: string;
+//   creator: { username: string } | string;
+//   date: string;
+// }
 
 
 
@@ -79,20 +80,11 @@ export const metadata:Metadata = {
 export default async function PostPage() {
   await connectToDatabase();
 
-  const docs = await Post.find({})
-    .sort({ updatedAt: -1 })
+  const initialPosts = await Post.find({})
+    .sort({ updatedAt: -1, date: -1 })
     .limit(6)
     .populate("creator", "username")
-    .lean<IPost[]>();
-
-  // ✅ Ensure serializable fields for RSC
-  const initialPosts: LeanPost[] = docs.map((d: any) => ({
-    ...d,
-    _id: d._id.toString(),
-    creator: d.creator, // populated or ObjectId
-    date:
-      (d.updatedAt || d.createdAt)?.toISOString?.() ?? new Date().toISOString(),
-  }));
+    .lean<PopulatedClientPost[]>();
 
   return (
     <>

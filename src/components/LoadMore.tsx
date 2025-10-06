@@ -1,5 +1,5 @@
 "use client";
-import { ClientPost } from "@/types/post";
+import { PopulatedClientPost } from "@/types/post";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import BlogPost from "@/components/BlogPost";
@@ -10,7 +10,7 @@ export default function LoadMore({ initialCount = 6 }) {
   const skipRef = useRef(initialCount); // ✅ Start from real fetched count
   const [loading, setLoading] = useState(false);
   const [noMoreData, setNoMoreData] = useState(false);
-  const [morePosts, setMorePosts] = useState<ClientPost[]>([]); // ✅ Explicit type
+  const [morePosts, setMorePosts] = useState<PopulatedClientPost[]>([]); // ✅ Explicit type
 
   const fetchMore = useCallback(async () => {
     if (loading || noMoreData) return;
@@ -44,7 +44,6 @@ export default function LoadMore({ initialCount = 6 }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [fetchMore]);
 
-  console.log("morePosts",morePosts)
 
   return (
     <>

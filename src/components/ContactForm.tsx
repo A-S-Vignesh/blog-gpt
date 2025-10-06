@@ -25,7 +25,6 @@ const ContactForm = () => {
     // Handle form submission
     const handleSubmit = (e:any) => {
         e.preventDefault();
-        console.log("Form submitted with data:", formData);
 
         // You can add logic here to show a success message or clear the form
         setFormData({

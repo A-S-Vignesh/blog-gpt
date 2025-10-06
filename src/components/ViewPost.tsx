@@ -17,7 +17,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getRequest } from "@/utils/requestHandler";
 
-
 import {
   EmailIcon,
   EmailShareButton,
@@ -27,14 +26,14 @@ import {
   WhatsappShareButton,
 } from "react-share";
 import { useDispatch } from "react-redux";
-import { ClientPost } from "@/types/post";
+import { PopulatedClientPost } from "@/types/post";
 import RelatedPosts from "./RelatedPosts";
 // import { postActions } from "@/redux/slice/post";
 // import { getRequest } from "@/utils/requestHandlers";
 
 interface ViewPostProps {
-  post: ClientPost;
-  relatedPosts: ClientPost[];
+  post: PopulatedClientPost;
+  relatedPosts: PopulatedClientPost[];
 }
 
 interface ShareData {
@@ -105,6 +104,7 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
               name="threedot"
               onClick={() => setThreedotModel((prev) => !prev)}
               className="ml-4 threedot"
+              aria-label="More options menu"
             >
               <BsThreeDotsVertical className="w-6 h-6 dark:text-white hover:cursor-pointer" />
             </button>
@@ -177,20 +177,25 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
           <Date date={post?.date} creator={post?.creator} />
         </div>
         {/* image */}
-        <div className="w-full center  m-auto rounded-md overflow-hidden sm:w-[400px] sm:h-auto  lg:h-[400px]  lg:max-w-[80%] h-auto">
+        <div
+          className="relative w-full m-auto rounded-md overflow-hidden
+                sm:w-[400px] sm:h-64
+                md:h-80
+                lg:h-[400px] lg:max-w-[80%]"
+        >
           <Image
             alt="post image"
-            width={100}
-            height={100}
-            className={`${
-              !post?.image && "skeloten_loading"
-            }  w-full h-full object-contain rounded-md object-center`}
             src={
               post?.image ??
               "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.jpg"
             }
+            fill
+            className={`object-contain rounded-md object-center ${
+              !post?.image ? "skeloten_loading" : ""
+            }`}
           />
         </div>
+
         {/* paragraph */}
         <div className="para para-page mt-6 sm:mt-10 prose dark:prose-invert max-w-none">
           <ReactMarkdown

@@ -7,11 +7,9 @@ interface Creator {
 }
 
 interface PostDateProps {
-  creator?: string | Creator | null;
+  creator?: Creator | null;
   date?: string | null;
 }
-
-
 
 const PostDate: React.FC<PostDateProps> = ({ date, creator }) => {
   return (
@@ -21,19 +19,11 @@ const PostDate: React.FC<PostDateProps> = ({ date, creator }) => {
       } font-semibold capitalize text-[15px] mb-4 text-[#6941C6]`}
     >
       {creator ? (
-        typeof creator === "string" ? (
-          <Link href={`/profile/${creator}`}>
-            <span>{creator}</span>
-            {" - "}
-            {date && formattedDate(date)}
-          </Link>
-        ) : (
-          <Link href={`/profile/${creator.username}`}>
-            <span>{creator.username}</span>
-            {" - "}
-            {date && formattedDate(date)}
-          </Link>
-        )
+        <Link href={`/profile/${creator.username}`}>
+          <span>{creator.username}</span>
+          {" - "}
+          {date && formattedDate(date)}
+        </Link>
       ) : (
         date && formattedDate(date)
       )}

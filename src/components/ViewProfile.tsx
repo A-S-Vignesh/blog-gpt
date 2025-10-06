@@ -19,27 +19,30 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import React, { use, useState } from "react";
 import BlogPost from "./BlogPost";
 import { useEffect } from "react";
-import { ClientPost } from "@/types/post";
-import {IUser} from "@/models/User"
+import { PopulatedClientPost } from "@/types/post";
+import { IUser } from "@/models/User";
+import LoadMore from "./LoadMore";
 // import LoadingSkeleton from "@/components/LoadingSkeleton";
 
-interface ViewProfileProps{
-    isMyProfile: boolean,
-    data: IUser,
-    userPosts: ClientPost[],
+interface ViewProfileProps {
+  isMyProfile: boolean;
+  data: IUser;
+  userPosts: PopulatedClientPost[];
 }
 
-const ViewProfile: React.FC<ViewProfileProps> = ({ isMyProfile, data, userPosts }) => {
-    const [userData, setUserData] = useState(data);
-    // const [userPosts, setUserPost] = useState(userPostsData);
-    // console.log()
+const ViewProfile: React.FC<ViewProfileProps> = ({
+  isMyProfile,
+  data,
+  userPosts,
+}) => {
+  const [userData, setUserData] = useState(data);
+  // const [userPosts, setUserPost] = useState(userPostsData);
   // const [showApiKey, setShowApiKey] = useState(false);
   const [errorState, setErrorState] = useState({
     isError: false,
     message: "",
   });
   const [loading, setLoading] = useState(false);
-  console.log(userData);
 
   return (
     <>
@@ -178,27 +181,33 @@ const ViewProfile: React.FC<ViewProfileProps> = ({ isMyProfile, data, userPosts 
 
                 {/* Social Links */}
                 <div className="flex justify-center gap-4 mt-8 mb-6">
-                  <a
-                    href={userData?.socials?.twitter || "#"}
-                    target="_blank"
-                    className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-                  >
-                    <FaTwitter size={18} />
-                  </a>
-                  <a
-                    href={userData?.socials?.linkedin || "#"}
-                    target="_blank"
-                    className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-                  >
-                    <FaLinkedin size={18} />
-                  </a>
-                  <a
-                    href={userData?.socials?.github || "#"}
-                    target="_blank"
-                    className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-                  >
-                    <FaGithub size={18} />
-                  </a>
+                  {userData?.socials?.twitter && (
+                    <a
+                      href={userData?.socials?.twitter || "#"}
+                      target="_blank"
+                      className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                    >
+                      <FaTwitter size={18} />
+                    </a>
+                  )}
+                  {userData?.socials?.linkedin && (
+                    <a
+                      href={userData?.socials?.linkedin || "#"}
+                      target="_blank"
+                      className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                    >
+                      <FaLinkedin size={18} />
+                    </a>
+                  )}
+                  {userData?.socials?.github && (
+                    <a
+                      href={userData?.socials?.github || "#"}
+                      target="_blank"
+                      className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                    >
+                      <FaGithub size={18} />
+                    </a>
+                  )}
                 </div>
 
                 {isMyProfile && (
@@ -262,7 +271,7 @@ const ViewProfile: React.FC<ViewProfileProps> = ({ isMyProfile, data, userPosts 
               )}
             </div>
 
-            {userPosts && userPosts ? (
+            {!userPosts ? (
               <div className="bg-gray-50 dark:bg-dark-100 rounded-2xl p-12 text-center border-2 border-gray-200 dark:border-gray-700">
                 <div className="mx-auto w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
                   <FaPencilAlt className="text-3xl text-gray-400 dark:text-gray-600" />
@@ -288,12 +297,9 @@ const ViewProfile: React.FC<ViewProfileProps> = ({ isMyProfile, data, userPosts 
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* {userPosts
-                  ?.slice()
-                  .sort((a, b) => new Date(b.date) - new Date(a.date))
-                  .map((post) => (
-                    <BlogPost key={post._id} {...post} />
-                  ))} */}
+                {userPosts.map((post) => (
+                  <BlogPost key={post._id} post={post} />
+                ))}
               </div>
             )}
           </div>

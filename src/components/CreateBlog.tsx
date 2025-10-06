@@ -88,7 +88,6 @@ const CreateBlog = () => {
     dispatch(clearPost());
     router.push("/");
   };
-  console.log("submited post", post);
 
   return (
     <>

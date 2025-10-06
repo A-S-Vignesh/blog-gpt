@@ -13,24 +13,22 @@ import dynamic from "next/dynamic";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
 
-interface FormPropsType{
+interface FormPropsType {
   name: string;
   submitting: boolean;
   post: {
     title: string;
     content: string;
     slug: string;
-    image?: string | null |ArrayBuffer | undefined;
-    tags: string[],
+    image?: string | null | ArrayBuffer | undefined;
+    tags: string[];
   };
   setPost: (post: any) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   handleCancel: () => void;
 }
 
-
-
-const Form:React.FC<FormPropsType> = ({
+const Form: React.FC<FormPropsType> = ({
   name,
   submitting,
   post,
@@ -38,7 +36,9 @@ const Form:React.FC<FormPropsType> = ({
   handleSubmit,
   handleCancel,
 }) => {
-  const [imageUrl, setImageUrl] = useState<string | ArrayBuffer | undefined | null>(null);
+  const [imageUrl, setImageUrl] = useState<
+    string | ArrayBuffer | undefined | null
+  >(null);
   const [tags, setTags] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
 
@@ -98,7 +98,6 @@ const Form:React.FC<FormPropsType> = ({
       tags: post.tags.filter((tag) => tag !== tagToRemove),
     });
   };
-
 
   useEffect(() => {
     setImageUrl(post?.image);

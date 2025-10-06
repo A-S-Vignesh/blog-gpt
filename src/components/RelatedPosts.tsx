@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Date from "@/components/Date";
 import Tags from "@/components/Tags";
-import { ClientPost } from "@/types/post";
+import { PopulatedClientPost } from "@/types/post";
 
 interface RelatedPost {
   _id: string;
@@ -16,7 +16,11 @@ interface RelatedPost {
   tags: string[];
 }
 
-export default function RelatedPosts({ posts }: { posts: ClientPost[] }) {
+export default function RelatedPosts({
+  posts,
+}: {
+  posts: PopulatedClientPost[];
+}) {
   if (!posts || posts.length === 0) {
     return <p className="text-center text-gray-400">No related posts found.</p>;
   }
@@ -53,7 +57,7 @@ export default function RelatedPosts({ posts }: { posts: ClientPost[] }) {
               {post.content && (
                 <div className="para line-clamp-3 text-md">{post.content}</div>
               )}
-              <Tags limit={4} tags={post.tags} />
+              <Tags limit={3} tags={post.tags} />
             </div>
           </div>
         ))}

@@ -9,13 +9,13 @@ export default function EditPostClient({ slug }: { slug: string }) {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-    const [post, setPost] = useState({
-      title: "",
-      content: "",
-      slug: "",
-      image: null as string | ArrayBuffer | null,
-      tags: [] as string[],
-    });
+  const [post, setPost] = useState({
+    title: "",
+    content: "",
+    slug: "",
+    image: null as string | ArrayBuffer | null,
+    tags: [] as string[],
+  });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -56,7 +56,7 @@ export default function EditPostClient({ slug }: { slug: string }) {
   if (!post)
     return <p className="p-10 text-center">Post not found or unauthorized</p>;
 
-  const handleUpdate = async (e:any) => {
+  const handleUpdate = async (e: any) => {
     e.preventDefault();
     setSubmitting(true);
     try {
@@ -77,11 +77,11 @@ export default function EditPostClient({ slug }: { slug: string }) {
     } finally {
       setSubmitting(false);
     }
-    };
-    
-    const handleCancel = () => {
-        router.push(`/post/${slug}`);
-    }
+  };
+
+  const handleCancel = () => {
+    router.push(`/post/${slug}`);
+  };
 
   return (
     <Form
@@ -89,9 +89,8 @@ export default function EditPostClient({ slug }: { slug: string }) {
       post={post}
       setPost={setPost}
       handleSubmit={handleUpdate}
-          submitting={submitting}
-          handleCancel={handleCancel}
-          
+      submitting={submitting}
+      handleCancel={handleCancel}
     />
   );
 }

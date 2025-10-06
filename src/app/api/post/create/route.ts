@@ -36,10 +36,8 @@ export async function POST(request:Request) {
       "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.jpg";
         let publicId = "";
     
-    console.log("hello")
 
     if (typeof image === "string" && image.startsWith("data:image")) {
-      console.log("Uploading base64 image to Cloudinary");
       const uploaded = await cloudinary.uploader.upload(image, {
         folder: "blog-gpt/posts",
       });
