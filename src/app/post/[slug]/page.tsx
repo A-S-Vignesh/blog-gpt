@@ -11,7 +11,7 @@ export async function generateMetadata({
   const { slug } = await params;
   try {
     const res = await fetch(`${process.env.NEXTAUTH_URL}/api/post/${slug}`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
 
     if (!res.ok) {
@@ -21,7 +21,7 @@ export async function generateMetadata({
       };
     }
 
-    const post = await res.json();
+    const post: PopulatedClientPost = await res.json();
     const plainContent = post.content?.replace(/<[^>]+>/g, "") || "";
     const shortDescription = plainContent.slice(0, 150).trim();
     const tags = post.tags;
@@ -45,7 +45,7 @@ export async function generateMetadata({
         siteName: "TheBlogGPT",
         type: "article",
         article: {
-          author: post.author.name,
+          author: post.creator.name,
           tags: post.tags,
         },
 
@@ -117,7 +117,11 @@ export default async function Page({
             },
             headline: post.title,
             image: [post.image || "https://thebloggpt.com/og-image.jpg"],
-            author: { "@type": "Person", name: post.creator.username },
+            author: {
+              "@type": "Person",
+              name: post.creator.name,
+              url: `https://thebloggpt.com/profile/${post.creator.username}`,
+            },
             publisher: {
               "@type": "Organization",
               name: "TheBlogGPT",

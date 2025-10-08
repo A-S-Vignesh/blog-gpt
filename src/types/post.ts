@@ -8,7 +8,7 @@ export interface ClientPost {
   content: string;
   image?: string | null;
   imagePublicId?: string;
-  tags?: string[];
+  tags: string[];
   category?: string;
   status?: "draft" | "published" | "archived";
   views?: number;
