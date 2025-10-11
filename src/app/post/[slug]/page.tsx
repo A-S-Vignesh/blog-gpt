@@ -1,7 +1,8 @@
 import PostNotFound from "@/components/PostNotFound";
 import ViewPost from "@/components/ViewPost";
 import { PopulatedClientPost } from "@/types/post";
-import { url } from "inspector";
+import { connectToDatabase } from "@/lib/mongodb";
+import Post from "@/models/Post";
 
 export async function generateMetadata({
   params,
@@ -9,22 +10,25 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  try {
-    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/post/${slug}`, {
-      cache: "no-store",
-    });
 
-    if (!res.ok) {
+  try {
+    await connectToDatabase();
+
+    // Fetch the post directly from DB
+    const post: PopulatedClientPost | null = await Post.findOne({ slug })
+      .populate("creator", "name username")
+      .lean<PopulatedClientPost>();
+
+    if (!post) {
       return {
         title: "Post Not Found | TheBlogGPT",
         description: "Sorry, the blog post you're looking for doesn't exist.",
       };
     }
 
-    const post: PopulatedClientPost = await res.json();
     const plainContent = post.content?.replace(/<[^>]+>/g, "") || "";
     const shortDescription = plainContent.slice(0, 150).trim();
-    const tags = post.tags;
+    const tags = post.tags || [];
 
     return {
       title: `${post.title} | TheBlogGPT`,
@@ -48,7 +52,6 @@ export async function generateMetadata({
           author: post.creator.name,
           tags: post.tags,
         },
-
         images: [
           {
             url: post.image || "https://thebloggpt.com/og-image.jpg",
@@ -69,7 +72,8 @@ export async function generateMetadata({
         canonical: `https://thebloggpt.com/post/${slug}`,
       },
     };
-  } catch {
+  } catch (err) {
+    console.error("Error generating metadata:", err);
     return {
       title: "Post | TheBlogGPT",
       description: "Explore the latest AI-powered blog on TheBlogGPT.",
@@ -84,22 +88,38 @@ export default async function Page({
 }) {
   const { slug } = await params;
 
-  // fetch main post
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/post/${slug}`, {
-    next: { revalidate: 60 },
-  });
-  if (!res.ok) return <PostNotFound />;
-  const post: PopulatedClientPost = await res.json();
+  await connectToDatabase();
 
-  // fetch related posts
+  // Fetch the main post directly from DB
+  const post: PopulatedClientPost | null = await Post.findOne({ slug })
+    .populate("creator", "name username")
+    .lean<PopulatedClientPost>();
+
+  if (!post) return <PostNotFound />;
+
+  // Convert to plain object to avoid React Client Component errors
+  const plainPost: PopulatedClientPost = {
+    ...post,
+    _id: post._id.toString(),
+    creator: {
+      ...post.creator,
+      _id: post.creator?._id ? post.creator._id.toString() : "",
+    },
+  };
+
+
+  // Fetch related posts via API (typed)
   const relatedRes = await fetch(
     `${process.env.NEXTAUTH_URL}/api/post/related/${slug}`,
     {
       next: { revalidate: 60 },
     }
   );
-  const relatedData = relatedRes.ok ? await relatedRes.json() : { data: [] };
-  const plainContent = post.content?.replace(/<[^>]+>/g, "") || "";
+  const relatedData: { data: PopulatedClientPost[] } = relatedRes.ok
+    ? await relatedRes.json()
+    : { data: [] };
+
+  const plainContent = plainPost.content?.replace(/<[^>]+>/g, "") || "";
   const shortDescription = plainContent.slice(0, 150).trim();
 
   return (
@@ -108,19 +128,19 @@ export default async function Page({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
-            url: `https://thebloggpt.com/post/${post.slug}`,
+            url: `https://thebloggpt.com/post/${plainPost.slug}`,
             "@context": "https://schema.org",
             "@type": "BlogPosting",
             mainEntityOfPage: {
               "@type": "WebPage",
-              "@id": `https://thebloggpt.com/post/${post.slug}`,
+              "@id": `https://thebloggpt.com/post/${plainPost.slug}`,
             },
-            headline: post.title,
-            image: [post.image || "https://thebloggpt.com/og-image.jpg"],
+            headline: plainPost.title,
+            image: [plainPost.image || "https://thebloggpt.com/og-image.jpg"],
             author: {
               "@type": "Person",
-              name: post.creator.name,
-              url: `https://thebloggpt.com/profile/${post.creator.username}`,
+              name: plainPost.creator.name,
+              url: `https://thebloggpt.com/profile/${plainPost.creator.username}`,
             },
             publisher: {
               "@type": "Organization",
@@ -131,16 +151,16 @@ export default async function Page({
               },
             },
             articleBody: plainContent,
-            datePublished: new Date(post.date).toISOString(),
+            datePublished: new Date(plainPost.date).toISOString(),
             dateModified: new Date(
-              post.updatedAt ?? post.date ?? Date.now()
+              plainPost.updatedAt ?? plainPost.date ?? Date.now()
             ).toISOString(),
             description: shortDescription,
-            keywords: post.tags?.join(", "),
+            keywords: plainPost.tags?.join(", "),
           }),
         }}
       />
-      <ViewPost post={post} relatedPosts={relatedData.data} />
+      <ViewPost post={plainPost} relatedPosts={relatedData.data} />
     </>
   );
 }

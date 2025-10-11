@@ -6,7 +6,6 @@ import Post from "@/models/Post";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { PopulatedClientPost } from "@/types/post";
-import { use } from "react";
 
 // ✅ Type for route params
 interface ProfilePageProps {
@@ -71,18 +70,30 @@ export default async function ProfilePage({
 
   // 1️⃣ Fetch profile from API (cached until revalidated)
   const res = await fetch(`${process.env.NEXTAUTH_URL}/api/user/${username}`);
-
   if (!res.ok) return notFound();
   const user = await res.json();
 
-  // 2️⃣ Fetch posts directly from DB
+  // 2️⃣ Fetch only required fields from DB for posts
   await connectToDatabase();
-  const postsFromDB = await Post.find({ creator: user._id })
+  const postsFromDB = await Post.find(
+    { creator: user._id },
+    {
+      title: 1,
+      slug: 1,
+      excerpt: 1,
+      image: 1,
+      imagePublicId: 1,
+      date: 1,
+      tags: 1,
+    }
+  )
     .sort({ date: -1 })
     .populate("creator", "name username")
     .lean<PopulatedClientPost[]>();
 
   const isMyProfile = session?.user?.username === username;
+
+  // Convert to plain objects to avoid React Client Component errors
   const posts = JSON.parse(JSON.stringify(postsFromDB));
   const plainUser = JSON.parse(JSON.stringify(user));
 

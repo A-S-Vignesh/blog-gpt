@@ -7,15 +7,7 @@ import { Metadata } from "next";
 
 export const revalidate = 600; // refresh every 10 minutes
 
-// interface LeanPost extends Omit<IPost, "creator" | "date" | "_id"> {
-//   _id: string;
-//   creator: { username: string } | string;
-//   date: string;
-// }
-
-
-
-export const metadata:Metadata = {
+export const metadata: Metadata = {
   title: "All Posts | The Blog GPT - AI-Powered Blog Platform",
   description:
     "Browse all AI-generated blog posts powered by Gemini AI on The Blog GPT. Explore trending topics, discover insightful content, and get inspired by AI-driven creativity.",
@@ -80,7 +72,19 @@ export const metadata:Metadata = {
 export default async function PostPage() {
   await connectToDatabase();
 
-  const initialPosts = await Post.find({})
+  const initialPosts = await Post.find(
+    {},
+    {
+      title: 1,
+      slug: 1,
+      excerpt: 1, // already generated excerpt
+      image: 1,
+      imagePublicId: 1,
+      creator: 1, // populate will fill username
+      date: 1,
+      tags: 1,
+    }
+  )
     .sort({ updatedAt: -1, date: -1 })
     .limit(6)
     .populate("creator", "username")
