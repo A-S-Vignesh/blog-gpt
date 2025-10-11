@@ -8,28 +8,13 @@ export const GET = async (req: NextRequest) => {
 
     const skip = req.nextUrl.searchParams.get("skip");
 
-    // If skip=all, return all posts (optimized)
     if (skip === "all") {
-      const response = await Post.find(
-        {},
-        {
-          title: 1,
-          slug: 1,
-          excerpt: 1,
-          image: 1,
-          imagePublicId: 1,
-          creator: 1,
-          date: 1,
-          tags: 1,
-        }
-      )
-        .populate("creator", "username")
-        .sort({ updatedAt: -1, date: -1 })
-        .lean();
-
+      const response = await Post.find({}).populate("creator");
       return new Response(JSON.stringify(response), {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
     }
 
@@ -37,28 +22,18 @@ export const GET = async (req: NextRequest) => {
     if (isNaN(skipValue)) {
       return new Response(JSON.stringify({ error: "Invalid skip parameter" }), {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
     }
 
-    const response = await Post.find(
-      {},
-      {
-        title: 1,
-        slug: 1,
-        excerpt: 1,
-        image: 1,
-        imagePublicId: 1,
-        creator: 1,
-        date: 1,
-        tags: 1,
-      }
-    )
-      .populate("creator", "username")
+    const response = await Post.find({})
+      .populate("creator")
       .sort({ updatedAt: -1, date: -1 })
       .skip(skipValue)
       .limit(6)
-      .lean();
+      .exec();
 
     const postLength = await Post.countDocuments();
 
@@ -72,7 +47,9 @@ export const GET = async (req: NextRequest) => {
       }),
       {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
     );
   } catch (error: any) {
@@ -84,9 +61,10 @@ export const GET = async (req: NextRequest) => {
       }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
     );
   }
 };
-

@@ -1,48 +1,54 @@
-import { MongoClient, ObjectId } from "mongodb";
 
-const uri = "mongodb://127.0.0.1:27017"; // your Mongo URI
+import { MongoClient } from "mongodb";
+
+const uri = "mongodb://127.0.0.1:27017"; // change if needed
 const client = new MongoClient(uri);
 
-async function updateExcerpts() {
+async function migrateTags() {
   try {
     await client.connect();
-    const db = client.db("blog"); // change to your DB name
-    const collection = db.collection("posts"); // change to your collection name
+    const db = client.db("blog"); // change
+    const collection = db.collection("posts"); // change
 
-    // Find posts where excerpt is missing or empty
-    const cursor = collection.find({
-      $or: [{ excerpt: { $exists: false } }, { excerpt: "" }],
-    });
+    const cursor = collection.find({ tag: { $type: "string" } });
 
     let updatedCount = 0;
 
     while (await cursor.hasNext()) {
       const doc = await cursor.next();
 
-      if (doc.content && doc.content.length > 0) {
-        // Generate excerpt: first 200 characters
-        const newExcerpt = doc.content.slice(0, 200);
+      // old field
+      const oldTag = doc.tag;
 
-        await collection.updateOne(
-          { _id: doc._id },
-          {
-            $set: { excerpt: newExcerpt },
-          }
-        );
+      console.log("Before:", oldTag);
 
-        console.log(`✅ Updated excerpt for: "${doc.title}"`);
-        updatedCount++;
-      }
+      // convert "#CloudComputing, #Data, #Education" -> ["cloudComputing", "data", "education"]
+      const newTags = oldTag
+        .split(",")
+        .map((tag) => tag.trim())
+        .map((tag) => tag.replace(/^#/, "")) // remove leading #
+        .map((tag) => tag.charAt(0).toLowerCase() + tag.slice(1)) // make first letter lowercase
+        .filter((tag) => tag.length > 0);
+
+      await collection.updateOne(
+        { _id: doc._id },
+        {
+          $set: { tags: newTags }, // new array field
+          $unset: { tag: "" }, // remove old string field
+        }
+      );
+
+      console.log("After:", newTags);
+      updatedCount++;
     }
 
-    console.log(
-      `🎉 Excerpt update complete! Updated ${updatedCount} documents.`
-    );
+    console.log(`✅ Migration complete! Updated ${updatedCount} documents.`);
   } catch (err) {
-    console.error("❌ Error updating excerpts:", err);
+    console.error("Error:", err);
   } finally {
     await client.close();
   }
 }
 
-updateExcerpts();
+migrateTags();
+
