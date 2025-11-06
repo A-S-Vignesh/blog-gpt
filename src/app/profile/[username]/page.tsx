@@ -77,16 +77,27 @@ export default async function ProfilePage({
 
   // 2️⃣ Fetch posts directly from DB
   await connectToDatabase();
-  const postsFromDB = await Post.find({ creator: user._id })
-    .sort({ date: -1 })
-    .populate("creator", "name username")
-    .lean<PopulatedClientPost[]>();
+  
+   const response = await fetch(
+     `${process.env.NEXTAUTH_URL}/api/user/${username}/post`,
+     {
+       next: { revalidate: 60 },
+     }
+   );
+
+   if (!response.ok) {
+     throw new Error("Failed to fetch posts");
+  }
+
+  const { data }: { data: PopulatedClientPost[] }= await response.json();
+  
+
 
   const isMyProfile = session?.user?.username === username;
-  const posts = JSON.parse(JSON.stringify(postsFromDB));
+  const posts = JSON.parse(JSON.stringify(data));
   const plainUser = JSON.parse(JSON.stringify(user));
 
   return (
-    <ViewProfile data={plainUser} userPosts={posts} isMyProfile={isMyProfile} />
+    <ViewProfile data={plainUser} userPosts={posts} isMyProfile={isMyProfile} username={username} />
   );
 }

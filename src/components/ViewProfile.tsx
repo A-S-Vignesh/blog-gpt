@@ -22,18 +22,21 @@ import { useEffect } from "react";
 import { PopulatedClientPost } from "@/types/post";
 import { IUser } from "@/models/User";
 import LoadMore from "./LoadMore";
+import ProfileLoadMore from "./ProfileLoadMore";
 // import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 interface ViewProfileProps {
   isMyProfile: boolean;
   data: IUser;
   userPosts: PopulatedClientPost[];
+  username:string
 }
 
 const ViewProfile: React.FC<ViewProfileProps> = ({
   isMyProfile,
   data,
   userPosts,
+  username
 }) => {
   const [userData, setUserData] = useState(data);
   // const [userPosts, setUserPost] = useState(userPostsData);
@@ -180,35 +183,59 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
                 </div>
 
                 {/* Social Links */}
-                <div className="flex justify-center gap-4 mt-8 mb-6">
-                  {userData?.socials?.twitter && (
-                    <a
-                      href={userData?.socials?.twitter || "#"}
-                      target="_blank"
-                      className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-                    >
-                      <FaTwitter size={18} />
-                    </a>
-                  )}
-                  {userData?.socials?.linkedin && (
-                    <a
-                      href={userData?.socials?.linkedin || "#"}
-                      target="_blank"
-                      className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-                    >
-                      <FaLinkedin size={18} />
-                    </a>
-                  )}
-                  {userData?.socials?.github && (
-                    <a
-                      href={userData?.socials?.github || "#"}
-                      target="_blank"
-                      className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-                    >
-                      <FaGithub size={18} />
-                    </a>
-                  )}
-                </div>
+                {(userData?.socials?.twitter ||
+                  userData?.socials?.linkedin ||
+                  userData?.socials?.github) && (
+                  <div className="flex justify-center gap-4 mt-8 mb-6">
+                    {/* Twitter */}
+                    {userData?.socials?.twitter && (
+                      <a
+                        href={
+                          userData.socials.twitter.startsWith("http")
+                            ? userData.socials.twitter
+                            : `https://x.com/${userData.socials.twitter}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                      >
+                        <FaTwitter size={18} />
+                      </a>
+                    )}
+
+                    {/* LinkedIn */}
+                    {userData?.socials?.linkedin && (
+                      <a
+                        href={
+                          userData.socials.linkedin.startsWith("http")
+                            ? userData.socials.linkedin
+                            : `https://linkedin.com/in/${userData.socials.linkedin}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                      >
+                        <FaLinkedin size={18} />
+                      </a>
+                    )}
+
+                    {/* GitHub */}
+                    {userData?.socials?.github && (
+                      <a
+                        href={
+                          userData.socials.github.startsWith("http")
+                            ? userData.socials.github
+                            : `https://github.com/${userData.socials.github}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                      >
+                        <FaGithub size={18} />
+                      </a>
+                    )}
+                  </div>
+                )}
 
                 {isMyProfile && (
                   <div className="flex justify-center gap-4">
@@ -296,16 +323,22 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userPosts.map((post) => (
-                  <BlogPost key={post._id} post={post} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {userPosts.map((post) => (
+                    <BlogPost key={post._id} post={post} />
+                  ))}
+                </div>
+                <ProfileLoadMore
+                  username={username}
+                  initialCount={userPosts.length}
+                />
+              </>
             )}
           </div>
 
           {/* Stats Section */}
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-2xl p-8 mb-12">
+          {/* <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-2xl p-8 mb-12">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
               <FaChartLine className="mr-3 text-blue-600 dark:text-blue-400" />
               Engagement Statistics
@@ -337,7 +370,7 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
                 <div className="text-gray-600 dark:text-gray-400">Comments</div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
     </>

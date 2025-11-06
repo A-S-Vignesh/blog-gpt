@@ -2,29 +2,7 @@ import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { connectToDatabase } from "@/lib/mongodb";
 import {User} from "@/models/User";
-
-// Utility to generate unique username
-const generateUsername = async (name: string): Promise<string> => {
-  const baseUsername = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with dashes
-    .replace(/(^-|-$)/g, ""); // Trim starting/trailing dashes
-
-  const isTaken = await User.findOne({ username: baseUsername });
-
-  if (!isTaken) return baseUsername;
-
-  const suffix = Math.random().toString(36).substring(2).slice(
-    0,
-    baseUsername.length >= 20
-      ? 0
-      : baseUsername.length > 16
-      ? 20 - baseUsername.length
-      : 4
-  );
-
-  return `${baseUsername}${suffix}`;
-};
+import { generateUsername } from "@/utils/generateUsername";
 
 export const authOptions: NextAuthOptions = {
   providers: [

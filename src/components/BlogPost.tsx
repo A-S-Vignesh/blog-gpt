@@ -45,11 +45,9 @@ const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
           {post.title}
         </Link>
 
-        {post.content && (
+        {post.excerpt && (
           <div className="para line-clamp-3 text-md prose">
-
-            
-            {post.excerpt || post.content.slice(0, 200)}
+            {post.excerpt}
           </div>
         )}
         <Tags limit={3} tags={post.tags} />

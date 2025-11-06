@@ -1,7 +1,5 @@
 import BlogPost from "@/components/BlogPost";
 import LoadMore from "@/components/LoadMore";
-import { connectToDatabase } from "@/lib/mongodb";
-import Post, { IPost } from "@/models/Post";
 import { PopulatedClientPost } from "@/types/post";
 import { Metadata } from "next";
 
@@ -78,13 +76,18 @@ export const metadata:Metadata = {
 };
 
 export default async function PostPage() {
-  await connectToDatabase();
 
-  const initialPosts = await Post.find({})
-    .sort({ updatedAt: -1, date: -1 })
-    .limit(6)
-    .populate("creator", "username")
-    .lean<PopulatedClientPost[]>();
+  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/post?skip=0`, {
+    next: { revalidate: 60 },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch posts");
+  }
+
+  const { data }: { data: PopulatedClientPost[] } = await res.json();
+
+  const initialPosts: PopulatedClientPost[] = data;
 
   return (
     <>

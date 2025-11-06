@@ -5,14 +5,14 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
-export async function POST(request:Request) {
+export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user?._id) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-    try {
+  try {
     const userId = session.user._id.toString();
     const { title, content, slug, image, tags } = await request.json();
 
@@ -29,13 +29,11 @@ export async function POST(request:Request) {
       );
     }
 
-
     await connectToDatabase();
 
     let imageUrl =
       "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.jpg";
-        let publicId = "";
-    
+    let publicId = "";
 
     if (typeof image === "string" && image.startsWith("data:image")) {
       const uploaded = await cloudinary.uploader.upload(image, {
@@ -48,10 +46,24 @@ export async function POST(request:Request) {
       imageUrl = image;
     }
 
+    const decodeEntities = (str: string) =>
+      str
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&nbsp;/g, " ");
+
+    const plainContent = decodeEntities(content?.replace(/<[^>]+>/g, "") || "");
+    const shortDescription =
+      plainContent.slice(0, 150).split(" ").slice(0, -1).join(" ").trim() +
+      "...";
 
     const newPost = new Post({
       creator: userId,
       title,
+      excerpt: shortDescription,
       content,
       slug,
       image: imageUrl,

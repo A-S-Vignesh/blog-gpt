@@ -94,16 +94,26 @@ const AccountSettings = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSocialChange = (e:any) => {
+  const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+
+    // Remove any accidental full URL pasted by user
+    const cleanedValue = value
+      .replace(
+        /^https?:\/\/(www\.)?(x\.com|twitter\.com|linkedin\.com\/in|github\.com)\//,
+        ""
+      )
+      .trim();
+
+    setFormData((prev: any) => ({
       ...prev,
       socials: {
         ...prev.socials,
-        [name]: value,
+        [name]: cleanedValue,
       },
     }));
   };
+
 
   const handleSubmit = async (e:any) => {
     e.preventDefault();
@@ -236,7 +246,7 @@ const AccountSettings = () => {
                 </h2>
                 <div className="flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4">
                   <FaAt className="mr-1" />
-                  <span className="font-medium">@{formData.username}</span>
+                  <span className="font-medium">{formData.username}</span>
                 </div>
 
                 <p className="text-gray-700 dark:text-gray-300 mb-6">
@@ -244,27 +254,41 @@ const AccountSettings = () => {
                 </p>
 
                 <div className="flex justify-center gap-4 mb-6">
-                  <a
-                    href={formData?.socials?.twitter || "#"}
-                    target="_blank"
-                    className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-                  >
-                    <FaTwitter size={18} />
-                  </a>
-                  <a
-                    href={formData?.socials?.linkedin || "#"}
-                    target="_blank"
-                    className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-                  >
-                    <FaLinkedin size={18} />
-                  </a>
-                  <a
-                    href={formData?.socials?.github || "#"}
-                    target="_blank"
-                    className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-                  >
-                    <FaGithub size={18} />
-                  </a>
+                  {/* Twitter */}
+                  {formData?.socials?.twitter && (
+                    <a
+                      href={`https://x.com/${formData.socials.twitter}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                    >
+                      <FaTwitter size={18} />
+                    </a>
+                  )}
+
+                  {/* LinkedIn */}
+                  {formData?.socials?.linkedin && (
+                    <a
+                      href={`https://linkedin.com/in/${formData.socials.linkedin}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                    >
+                      <FaLinkedin size={18} />
+                    </a>
+                  )}
+
+                  {/* GitHub */}
+                  {formData?.socials?.github && (
+                    <a
+                      href={`https://github.com/${formData.socials.github}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                    >
+                      <FaGithub size={18} />
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
@@ -353,6 +377,7 @@ const AccountSettings = () => {
               </div>
 
               {/* Social Media Card */}
+              {/* Social Media Card */}
               <div className="bg-white dark:bg-dark-100 rounded-2xl shadow-lg p-6 border-2 border-gray-200 dark:border-gray-700">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
                   <FaTwitter className="mr-2 text-blue-600 dark:text-blue-400" />
@@ -360,6 +385,7 @@ const AccountSettings = () => {
                 </h3>
 
                 <div className="space-y-6">
+                  {/* Twitter */}
                   <div>
                     <label
                       htmlFor="twitter"
@@ -367,22 +393,23 @@ const AccountSettings = () => {
                     >
                       Twitter
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FaTwitter className="text-blue-400" />
-                      </div>
+                    <div className="flex rounded-xl overflow-hidden border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-100 focus-within:ring-2 focus-within:ring-blue-500">
+                      <span className="px-3 py-3 text-gray-500 dark:text-gray-300 bg-gray-100 dark:bg-slate-700 select-none">
+                        https://x.com/
+                      </span>
                       <input
-                        type="url"
+                        type="text"
                         id="twitter"
                         name="twitter"
-                        value={formData?.socials?.twitter}
+                        value={formData?.socials?.twitter || ""}
                         onChange={handleSocialChange}
-                        className="w-full pl-10 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="https://twitter.com/username"
+                        className="flex-1 px-3 py-3 outline-none bg-transparent text-gray-900 dark:text-white"
+                        placeholder="username"
                       />
                     </div>
                   </div>
 
+                  {/* LinkedIn */}
                   <div>
                     <label
                       htmlFor="linkedin"
@@ -390,22 +417,23 @@ const AccountSettings = () => {
                     >
                       LinkedIn
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FaLinkedin className="text-blue-600" />
-                      </div>
+                    <div className="flex rounded-xl overflow-hidden border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-100 focus-within:ring-2 focus-within:ring-blue-500">
+                      <span className="px-3 py-3 text-gray-500 dark:text-gray-300 bg-gray-100 dark:bg-slate-700 select-none">
+                        https://linkedin.com/in/
+                      </span>
                       <input
-                        type="url"
+                        type="text"
                         id="linkedin"
                         name="linkedin"
-                        value={formData?.socials?.linkedin}
+                        value={formData?.socials?.linkedin || ""}
                         onChange={handleSocialChange}
-                        className="w-full pl-10 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="https://linkedin.com/in/username"
+                        className="flex-1 px-3 py-3 outline-none bg-transparent text-gray-900 dark:text-white"
+                        placeholder="username"
                       />
                     </div>
                   </div>
 
+                  {/* GitHub */}
                   <div>
                     <label
                       htmlFor="github"
@@ -413,18 +441,18 @@ const AccountSettings = () => {
                     >
                       GitHub
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FaGithub className="text-gray-800 dark:text-gray-300" />
-                      </div>
+                    <div className="flex rounded-xl overflow-hidden border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-100 focus-within:ring-2 focus-within:ring-blue-500">
+                      <span className="px-3 py-3 text-gray-500 dark:text-gray-300 bg-gray-100 dark:bg-slate-700 select-none">
+                        https://github.com/
+                      </span>
                       <input
-                        type="url"
+                        type="text"
                         id="github"
                         name="github"
-                        value={formData?.socials?.github}
+                        value={formData?.socials?.github || ""}
                         onChange={handleSocialChange}
-                        className="w-full pl-10 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="https://github.com/username"
+                        className="flex-1 px-3 py-3 outline-none bg-transparent text-gray-900 dark:text-white"
+                        placeholder="username"
                       />
                     </div>
                   </div>

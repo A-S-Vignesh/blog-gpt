@@ -1,6 +1,7 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import Post from "@/models/Post";
 import { NextRequest } from "next/server";
+import "@/models/User";
 
 export const GET = async (req: NextRequest) => {
   try {
@@ -29,11 +30,13 @@ export const GET = async (req: NextRequest) => {
     }
 
     const response = await Post.find({})
-      .populate("creator")
+      .select("title excerpt slug image tags date creator") // ✅ fetch only needed fields
+      .populate("creator", "username") // ✅ populate only required creator fields
       .sort({ updatedAt: -1, date: -1 })
       .skip(skipValue)
       .limit(6)
       .exec();
+
 
     const postLength = await Post.countDocuments();
 
