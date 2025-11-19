@@ -96,7 +96,16 @@ button:disabled {
 }
 
 .para {
-  @apply text-lg sm:text-xl indent-8 mb-4 text-[#667085] text-justify dark:text-[#C0C5D0]
+  @apply text-lg sm:text-xl mb-4 text-[#667085] text-justify dark:text-[#C0C5D0]
+}
+
+.para > p {
+  @apply indent-8;
+}
+
+
+.para ul li p{
+  @apply p-0 m-0
 }
 
 .para-page a{
@@ -107,3 +116,33 @@ button:disabled {
   @apply flex justify-center items-center flex-col px-6 sm:px-16 md:px-20 lg:px-28
 }
 
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+.fadeOut {
+  animation: fadeOut 3.5s forwards ease-in;
+}

@@ -1,6 +1,7 @@
 import PostNotFound from "@/components/PostNotFound";
 import ViewPost from "@/components/ViewPost";
 import { PopulatedClientPost } from "@/types/post";
+import { notFound } from "next/navigation";
 import { url } from "inspector";
 
 export async function generateMetadata({
@@ -88,7 +89,7 @@ export default async function Page({
   const res = await fetch(`${process.env.NEXTAUTH_URL}/api/post/${slug}`, {
     next: { revalidate: 60 },
   });
-  if (!res.ok) return <PostNotFound />;
+  if (!res.ok) notFound();
   const post: PopulatedClientPost = await res.json();
 
   // fetch related posts

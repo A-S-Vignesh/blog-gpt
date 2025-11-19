@@ -1,4 +1,5 @@
 "use client";
+
 import Form from "@/components/Form";
 // import { generatePostAction } from "@/redux/slice/generatePost";
 import { clearPost } from "@/redux/features/generateSlice";
@@ -7,11 +8,12 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useToast } from "@/provider/ToastProvider";
 
 const CreateBlog = () => {
-  const { data: session } = useSession();
+  const { showToast } = useToast();
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null as string |null);
+  const [error, setError] = useState(null as string | null);
   const generatePost = useAppSelector((state) => state.generate.post);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -19,9 +21,10 @@ const CreateBlog = () => {
     title: "",
     content: "",
     slug: "",
-    image: null as string |ArrayBuffer|null,
+    image: null as string | ArrayBuffer | null,
     tags: [] as string[],
   });
+  console.log("Generate post", generatePost);
 
   useEffect(() => {
     if (generatePost) {
@@ -35,15 +38,36 @@ const CreateBlog = () => {
     }
   }, [generatePost]);
 
-  const handleSubmit = async (e:any) => {
+  console.log("Post content", post);
+
+
+  const cleanSlug = (value: string) => {
+    return value
+      .toLowerCase() // lowercase
+      .trim() // remove spaces front & back
+      .replace(/[^a-z0-9\s-]/g, "") // remove special chars
+      .replace(/\s+/g, "-") // spaces → hyphens
+      .replace(/-+/g, "-"); // multiple hyphens → one
+  };
+
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-    
 
     try {
       if (!post.title || !post.content || !post.slug || !post.tags) {
-        setError("Please fill in all required fields including image");
+        showToast("Please fill in all required fields", "error");
+        setSubmitting(false);
+        return;
+      }
+
+      // 👉 Clean slug before sending
+      const cleanedSlug = cleanSlug(post.slug);
+
+      // If slug becomes empty after cleaning
+      if (!cleanedSlug) {
+        setError("Slug is invalid. Please enter a proper slug.");
         setSubmitting(false);
         return;
       }
@@ -54,27 +78,25 @@ const CreateBlog = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          title: post.title,
+          title: post.title.trim(),
           content: post.content,
-          slug: post.slug,
+          slug: cleanedSlug,
           image: post.image,
           tags: post.tags,
-
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        try {
-          router.push("/");
-        } catch (err) {
-          console.error("Error fetching posts:", err);
-          router.push("/");
-        }
+        showToast("Post created successfully!", "success");
+        router.push("/");
       } else {
-        setError(data.error || "Failed to create post");
-        console.error("Error creating post:", data);
+        showToast(
+          data.details || data.error || "Failed to create post",
+          "error"
+        );
+        return;
       }
     } catch (error) {
       console.error("Error submitting form:", error);

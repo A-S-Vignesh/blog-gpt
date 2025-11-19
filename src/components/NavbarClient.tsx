@@ -133,7 +133,7 @@ useEffect(() => {
           )}
 
           {/* Conditional Buttons */}
-          { userData ? (
+          {userData ? (
             <>
               <Link
                 href="/post/generate"
@@ -160,8 +160,7 @@ useEffect(() => {
                       className="object-cover"
                       fill
                       src={
-                        userData.image ||
-                        "/assets/images/default-avatar.png"
+                        userData.image || "/assets/images/default-avatar.png"
                       }
                     />
                   </div>
@@ -247,7 +246,7 @@ useEffect(() => {
               className="flex items-center"
               onClick={() => setIsOpen(false)}
             >
-              <div className="w-10 h-10 relative mr-3">
+              <div className="w-[160px] h-[50px] relative mr-3">
                 <Image
                   src={
                     isDarkMode
@@ -259,9 +258,9 @@ useEffect(() => {
                   className="object-contain"
                 />
               </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
-                BlogGPT
-              </span>
+              {/* <span className="text-xl font-bold text-gray-900 dark:text-white">
+                The Blog GPT
+              </span> */}
             </Link>
             <button
               onClick={() => setIsOpen(false)}
@@ -287,7 +286,7 @@ useEffect(() => {
           </div>
 
           {/* Conditional Mobile Buttons */}
-          { userData ? (
+          {userData ? (
             <>
               <Link
                 href="/post/generate"
@@ -312,8 +311,7 @@ useEffect(() => {
                       className="object-cover"
                       fill
                       src={
-                        userData.image ||
-                        "/assets/images/default-avatar.png"
+                        userData.image || "/assets/images/default-avatar.png"
                       }
                     />
                   </div>

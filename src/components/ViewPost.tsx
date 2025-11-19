@@ -4,10 +4,6 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Date from "@/components/Date";
 import Tags from "@/components/Tags";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
-import rehypeSanitize from "rehype-sanitize";
 
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { useSession } from "next-auth/react";
@@ -92,7 +88,7 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
 
   return (
     <section className="app center pb-4 sm:pb-8  bg-white dark:bg-dark-100">
-      <div className="w-full max-w-7xl 2xl:max-w-[85%] mx-auto px-4">
+      <div className="w-full max-w-7xl 2xl:max-w-[85%] mx-auto px-2 md:px-4">
         {/* tags */}
         <div className="flex justify-between  items-center">
           <div className="w-full flex flex-wrap justify-start my-4">
@@ -179,7 +175,7 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
         {/* image */}
         <div
           className="relative w-full m-auto rounded-md overflow-hidden
-                sm:w-[400px] sm:h-64
+                sm:w-[400px] h-72
                 md:h-80
                 lg:h-[400px] lg:max-w-[80%]"
         >
@@ -190,6 +186,11 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
               "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.jpg"
             }
             fill
+            sizes="
+            (max-width: 640px) 100vw,
+            (max-width: 1024px) 400px,
+            80vw
+          "
             className={`object-contain rounded-md object-center ${
               !post?.image ? "skeloten_loading" : ""
             }`}
@@ -197,28 +198,11 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
         </div>
 
         {/* paragraph */}
-        <div className="para para-page mt-6 sm:mt-10 prose dark:prose-invert max-w-none">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw]}
-            components={{
-              a: ({ href, children, ...props }) => (
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  {...props}
-                >
-                  {children}
-                </a>
-              ),
-            }}
-          >
-            {post?.content}
-          </ReactMarkdown>
+        <div
+          className="para para-page mt-6 sm:mt-10 prose dark:prose-invert max-w-none"
+          dangerouslySetInnerHTML={{ __html: post?.content || "" }}
+        />
 
-          {/* {post?.content} */}
-        </div>
         {/* slogan */}
         {post?.slug && (
           <div className="bg-[#F6F6F7] dark:bg-[#242535] mt-8 dark:text-white border-l-4 text-black p-4 rounded-lg text-center capitalize text-lg font-semibold">

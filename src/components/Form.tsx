@@ -1,4 +1,5 @@
 "use client";
+
 import {
   FaUpload,
   FaTimes,
@@ -10,11 +11,12 @@ import {
 } from "react-icons/fa";
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import MarkdownPreview from "@uiw/react-markdown-preview";
-const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
+const TiptapEditor = dynamic(() => import("@/components/editor/TiptapEditor"), {
+  ssr: false,
+});
 
 interface FormPropsType {
-  name: string;
+  name: "Create" | "Edit";
   submitting: boolean;
   post: {
     title: string;
@@ -120,8 +122,8 @@ const Form: React.FC<FormPropsType> = ({
           </p>
         </div>
       </section>
-      <section className="px-6 sm:px-16 md:px-20 lg:px-28 py-8 sm:py-10 bg-white dark:bg-dark-100">
-        <div className="max-w-4xl mx-auto">
+      <section className="w-full max-w-7xl 2xl:max-w-[85%] mx-auto px-2 md:px-4 py-8 bg-white dark:bg-dark-100">
+        <div className="">
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Title Section */}
             <div className="bg-white dark:bg-dark-100 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6">
@@ -143,54 +145,61 @@ const Form: React.FC<FormPropsType> = ({
               />
             </div>
 
-            {/* Content Editor */}
             <div className="bg-white dark:bg-dark-100 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6">
               <div className="flex items-center mb-4">
                 <div className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg mr-3">
                   <FaPencilAlt className="text-purple-600 dark:text-purple-400" />
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Content
-                </h2>
-              </div>
-              <div className="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-dark-100 text-black dark:text-white p-2">
-                <MDEditor
-                  value={post.content}
-                  onChange={(val) => setPost({ ...post, content: val || "" })}
-                  height={500}
-                  className="rounded-lg"
-                />
-
-                {/* Optional: Separate preview */}
-                <div className="mt-4 p-3 rounded-lg border dark:border-gray-700 bg-gray-50 dark:bg-dark-200">
-                  <MarkdownPreview source={post.content} />
-                </div>
-              </div>
-            </div>
-
-            {/* Slug Section */}
-            <div className="bg-white dark:bg-dark-100 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-green-100 dark:bg-green-900 p-2 rounded-lg mr-3">
-                  <FaLink className="text-green-600 dark:text-green-400" />
-                </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  URL Slug
-                  <span className="block text-sm font-normal text-gray-500 dark:text-gray-400 mt-1">
-                    (Ex: your-blog-post-title)
+                  Content{" "}
+                  <span
+                    className="ml-2 px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900 
+                   text-blue-700 dark:text-blue-300 text-xs font-medium"
+                  >
+                    Write at least 300 characters to publish your post
                   </span>
                 </h2>
               </div>
-              <input
-                type="text"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="Enter a unique URL slug for your post"
-                name="slug"
-                value={post?.slug}
-                onChange={(e) => setPost({ ...post, slug: e.target.value })}
-                required
-              ></input>
+              <div className="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-dark-100 text-black dark:text-white p-2 min-h-96">
+                <TiptapEditor
+                  value={post.content}
+                  onChange={(html: string) =>
+                    setPost((prev: any) => ({ ...prev, content: html }))
+                  }
+                />
+              </div>
             </div>
+
+            {name === "Create" && (
+              <div className="bg-white dark:bg-dark-100 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6">
+                <div className="flex items-center mb-4">
+                  <div className="bg-green-100 dark:bg-green-900 p-2 rounded-lg mr-3">
+                    <FaLink className="text-green-600 dark:text-green-400" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    URL Slug{" "}
+                    <span
+                      className="ml-2 px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900 
+                   text-blue-700 dark:text-blue-300 text-xs font-medium"
+                    >
+                      Permanent - cannot be edited after publishing
+                    </span>
+                    <span className="block text-sm font-normal text-gray-500 dark:text-gray-400 mt-1">
+                      (Ex: your-blog-post-title)
+                    </span>
+                  </h2>
+                </div>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  placeholder="Enter a unique URL slug for your post"
+                  name="slug"
+                  value={post?.slug}
+                  onChange={(e) => setPost({ ...post, slug: e.target.value })}
+                  required
+                ></input>
+              </div>
+            )}
 
             {/* Image Upload */}
             <div className="bg-white dark:bg-dark-100 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6">

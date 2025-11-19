@@ -88,11 +88,28 @@ export default function GenerateBlog() {
       const slug = generateSlug(userInput.title);
       const tags = generateTags(userInput.prompt);
 
-      const promptString = `Write a detailed, SEO-friendly blog post about "${userInput.prompt}" suitable for a modern blog website.
+      const promptString = `Write a detailed, SEO-friendly blog post about "${userInput.prompt}" in clean HTML format only.
 
-Start the blog with a short, engaging 2–3 sentence introductory paragraph **without using any heading**. This intro should clearly explain what the blog is about to hook the reader.
+Important rules:
+- Do NOT return Markdown.
+- Do NOT use backticks (\`\`\`) anywhere.
+- Do NOT label the response as "html", "code", or any language.
+- Do NOT wrap the content inside <html>, <body>, or <head> tags.
+- Return only plain HTML tags for the article content.
 
-After the intro, continue the article with proper markdown-formatted headings and subheadings. Cover all important aspects of the topic with explanations, examples, and key insights. Keep the tone informative and engaging, and make sure it flows naturally for readers.`;
+Start with a short, engaging introductory paragraph using a <p> tag. The intro must be 4–5 sentences and must NOT contain any heading.
+
+After the intro, continue with proper semantic HTML elements:
+- <h2> for main sections
+- <h3> for subsections
+- <p> for paragraphs
+- <ul> or <ol> for lists
+- <pre><code>...</code></pre> for code blocks (no Markdown formatting inside)
+
+Ensure the content is well structured, well formatted, and easy to read.
+
+Return ONLY the HTML snippet — no explanations, no prose before it, and absolutely no backticks.
+`;
 
       const imgePrompt = `Create a high-quality, realistic, SEO-friendly blog cover image that visually represents the topic: "${userInput.prompt}". 
 
@@ -329,6 +346,7 @@ No watermarks, no text, no logos.
                       type="checkbox"
                       checked={generateImage}
                       onChange={() => setGenerateImage(!generateImage)}
+                      disabled
                       className="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                     />
                   </div>
@@ -351,12 +369,17 @@ No watermarks, no text, no logos.
                           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      Generate Featured Image
+                      Generate Featured Image (Beta)
                     </label>
                     <p className="text-gray-500 dark:text-gray-400 mt-2">
                       Create an AI-generated image for your blog post header.
                       <span className="ml-1 text-red-500 font-medium">
                         (Consumes more AI credits)
+                      </span>
+                    </p>
+                    <p className="text-gray-500 dark:text-gray-400 mt-2">
+                      <span className="ml-1 text-red-500 font-medium text-sm">
+                        (Due to traffice image generation is disabled for now)
                       </span>
                     </p>
                   </div>

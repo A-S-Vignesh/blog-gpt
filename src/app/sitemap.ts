@@ -30,7 +30,7 @@ export default async function sitemap(){
       {
         url: `${baseUrl}/post`,
         lastModified: deploymentDate,
-        changeFrequency: "weekly",
+        changeFrequency: "daily",
         priority: 0.9,
       },
       {

@@ -1,54 +1,56 @@
-
 import { MongoClient } from "mongodb";
+import { marked } from "marked";
 
-const uri = "mongodb://127.0.0.1:27017"; // change if needed
+const uri = "mongodb://127.0.0.1:27017";
 const client = new MongoClient(uri);
 
-async function migrateTags() {
+async function migrateMarkdownToHtml() {
   try {
     await client.connect();
-    const db = client.db("blog"); // change
-    const collection = db.collection("posts"); // change
 
-    const cursor = collection.find({ tag: { $type: "string" } });
+    const db = client.db("blog");
+    const collection = db.collection("posts");
 
-    let updatedCount = 0;
+    const cursor = collection.find({});
+
+    let updated = 0;
 
     while (await cursor.hasNext()) {
       const doc = await cursor.next();
+      const content = doc.content || "";
 
-      // old field
-      const oldTag = doc.tag;
+      // Detect REAL HTML (not markdown with <span> inside code blocks)
+      const trimmed = content.trim();
 
-      console.log("Before:", oldTag);
+      const isRealHTML =
+        trimmed.startsWith("<p") ||
+        trimmed.startsWith("<h1") ||
+        trimmed.startsWith("<h2") ||
+        trimmed.startsWith("<div") ||
+        trimmed.startsWith("<ul") ||
+        trimmed.startsWith("<ol");
 
-      // convert "#CloudComputing, #Data, #Education" -> ["cloudComputing", "data", "education"]
-      const newTags = oldTag
-        .split(",")
-        .map((tag) => tag.trim())
-        .map((tag) => tag.replace(/^#/, "")) // remove leading #
-        .map((tag) => tag.charAt(0).toLowerCase() + tag.slice(1)) // make first letter lowercase
-        .filter((tag) => tag.length > 0);
+      if (isRealHTML) {
+        console.log(`⏭ Skipping (already HTML): ${doc.slug}`);
+        continue;
+      }
 
-      await collection.updateOne(
-        { _id: doc._id },
-        {
-          $set: { tags: newTags }, // new array field
-          $unset: { tag: "" }, // remove old string field
-        }
-      );
+      console.log(`🔄 Converting markdown for: ${doc.slug}`);
 
-      console.log("After:", newTags);
-      updatedCount++;
+      const html = marked(content);
+
+      await collection.updateOne({ _id: doc._id }, { $set: { content: html } });
+
+      updated++;
+      console.log(`✔ Updated: ${doc.slug}`);
     }
 
-    console.log(`✅ Migration complete! Updated ${updatedCount} documents.`);
+    console.log(`\n🎉 Migration completed! Total updated: ${updated}`);
   } catch (err) {
-    console.error("Error:", err);
+    console.error("❌ Error during migration:", err);
   } finally {
     await client.close();
   }
 }
 
-migrateTags();
-
+migrateMarkdownToHtml();

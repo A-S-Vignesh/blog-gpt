@@ -17,7 +17,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
   return (
     <div className="flex flex-col w-full sm:max-w-[390px] sm:w-full rounded-md max-h-max gap-2 mb-6">
       <div className="relative overflow-hidden rounded-md shrink-0 h-[250px] w-full sm:w-auto">
-        <Link href={`/post/${post.slug}`} className="block w-full h-full">
+        <Link href={`/post/${post.slug}`} className="block relative w-full h-full">
           <Image
             src={
               post.image

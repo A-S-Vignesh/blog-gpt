@@ -57,21 +57,21 @@ const ContactPage = () => {
                         General inquiries:
                       </p>
                       <a
-                        href="mailto:info@bloggpt.com"
+                        href="mailto:info@thebloggpt.com"
                         target="_blank"
                         className="text-blue-600 dark:text-blue-400 hover:underline"
                       >
-                        info@bloggpt.com
+                        info@thebloggpt.com
                       </a>
                       <p className="text-gray-600 dark:text-gray-400 mt-3 mb-1">
                         Support:
                       </p>
                       <a
-                        href="mailto:support@bloggpt.com"
+                        href="mailto:support@thebloggpt.com"
                         target="_blank"
                         className="text-blue-600 dark:text-blue-400 hover:underline"
                       >
-                        support@bloggpt.com
+                        support@thebloggpt.com
                       </a>
                     </div>
                   </div>
@@ -252,7 +252,7 @@ const ContactPage = () => {
                       Email
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400">
-                      info@bloggpt.com
+                      info@thebloggpt.com
                     </p>
                   </div>
                 </div>

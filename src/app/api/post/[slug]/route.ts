@@ -1,11 +1,12 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import Post from "@/models/Post";
-import { NextResponse,NextRequest } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
-import { revalidatePath } from "next/cache"; 
+import { revalidatePath } from "next/cache";
 import cloudinary from "@/lib/cloudinary";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import sanitizeHtml from "sanitize-html";
 
 type UpdatePostBody = {
   title: string;
@@ -20,8 +21,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  const { slug } =await params;
-
+  const { slug } = await params;
 
   try {
     await connectToDatabase();
@@ -56,9 +56,83 @@ export async function PATCH(
   }
 
   try {
-    const { title, content, newSlug, image, tags }: UpdatePostBody =
+    const { title, content, image, tags }: UpdatePostBody =
       await req.json();
+    if (
+      !title ||
+      !content ||
+      !slug ||
+      !Array.isArray(tags) ||
+      tags.length === 0
+    ) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields" }),
+        { status: 400 }
+      );
+    }
+
+    // 2. Title too short
+    if (title.trim().length < 10) {
+      return new Response(
+        JSON.stringify({ error: "Title is too short (min 10 characters)" }),
+        { status: 400 }
+      );
+    }
+
+    // 3. Content too short (SEO check)
+    if (content.trim().length < 300) {
+      return new Response(
+        JSON.stringify({
+          error: "Content is too short (minimum 300 characters required)",
+        }),
+        { status: 400 }
+      );
+    }
+
+
+    // 4. Slug empty after cleaning
+    if (slug.trim().length < 3) {
+      return new Response(
+        JSON.stringify({ error: "Slug is too short or invalid" }),
+        { status: 400 }
+      );
+    }
+
+    // 5. Tag length (optional)
+    if (tags.some((t) => t.trim().length < 2)) {
+      return new Response(
+        JSON.stringify({ error: "Each tag must be at least 2 characters" }),
+        { status: 400 }
+      );
+    }
     await connectToDatabase();
+    const cleanHTML = sanitizeHtml(content, {
+      allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "img",
+        "pre",
+        "code",
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "td",
+        "th",
+      ]),
+
+      allowedAttributes: {
+        "*": ["class"],
+        img: ["src", "alt", "title", "width", "height"],
+        a: ["href", "target", "rel"],
+        code: ["class"],
+      },
+
+      allowedSchemes: ["http", "https", "mailto"],
+    });
 
     const post = await Post.findOne({ slug });
 
@@ -92,8 +166,7 @@ export async function PATCH(
     }
 
     post.title = title;
-    post.content = content;
-    post.slug = newSlug || slug;
+    post.content = cleanHTML;
     post.image = updatedImage;
     post.imagePublicId = updatedPublicId;
     post.tags = tags;
@@ -117,7 +190,7 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const session = await getServerSession(authOptions);
-  const { slug } =await params;
+  const { slug } = await params;
 
   if (!session || !session.user?._id) {
     return new Response("Unauthorized", { status: 401 });

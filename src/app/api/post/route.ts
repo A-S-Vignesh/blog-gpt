@@ -37,7 +37,6 @@ export const GET = async (req: NextRequest) => {
       .limit(6)
       .exec();
 
-
     const postLength = await Post.countDocuments();
 
     return new Response(

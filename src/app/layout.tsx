@@ -8,6 +8,7 @@ import Providers from "@/redux/provider";
 import CommonFooter from "@/components/CommonFooter";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "next-themes";
+import ToastProvider from "@/provider/ToastProvider";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -100,14 +101,15 @@ export default function RootLayout({
             gtag('config', 'G-VWS6MTPDHT');
           `}
         </Script>
-
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Providers>
-            <Navbar />
-            {children}
-            <CommonFooter />
-          </Providers>
-        </ThemeProvider>
+        <ToastProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <Providers>
+              <Navbar />
+              {children}
+              <CommonFooter />
+            </Providers>
+          </ThemeProvider>
+        </ToastProvider>
         <Analytics />
       </body>
     </html>
