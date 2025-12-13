@@ -12,11 +12,13 @@ export interface ClientPost {
   category?: string;
   status?: "draft" | "published" | "archived";
   views?: number;
-  likes?: string[];
+  likes: string[];
   comments?: string[];
   readingTime?: number;
   metaTitle?: string;
   metaDescription?: string;
+  likesCount: number;
+  commentsCount: number;
   scheduledAt?: string;
   date: string;
   createdAt?: string;
@@ -24,6 +26,8 @@ export interface ClientPost {
   creator: string;
 }
 
+
+
 export interface PopulatedClientPost extends Omit<ClientPost, "creator"> {
-  creator: { username: string; _id?: string;name?: string };
+  creator: { username: string; _id?: string; name: string; image?: string };
 }

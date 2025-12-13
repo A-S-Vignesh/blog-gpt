@@ -13,7 +13,6 @@ export interface IPost extends Document {
   status?: "draft" | "published" | "archived";
   views?: number;
   likes?: Schema.Types.ObjectId[];
-  comments?: Schema.Types.ObjectId[];
   readingTime?: number;
   metaTitle?: string;
   metaDescription?: string;
@@ -26,8 +25,8 @@ export interface IPost extends Document {
 const PostSchema = new Schema<IPost>(
   {
     creator: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    title: { type: String, required: true, unique: true },
-    slug: { type: String, required: true, unique: true },
+    title: { type: String, required: true },
+    slug: { type: String, required: true },
     excerpt: { type: String, default: "" },
     content: { type: String, required: true },
     image: {
@@ -37,7 +36,7 @@ const PostSchema = new Schema<IPost>(
     },
     imagePublicId: { type: String, default: "" },
     tags: { type: [String], default: [] },
-    category: { type: String, default: "" },
+    category: { type: String },
     status: {
       type: String,
       enum: ["draft", "published", "archived"],
@@ -45,7 +44,6 @@ const PostSchema = new Schema<IPost>(
     },
     views: { type: Number, default: 0 },
     likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
     readingTime: { type: Number, default: 0 },
     metaTitle: { type: String, default: "" },
     metaDescription: { type: String, default: "" },
@@ -54,6 +52,8 @@ const PostSchema = new Schema<IPost>(
   },
   { timestamps: true }
 );
+
+PostSchema.index({ creator: 1, slug: 1 }, { unique: true });
 
 const Post = models.Post || model<IPost>("Post", PostSchema);
 export default Post;

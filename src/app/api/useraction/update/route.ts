@@ -4,7 +4,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { User } from "@/models/User";
 import { revalidatePath } from "next/cache";
 
-export async function PUT(req:Request) {
+export async function PUT(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user || !session.user._id) {
     return new Response(JSON.stringify({ message: "Unauthorized" }), {
@@ -35,13 +35,13 @@ export async function PUT(req:Request) {
     }
 
     // ✅ Get old user to check username change
-      const oldUser = await User.findById(session.user._id);
-      if (!oldUser) {
-        return new Response(JSON.stringify({ message: "User not found" }), {
-          status: 404,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
+    const oldUser = await User.findById(session.user._id);
+    if (!oldUser) {
+      return new Response(JSON.stringify({ message: "User not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     const updatedUser = await User.findByIdAndUpdate(
       session.user._id,
@@ -59,8 +59,8 @@ export async function PUT(req:Request) {
     const usernameChanged = body.username && body.username !== oldUser.username;
     // ✅ Revalidate paths if username changed
     if (usernameChanged) {
-      revalidatePath(`/profile/${oldUser.username}`);
-      revalidatePath(`/profile/${body.username}`);
+      revalidatePath(`/${oldUser.username}`);
+      revalidatePath(`/${body.username}`);
     }
 
     return new Response(

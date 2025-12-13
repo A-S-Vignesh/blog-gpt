@@ -2,13 +2,13 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import Date from "@/components/Date";
+import PostDate from "@/components/Date";
 import Tags from "@/components/Tags";
 
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { useSession } from "next-auth/react";
 import { MdDelete, MdEdit } from "react-icons/md";
-import { FaShare } from "react-icons/fa";
+import { FaBookmark, FaComment, FaShare, FaShareAlt } from "react-icons/fa";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getRequest } from "@/utils/requestHandler";
@@ -24,12 +24,17 @@ import {
 import { useDispatch } from "react-redux";
 import { PopulatedClientPost } from "@/types/post";
 import RelatedPosts from "./RelatedPosts";
+import LikeButton from "./ui/LikeButton";
+import { useToast } from "@/provider/ToastProvider";
 // import { postActions } from "@/redux/slice/post";
 // import { getRequest } from "@/utils/requestHandlers";
 
 interface ViewPostProps {
   post: PopulatedClientPost;
   relatedPosts: PopulatedClientPost[];
+  user?: {
+    _id: string;
+  };
 }
 
 interface ShareData {
@@ -37,7 +42,8 @@ interface ShareData {
   url: string;
 }
 
-const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
+const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts, user }) => {
+  const { showToast } = useToast();
   const [threedotModel, setThreedotModel] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(false);
@@ -47,7 +53,6 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
     url: "",
   });
   //get the login user data
-  const { data: session } = useSession();
   const router = useRouter();
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -72,12 +77,29 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
     }));
   }, []);
 
+  useEffect(() => {
+    const key = `viewed-${post._id}`;
+    const lastView = localStorage.getItem(key);
+
+    // 12 hours limit
+    const shouldCount =
+      !lastView || Date.now() - Number(lastView) > 12 * 60 * 60 * 1000;
+
+    if (shouldCount) {
+      fetch(`/api/post/${post.slug}/view`, { method: "POST" }).catch(() => {});
+      localStorage.setItem(key, Date.now().toString());
+    }
+  }, [post._id]);
+
   const deletePost = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/post/${post.slug}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/post/${post.creator._id}/${post.slug}`,
+        {
+          method: "DELETE",
+        }
+      );
       if (response.ok) {
         router.push("/post");
       }
@@ -108,13 +130,13 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
             {threedotModel && (
               <ul className="absolute right-0 w-40 p-4 bg-slate-200 dark:bg-black border-2 dark:border-slate-800 flex flex-col gap-3 rounded-md z-10">
                 {/* Owner actions */}
-                {session?.user?._id ===
+                {user?._id ===
                   (typeof post?.creator === "string"
                     ? post.creator
                     : post?.creator._id) && (
                   <>
                     <Link
-                      href={`/post/${post?.slug}/edit`}
+                      href={`/${post.creator._id}/${post?.slug}/edit`}
                       className="w-full flex items-center gap-2 text-left font-semibold text-black hover:text-slate-700 dark:text-white dark:hover:text-slate-300"
                     >
                       <MdEdit /> Edit
@@ -132,7 +154,8 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(window.location.href);
-                      //   toast.success("Link copied to clipboard!");
+                      // toast.success("Link copied to clipboard!");
+                      showToast("Link copied to clipboard!", "success");
                     }}
                     className="w-full flex items-center gap-2 text-left font-semibold text-black hover:text-slate-700 dark:text-white dark:hover:text-slate-300 hover:cursor-pointer"
                   >
@@ -170,7 +193,73 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
 
         {/* Date */}
         <div className="text-left w-full">
-          <Date date={post?.date} creator={post?.creator} />
+          <PostDate date={post?.date} creator={post?.creator} />
+        </div>
+        {/* --- AUTHOR HEADER + ACTIONS --- */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 mb-6">
+          {/* LEFT: AUTHOR INFO */}
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/${post.creator.username}`}
+              className="flex items-center gap-3 group"
+            >
+              <div className="relative w-12 h-12 rounded-full overflow-hidden border border-gray-300 dark:border-gray-700">
+                <Image
+                  src={
+                    post.creator.image || "/assets/images/default-avatar.png"
+                  }
+                  alt={post.creator.name}
+                  fill
+                  className="object-cover group-hover:scale-105 transition"
+                />
+              </div>
+
+              <div>
+                <p className="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 transition">
+                  {post.creator.name}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  @{post.creator.username}
+                </p>
+              </div>
+            </Link>
+          </div>
+
+          {/* RIGHT: ACTION BUTTONS */}
+          <div className="flex items-center gap-5 mt-4 sm:mt-0">
+            {/* LIKE BUTTON */}
+            <LikeButton
+              initialLiked={post.likes.includes(user?._id || "")}
+              initialCount={post.likesCount}
+              postSlug={post.slug}
+              username={post.creator.username}
+            />
+
+            {/* COMMENT LINK */}
+            <a
+              href="#comments"
+              className="flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-blue-500 transition"
+            >
+              <FaComment />
+              <span>{post.commentsCount}</span>
+            </a>
+
+            {/* BOOKMARK BUTTON */}
+            <button
+              // onClick={handleBookmark}
+              className="flex items-center text-gray-600 dark:text-gray-300 hover:text-yellow-500 transition"
+            >
+              <FaBookmark />
+            </button>
+
+            {/* SHARE BUTTON */}
+            <button
+              onClick={() => navigator.share?.({ url: window.location.href })}
+              className="flex items-center text-gray-600 dark:text-gray-300 hover:text-green-500 transition"
+            >
+              <FaShareAlt />
+            </button>
+          </div>
         </div>
         {/* image */}
         <div

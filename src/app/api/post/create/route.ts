@@ -42,8 +42,7 @@ export async function POST(request: Request) {
     if (content.trim().length < 300) {
       return new Response(
         JSON.stringify({
-          error:
-            "Content is too short (minimum 300 characters required)",
+          error: "Content is too short (minimum 300 characters required)",
         }),
         { status: 400 }
       );
@@ -140,7 +139,7 @@ export async function POST(request: Request) {
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'")
         .replace(/&nbsp;/g, " ");
-    
+
     const textOnly =
       content
         ?.replace(/<[^>]+>/g, " ") // remove HTML tags
@@ -167,7 +166,7 @@ export async function POST(request: Request) {
     await newPost.save();
     revalidatePath(`/post/${newPost.slug}`);
     revalidatePath("/post");
-    revalidatePath(`/profile/${session.user.username}`);
+    revalidatePath(`/${session.user.username}`);
 
     return new Response(JSON.stringify(newPost), { status: 201 });
   } catch (error: any) {

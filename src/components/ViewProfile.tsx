@@ -29,14 +29,14 @@ interface ViewProfileProps {
   isMyProfile: boolean;
   data: IUser;
   userPosts: PopulatedClientPost[];
-  username:string
+  username: string;
 }
 
 const ViewProfile: React.FC<ViewProfileProps> = ({
   isMyProfile,
   data,
   userPosts,
-  username
+  username,
 }) => {
   const [userData, setUserData] = useState(data);
   // const [userPosts, setUserPost] = useState(userPostsData);
@@ -254,7 +254,7 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
             {errorState.isError && (
               <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg p-4 mb-6 mx-6">
                 <div className="flex items-center">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <svg
                       className="h-5 w-5 text-red-600 dark:text-red-400"
                       fill="none"

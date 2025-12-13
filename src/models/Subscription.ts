@@ -4,7 +4,7 @@ export interface ISubscription extends Document {
   user: Schema.Types.ObjectId;
   customerId: string;
   subscriptionId: string;
-  plan: string;
+  plan: "free" | "pro" | "premium";
   status: "active" | "canceled" | "past_due" | "trialing";
   amount: number;
   currency: string;
@@ -23,7 +23,7 @@ const SubscriptionSchema = new Schema<ISubscription>(
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     customerId: { type: String, required: true },
     subscriptionId: { type: String, required: true },
-    plan: { type: String, required: true },
+    plan: { type: String, enum: ["free", "pro", "premium"], required: true },
     status: {
       type: String,
       enum: ["active", "canceled", "past_due", "trialing"],

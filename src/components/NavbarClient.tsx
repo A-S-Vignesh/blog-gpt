@@ -17,8 +17,10 @@ import {
   FaEnvelope,
   FaInfoCircle,
   FaSignOutAlt,
+  FaCompass,
 } from "react-icons/fa";
 import { useTheme } from "next-themes";
+import { FaBell, FaBookmark, FaPenNib } from "react-icons/fa6";
 // import { BuiltInProviderType } from "next-auth/providers/google";
 
 interface UserDataType {
@@ -33,41 +35,37 @@ interface NavbarClientProps {
   userData: UserDataType | null;
 }
 
-
 const NavbarClient = ({ userData }: NavbarClientProps) => {
-const [isOpen, setIsOpen] = useState<boolean>(false);
-    const { theme, setTheme } = useTheme();
-    // const [isDarkMode,setDarkMode]=use
-    const isDarkMode = theme === "dark";
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const { theme, setTheme } = useTheme();
+  // const [isDarkMode,setDarkMode]=use
+  const isDarkMode = theme === "dark";
 
-const mobileMenuRef = useRef<HTMLDivElement | null>(null);
-const profileRef = useRef<HTMLDivElement | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+  const profileRef = useRef<HTMLDivElement | null>(null);
 
-const [hasMounted, setHasMounted] = useState<boolean>(false);
-
-
-useEffect(() => {
-  setHasMounted(true);
-}, []);
+  const [hasMounted, setHasMounted] = useState<boolean>(false);
 
   useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (
-      mobileMenuRef.current &&
-      !mobileMenuRef.current.contains(event.target as Node) &&
-      profileRef.current &&
-      !profileRef.current.contains(event.target as Node)
-    ) {
-      setIsOpen(false);
-    }
-  };
+    setHasMounted(true);
+  }, []);
 
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => document.removeEventListener("mousedown", handleClickOutside);
-}, []);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node) &&
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  
   const NavSkeleton = () => (
     <div className="animate-pulse flex gap-4 items-center">
       <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-full" />
@@ -79,18 +77,17 @@ useEffect(() => {
 
   const navLinks = [
     { name: "Home", href: "/", icon: <FaHome /> },
-    { name: "Blog", href: "/post", icon: <FaBlog />},
-    { name: "About", href: "/about", icon: <FaInfoCircle />},
-    { name: "Contact", href: "/contact", icon: <FaEnvelope />},
+    { name: "Post", href: "/post", icon: <FaBlog /> },
+    { name: "About", href: "/about", icon: <FaInfoCircle /> },
+    { name: "Contact", href: "/contact", icon: <FaEnvelope /> },
   ];
-    
   return (
-    <nav className="sticky top-0 z-50 bg-white dark:bg-dark-100 border-b border-gray-200 dark:border-gray-700 px-6 sm:px-16 md:px-20 lg:px-28 py-3">
+    <nav className="sticky top-0 z-50 bg-white dark:bg-dark-100 border-b border-gray-200 dark:border-gray-700 px-6 sm:px-16 md:px-20 lg:px-28 py-2 md:py-3">
       <div className="flex justify-between items-center">
         {/* Logo */}
         <div className="flex items-center">
-          <Link href="/" className="flex items-center">
-            <div className="w-[175px] h-[60px] relative mr-3">
+          <Link href={userData ? "/feed" : "/"} className="flex items-center">
+            <div className="w-[175px] h-10 md:h-[50px] relative mr-3">
               {hasMounted ? (
                 <Image
                   src={
@@ -111,15 +108,16 @@ useEffect(() => {
 
           {/* Desktop Navigation Links */}
           <div className="hidden lg:flex ml-10 space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition duration-300"
-              >
-                {link.name}
-              </Link>
-            ))}
+            {!userData &&
+              navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition duration-300"
+                >
+                  {link.name}
+                </Link>
+              ))}
           </div>
         </div>
 
@@ -143,7 +141,7 @@ useEffect(() => {
               </Link>
               <Link
                 href="/post/create"
-                className="flex items-center border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-medium py-2 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-dark-75 transition duration-300"
+                className="flex items-center border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-medium py-2 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 transition duration-300"
               >
                 <FaPen className="mr-2" /> Create
               </Link>
@@ -180,7 +178,7 @@ useEffect(() => {
                       <Link
                         onClick={() => setIsOpen(false)}
                         className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        href={`/profile/${userData.username}`}
+                        href={`/${userData.username}`}
                       >
                         <FaUser className="mr-3" /> My Profile
                       </Link>
@@ -246,7 +244,7 @@ useEffect(() => {
               className="flex items-center"
               onClick={() => setIsOpen(false)}
             >
-              <div className="w-[160px] h-[50px] relative mr-3">
+              <div className="w-40 h-[50px] relative mr-3">
                 <Image
                   src={
                     isDarkMode
@@ -297,7 +295,7 @@ useEffect(() => {
               </Link>
               <Link
                 href="/post/create"
-                className="flex items-center justify-center py-3 px-4 mb-4 border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-medium rounded-lg hover:bg-blue-50 dark:hover:bg-dark-75 transition"
+                className="flex items-center justify-center py-3 px-4 mb-4 border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-medium rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 transition"
                 onClick={() => setIsOpen(false)}
               >
                 <FaPen className="mr-3" /> Create Post
@@ -328,7 +326,7 @@ useEffect(() => {
                 <Link
                   onClick={() => setIsOpen(false)}
                   className="flex items-center py-3 px-4 mb-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
-                  href={`/profile/${userData.username}`}
+                  href={`/${userData.username}`}
                 >
                   <FaUser className="mr-3" /> My Profile
                 </Link>

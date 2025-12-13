@@ -260,7 +260,7 @@ No watermarks, no text, no logos.
           {error && (
             <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-xl p-4 mb-8">
               <div className="flex items-start">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <svg
                     className="h-5 w-5 text-red-600 dark:text-red-400"
                     fill="currentColor"
@@ -512,7 +512,7 @@ No watermarks, no text, no logos.
             </h2>
             <ul className="space-y-3">
               <li className="flex items-start">
-                <div className="flex-shrink-0 mt-1">
+                <div className="shrink-0 mt-1">
                   <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
                     <span className="text-white text-sm">1</span>
                   </div>
@@ -523,7 +523,7 @@ No watermarks, no text, no logos.
                 </p>
               </li>
               <li className="flex items-start">
-                <div className="flex-shrink-0 mt-1">
+                <div className="shrink-0 mt-1">
                   <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
                     <span className="text-white text-sm">2</span>
                   </div>
@@ -534,7 +534,7 @@ No watermarks, no text, no logos.
                 </p>
               </li>
               <li className="flex items-start">
-                <div className="flex-shrink-0 mt-1">
+                <div className="shrink-0 mt-1">
                   <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
                     <span className="text-white text-sm">3</span>
                   </div>

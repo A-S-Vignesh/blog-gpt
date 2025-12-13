@@ -19,7 +19,7 @@ const PostDate: React.FC<PostDateProps> = ({ date, creator }) => {
       } font-semibold capitalize text-[15px] mb-4 text-[#6941C6]`}
     >
       {creator ? (
-        <Link href={`/profile/${creator.username}`}>
+        <Link href={`/${creator.username}`}>
           <span>{creator.username}</span>
           {" - "}
           {date && formattedDate(date)}

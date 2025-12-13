@@ -89,7 +89,7 @@ const AccountSettings = () => {
     fetchUserData();
   }, []);
 
-  const handleChange = (e:any) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -114,8 +114,7 @@ const AccountSettings = () => {
     }));
   };
 
-
-  const handleSubmit = async (e:any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     const isUsernameChanged =
@@ -131,7 +130,7 @@ const AccountSettings = () => {
     await saveProfile(isUsernameChanged);
   };
 
-  const saveProfile = async (isUsernameChanged:string|boolean) => {
+  const saveProfile = async (isUsernameChanged: string | boolean) => {
     setIsSaving(true);
 
     try {
@@ -504,7 +503,7 @@ const AccountSettings = () => {
               {/* Action Buttons */}
               <div className="flex justify-end gap-4 pt-4">
                 <Link
-                  href={`/profile/${userData.username}`}
+                  href={`/${userData.username}`}
                   className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition"
                 >
                   Cancel

@@ -1,6 +1,7 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import Post from "@/models/Post";
 import { NextResponse, NextRequest } from "next/server";
+import Comment from "@/models/Comment";
 
 import { revalidatePath } from "next/cache";
 import cloudinary from "@/lib/cloudinary";
@@ -16,29 +17,57 @@ type UpdatePostBody = {
   tags?: string;
 };
 
-// ✅ Get post by slug
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ username: string; slug: string }> }
 ) {
-  const { slug } = await params;
+  const { username, slug } = await params;
 
   try {
     await connectToDatabase();
+
+    // 1️⃣ Find the post by slug + populate creator
     const post = await Post.findOne({ slug }).populate(
       "creator",
-      "name username"
+      "name username image"
     );
 
-    if (!post) {
+    // Validate post exists AND belongs to the correct username
+    if (!post || post.creator.username !== username) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    return NextResponse.json(post, { status: 200 });
+    // 2️⃣ Count likes
+    const likesCount = post.likes?.length || 0;
+
+    // 3️⃣ Count comments
+    const commentsCount = await Comment.countDocuments({
+      postId: post._id,
+    });
+
+    // 4️⃣ Fetch first-level comments
+    const comments = await Comment.find({
+      postId: post._id,
+      parentCommentId: null,
+    })
+      .populate("userId", "name username image")
+      .sort({ createdAt: -1 })
+      .limit(20);
+
+    return NextResponse.json(
+      {
+        success: true,
+        ...post.toObject(),
+        likesCount,
+        commentsCount,
+        comments,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("❌ Error fetching post:", error);
     return NextResponse.json(
-      { error: "Unable to fetch the post" },
+      { error: "Unable to fetch post" },
       { status: 500 }
     );
   }
@@ -56,8 +85,7 @@ export async function PATCH(
   }
 
   try {
-    const { title, content, image, tags }: UpdatePostBody =
-      await req.json();
+    const { title, content, image, tags }: UpdatePostBody = await req.json();
     if (
       !title ||
       !content ||
@@ -88,7 +116,6 @@ export async function PATCH(
         { status: 400 }
       );
     }
-
 
     // 4. Slug empty after cleaning
     if (slug.trim().length < 3) {
@@ -174,9 +201,9 @@ export async function PATCH(
     await post.save();
 
     // ✅ Trigger revalidation for this specific post page
-    revalidatePath(`/post/${post.slug}`);
+    revalidatePath(`/${session.user.username}/${post.slug}`);
     revalidatePath("/post");
-    revalidatePath(`/profile/${session.user.username}`);
+    revalidatePath(`/${session.user.username}`);
 
     return NextResponse.json(post, { status: 200 });
   } catch (error) {
@@ -221,8 +248,8 @@ export async function DELETE(
 
     // ✅ Trigger revalidations
     revalidatePath("/posts");
-    revalidatePath(`/post/${slug}`);
-    revalidatePath(`/profile/${session.user.username}`);
+    revalidatePath(`/${session.user.username}/${slug}`);
+    revalidatePath(`/${session.user.username}`);
 
     return NextResponse.json(
       { message: "Deleted Successfully!" },

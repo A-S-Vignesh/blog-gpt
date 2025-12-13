@@ -9,7 +9,7 @@ const LoginPage = async () => {
 
   // Redirect if already logged in
   if (session?.user?._id) {
-    redirect(`/profile/${session.user.username}`);
+    redirect(`/${session.user.username}`);
   }
 
   return <Login />;

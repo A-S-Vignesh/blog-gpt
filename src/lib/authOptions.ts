@@ -1,7 +1,7 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { connectToDatabase } from "@/lib/mongodb";
-import {User} from "@/models/User";
+import { User } from "@/models/User";
 import { generateUsername } from "@/utils/generateUsername";
 
 export const authOptions: NextAuthOptions = {
@@ -16,27 +16,34 @@ export const authOptions: NextAuthOptions = {
     async signIn({ profile }) {
       if (!profile?.email || !profile?.name) return false;
 
-      try {
-        await connectToDatabase();
+      await connectToDatabase();
 
-        const existingUser = await User.findOne({ email: profile.email });
+      let user = await User.findOne({ email: profile.email });
 
-        if (!existingUser) {
-          const username = await generateUsername(profile.name);
-
-          await User.create({
-            email: profile.email,
-            name: profile.name,
-            username,
-            image: (profile as any).picture || "",
-          });
-          }
-
-        return true;
-      } catch (error) {
-        console.error("❌ SignIn Error:", error);
-        return false;
+      if (!user) {
+        const username = await generateUsername(profile.name);
+        user = await User.create({
+          email: profile.email,
+          name: profile.name,
+          username,
+          image: (profile as any).picture || "",
+        });
       }
+
+      return true;
+    },
+
+    async jwt({ token, user }) {
+      if (user?.email) {
+        await connectToDatabase();
+        const dbUser = await User.findOne({ email: user.email });
+
+        if (dbUser) {
+          token._id = dbUser._id.toString();
+          token.username = dbUser.username;
+        }
+      }
+      return token;
     },
 
     async session({ session, token }) {
@@ -45,16 +52,6 @@ export const authOptions: NextAuthOptions = {
         session.user.username = token.username as string;
       }
       return session;
-    },
-
-    async jwt({ token, user }) {
-      if (user?.email) {
-        await connectToDatabase();
-        const dbUser = await User.findOne({ email: user.email });
-        token._id = dbUser?._id?.toString() ?? "";
-        token.username = dbUser?.username ?? "";
-      }
-      return token;
     },
   },
   pages: {

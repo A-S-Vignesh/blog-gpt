@@ -1,0 +1,27 @@
+const reservedUsernames = [
+  "about",
+  "contact",
+  "post",
+  "posts",
+  "blog",
+  "feed",
+  "explore",
+  "settings",
+  "profile",
+  "admin",
+  "login",
+  "register",
+  "signup",
+  "api",
+  "static",
+  "help",
+  "privacy",
+  "terms",
+  "write",
+  "edit",
+  "bookmarks",
+  "notifications",
+  "search",
+];
+
+export default reservedUsernames;

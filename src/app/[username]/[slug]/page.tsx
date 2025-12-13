@@ -3,17 +3,22 @@ import ViewPost from "@/components/ViewPost";
 import { PopulatedClientPost } from "@/types/post";
 import { notFound } from "next/navigation";
 import { url } from "inspector";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; username: string }>;
 }) {
-  const { slug } = await params;
+  const { slug, username } = await params;
   try {
-    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/post/${slug}`, {
-      cache: "no-store",
-    });
+    const res = await fetch(
+      `${process.env.NEXTAUTH_URL}/api/post/${username}/${slug}`,
+      {
+        cache: "no-store",
+      }
+    );
 
     if (!res.ok) {
       return {
@@ -81,14 +86,18 @@ export async function generateMetadata({
 export default async function Page({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; username: string }>;
 }) {
-  const { slug } = await params;
+  const { slug, username } = await params;
+  const session = await getServerSession(authOptions);
 
   // fetch main post
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/post/${slug}`, {
-    next: { revalidate: 60 },
-  });
+  const res = await fetch(
+    `${process.env.NEXTAUTH_URL}/api/post/${username}/${slug}`,
+    {
+      next: { revalidate: 60 },
+    }
+  );
   if (!res.ok) notFound();
   const post: PopulatedClientPost = await res.json();
 
@@ -121,7 +130,7 @@ export default async function Page({
             author: {
               "@type": "Person",
               name: post.creator.name,
-              url: `https://thebloggpt.com/profile/${post.creator.username}`,
+              url: `https://thebloggpt.com/${post.creator.username}`,
             },
             publisher: {
               "@type": "Organization",
@@ -141,7 +150,7 @@ export default async function Page({
           }),
         }}
       />
-      <ViewPost post={post} relatedPosts={relatedData.data} />
+      <ViewPost post={post} relatedPosts={relatedData.data} user={session?.user} />
     </>
   );
 }

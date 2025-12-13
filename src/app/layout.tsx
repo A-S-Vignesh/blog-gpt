@@ -1,7 +1,6 @@
 // app/layout.tsx
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/redux/provider";
@@ -9,6 +8,8 @@ import CommonFooter from "@/components/CommonFooter";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "next-themes";
 import ToastProvider from "@/provider/ToastProvider";
+import CookiesBox from "@/components/CookiesBox";
+import AnalyticsLoader from "@/components/AnalyticsLoader";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -88,29 +89,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Google Analytics */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-VWS6MTPDHT"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-VWS6MTPDHT');
-          `}
-        </Script>
         <ToastProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <Providers>
               <Navbar />
               {children}
               <CommonFooter />
+              <CookiesBox />
             </Providers>
           </ThemeProvider>
         </ToastProvider>
-        <Analytics />
+        <AnalyticsLoader />
       </body>
     </html>
   );
