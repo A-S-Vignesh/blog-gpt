@@ -31,7 +31,7 @@ export const GET = async (req: NextRequest) => {
 
     const response = await Post.find({})
       .select("title excerpt slug image tags date creator") // ✅ fetch only needed fields
-      .populate("creator", "username") // ✅ populate only required creator fields
+      .populate("creator", "username name image") // ✅ populate only required creator fields
       .sort({ updatedAt: -1, date: -1 })
       .skip(skipValue)
       .limit(6)
