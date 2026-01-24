@@ -61,7 +61,7 @@ export default function CookiesBox() {
   if (!showBox) return null;
 
   return (
-    <div className="fixed bottom-6 left-6 z-9999">
+    <div className="fixed bottom-6 right-6 z-9999">
       <div
         className="w-80 max-w-[90vw] rounded-2xl shadow-xl 
         bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 
