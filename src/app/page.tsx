@@ -11,10 +11,6 @@ import {
   FaSearch,
   FaCloudUploadAlt,
   FaStar,
-  FaGithub,
-  FaLinkedin,
-  FaEnvelope,
-  FaMobileAlt,
   FaCheck,
   FaChevronRight,
 } from "react-icons/fa";
@@ -89,7 +85,7 @@ export default function Home() {
             Generate High-Quality Blogs Instantly with AI
           </h1>
           <p className="text-xl mt-6 text-gray-700 dark:text-gray-300">
-            Create, edit, and publish SEO-optimized blogs using Gemini AI—all in
+            Create, edit, and publish SEO optimized blogs using Gemini AI all in
             one place.
           </p>
           <div className="flex flex-wrap gap-4 mt-8">

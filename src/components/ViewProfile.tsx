@@ -93,15 +93,15 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
                   {/* Left Column - Personal Info */}
                   <div className="md:col-span-1">
                     <div className="text-center md:text-left">
-                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                        {userData?.name || "Anonymous User"}
-                      </h2>
-                      <div className="flex items-center justify-center md:justify-start text-blue-600 dark:text-blue-400 mb-4">
+                      <h2 className="flex items-center justify-center md:justify-start text-blue-600 dark:text-blue-400 mb-4">
                         <FaAt className="mr-1" />
-                        <span className="font-medium">
+                        <span className="font-medium text-2xl md:text-3xl">
                           {userData?.username}
                         </span>
-                      </div>
+                      </h2>
+                      <p className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                        {userData?.name || "Anonymous User"}
+                      </p>
 
                       <div className="space-y-4 mb-6">
                         <div className="flex items-center">

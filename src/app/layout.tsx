@@ -1,10 +1,11 @@
 // app/layout.tsx
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/redux/provider";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import CommonFooter from "@/components/CommonFooter";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "next-themes";
@@ -81,26 +82,13 @@ export default function RootLayout({
       suppressHydrationWarning
       className="bg-white dark:bg-dark-100"
     >
-      <head>
+      {/* <head>
         <meta name="color-scheme" content="light dark" />
         <meta name="apple-mobile-web-app-title" content="Blog GPT" />
-      </head>
+      </head> */}
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Google Analytics */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-VWS6MTPDHT"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-VWS6MTPDHT');
-          `}
-        </Script>
         <ToastProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <Providers>
@@ -110,8 +98,9 @@ export default function RootLayout({
             </Providers>
           </ThemeProvider>
         </ToastProvider>
-        <Analytics />
       </body>
+      <GoogleAnalytics gaId="G-VWS6MTPDHT" />
+      <Analytics />
     </html>
   );
 }

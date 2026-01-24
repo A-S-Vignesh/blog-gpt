@@ -1,8 +1,7 @@
-import PostNotFound from "@/components/PostNotFound";
+
 import ViewPost from "@/components/ViewPost";
 import { PopulatedClientPost } from "@/types/post";
 import { notFound } from "next/navigation";
-import { url } from "inspector";
 
 export async function generateMetadata({
   params,
