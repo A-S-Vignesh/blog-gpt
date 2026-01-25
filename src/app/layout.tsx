@@ -82,10 +82,6 @@ export default function RootLayout({
       suppressHydrationWarning
       className="bg-white dark:bg-dark-100"
     >
-      {/* <head>
-        <meta name="color-scheme" content="light dark" />
-        <meta name="apple-mobile-web-app-title" content="Blog GPT" />
-      </head> */}
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
