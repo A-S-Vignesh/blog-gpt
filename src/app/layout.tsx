@@ -98,9 +98,9 @@ export default function RootLayout({
             </Providers>
           </ThemeProvider>
         </ToastProvider>
+        <GoogleAnalytics gaId="G-VWS6MTPDHT" />
+        <Analytics />
       </body>
-      <GoogleAnalytics gaId="G-VWS6MTPDHT" />
-      <Analytics />
     </html>
   );
 }
