@@ -104,7 +104,7 @@ export default async function Page({
 
   return (
     <>
-      {/* <script
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
@@ -139,7 +139,7 @@ export default async function Page({
             keywords: post.tags?.join(", "),
           }),
         }}
-      /> */}
+      />
       <ViewPost post={post} relatedPosts={relatedData.data} />
     </>
   );
