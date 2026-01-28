@@ -62,7 +62,7 @@ const ContactForm = () => {
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
         Send us a message
       </h2>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
@@ -75,7 +75,7 @@ const ContactForm = () => {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-dark-100"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-100"
             />
           </div>
 
@@ -89,7 +89,7 @@ const ContactForm = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-dark-100"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-100"
             />
           </div>
         </div>
@@ -104,7 +104,7 @@ const ContactForm = () => {
             value={formData.subject}
             onChange={handleChange}
             required
-            className="w-full px-4 py-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-dark-100"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-100"
           />
         </div>
 
@@ -118,7 +118,7 @@ const ContactForm = () => {
             value={formData.message}
             onChange={handleChange}
             required
-            className="w-full px-4 py-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-dark-100"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-100"
           />
         </div>
 
