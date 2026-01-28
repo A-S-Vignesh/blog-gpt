@@ -3,131 +3,164 @@
 import React, { useState } from "react";
 import { FaPaperPlane } from "react-icons/fa6";
 
-
 const ContactForm = () => {
-    // Use the useState hook to manage the form state
-    const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+    >("idle");
+  const [showModal, setShowModal] = useState(false);
+
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("loading");
+
+    try {
+      const res = await fetch("/api/contactmessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Something went wrong");
+      }
+
+      // SUCCESS
+      setShowModal(true);
+      setStatus("success");
+      setFormData({
         name: "",
         email: "",
         subject: "",
         message: "",
-    });
+      });
+    } catch (err: any) {
+      setStatus("error");
+      setErrorMessage(err.message || "Failed to send message");
+    }
+  };
 
-    // Handle changes to the form inputs
-    const handleChange = (e:any) => {
-        const { name, value } = e.target;
-        setFormData(prevState => ({
-            ...prevState,
-            [name]: value,
-        }));
-    };
+  return (
+    <div className="bg-white dark:bg-dark-100 rounded-2xl shadow-xl p-8 border-2 border-gray-200 dark:border-gray-700">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
+        Send us a message
+      </h2>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label className="block mb-2 text-gray-700 dark:text-gray-300">
+              Name
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-dark-100"
+            />
+          </div>
 
-    // Handle form submission
-    const handleSubmit = (e:any) => {
-        e.preventDefault();
-
-        // You can add logic here to show a success message or clear the form
-        setFormData({
-            name: "",
-            email: "",
-            subject: "",
-            message: "",
-        });
-    };
-
-    return (
-        <div className="bg-white dark:bg-dark-100 rounded-2xl shadow-xl p-8 border-2 border-gray-200 dark:border-gray-700">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
-                Send us a message
-            </h2>
-
-            {/* Use onSubmit to handle form submission via a function */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                        <label
-                            htmlFor="name"
-                            className="block text-gray-700 dark:text-gray-300 mb-2"
-                        >
-                            Name
-                        </label>
-                        <input
-                            type="text"
-                            name="name"
-                            id="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Your name"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label
-                            htmlFor="email"
-                            className="block text-gray-700 dark:text-gray-300 mb-2"
-                        >
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            name="email"
-                            id="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="your@email.com"
-                            required
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <label
-                        htmlFor="subject"
-                        className="block text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                        Subject
-                    </label>
-                    <input
-                        type="text"
-                        name="subject"
-                        id="subject"
-                        value={formData.subject}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="How can we help?"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label
-                        htmlFor="message"
-                        className="block text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                        Message
-                    </label>
-                    <textarea
-                        id="message"
-                        name="message"
-                        rows={6}
-                        value={formData.message}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Tell us about your inquiry..."
-                    ></textarea>
-                </div>
-
-                <button
-                    type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-300 flex items-center justify-center"
-                >
-                    <FaPaperPlane className="mr-2" /> Send Message
-                </button>
-            </form>
+          <div>
+            <label className="block mb-2 text-gray-700 dark:text-gray-300">
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-dark-100"
+            />
+          </div>
         </div>
-    );
+
+        <div>
+          <label className="block mb-2 text-gray-700 dark:text-gray-300">
+            Subject
+          </label>
+          <input
+            type="text"
+            name="subject"
+            value={formData.subject}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-dark-100"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2 text-gray-700 dark:text-gray-300">
+            Message
+          </label>
+          <textarea
+            name="message"
+            rows={6}
+            value={formData.message}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-dark-100"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={status === "loading"}
+          className={`w-full flex items-center justify-center py-3 px-8 rounded-lg font-semibold text-white transition
+            ${
+              status === "loading"
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+        >
+          <FaPaperPlane className="mr-2" />
+          {status === "loading" ? "Sending..." : "Send Message"}
+        </button>
+      </form>
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white dark:bg-dark-100 rounded-2xl shadow-2xl w-full max-w-md p-8 text-center animate-scale-in">
+            <div className="text-green-600 text-5xl mb-4">✅</div>
+
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              Message Sent Successfully
+            </h3>
+
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Thanks for reaching out. We’ve received your message and will get
+              back to you shortly.
+            </p>
+
+            <button
+              onClick={() => setShowModal(false)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default ContactForm;
