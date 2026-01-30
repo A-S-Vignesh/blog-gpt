@@ -24,6 +24,7 @@ import {
 import { useDispatch } from "react-redux";
 import { PopulatedClientPost } from "@/types/post";
 import RelatedPosts from "./RelatedPosts";
+import { sanitizeForRender } from "@/utils/sanitizeHtmlForRender";
 // import { postActions } from "@/redux/slice/post";
 // import { getRequest } from "@/utils/requestHandlers";
 
@@ -200,7 +201,9 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
         {/* paragraph */}
         <div
           className="para para-page mt-6 sm:mt-10 prose dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: post?.content || "" }}
+          dangerouslySetInnerHTML={{
+            __html: sanitizeForRender(post?.content || ""),
+          }}
         />
 
         {/* slogan */}
