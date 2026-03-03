@@ -1,79 +1,84 @@
-
-
 export default function CookiesPolicyPage() {
   return (
     <section className="max-w-5xl mx-auto px-6 py-12 text-gray-800 dark:text-gray-200">
       <h1 className="text-3xl font-bold mb-6 sub_heading">Cookies Policy</h1>
 
-      <p className="para">
+      <p className="para mb-4">
         This Cookies Policy explains how <strong>The Blog GPT</strong> uses
-        cookies and similar technologies to recognize you when you visit our
-        website. It explains what these technologies are, why we use them, and
-        your rights to control our use of them.
+        cookies and similar tracking technologies when you visit our website. By
+        continuing to use our platform, you consent to the use of cookies as
+        described in this policy.
       </p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">1. What Are Cookies?</h2>
-      <p className="para">
-        Cookies are small data files placed on your device when you visit a
-        website. Cookies are widely used by website owners to make their
-        websites work more efficiently and to provide reporting information.
+      <p className="para mb-4">
+        Cookies are small text files stored on your device when you visit a
+        website. They help websites function properly, remember user
+        preferences, and collect analytical information.
       </p>
 
-      <h2 className="text-xl font-semibold mt-6 mb-2">2. Why We Use Cookies</h2>
-      <p className="para">We use cookies for several reasons, including:</p>
-      <ul className="list-disc pl-6 mb-4 text-[#667085] dark:text-[#C0C5D0]">
-        <li>To remember your theme preferences (light/dark mode)</li>
-        <li>To understand how you interact with our blog content</li>
-        <li>To enable AI content generation functionality securely</li>
-        <li>To analyze traffic and user behavior for improvements</li>
-        <li>To personalize user experience and suggestions</li>
+      <h2 className="text-xl font-semibold mt-6 mb-2">2. How We Use Cookies</h2>
+      <p className="para mb-4">We use cookies and similar technologies to:</p>
+
+      <ul className="list-disc pl-6 mb-4 text-[#667085] dark:text-[#C0C5D0] space-y-2">
+        <li>Maintain secure login sessions (Google OAuth authentication)</li>
+        <li>Remember your preferences (such as theme settings)</li>
+        <li>Analyze website traffic and user behavior</li>
+        <li>Improve AI content generation performance and security</li>
+        <li>Enhance overall user experience</li>
       </ul>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">
         3. Types of Cookies We Use
       </h2>
-      <p className="para">Our site may use the following types of cookies:</p>
-      <ul className="list-disc pl-6 mb-4 text-[#667085] dark:text-[#C0C5D0]">
+
+      <ul className="list-disc pl-6 mb-4 text-[#667085] dark:text-[#C0C5D0] space-y-2">
         <li>
-          <strong>Essential Cookies:</strong> Required for core functionality,
-          such as logging in and accessing secure areas.
+          <strong>Essential Cookies:</strong> Required for login,
+          authentication, and core functionality.
         </li>
         <li>
-          <strong>Performance Cookies:</strong> Help us understand how users
-          interact with the site.
+          <strong>Analytics Cookies:</strong> Used to collect anonymized
+          statistics about how visitors use the platform (e.g., Google
+          Analytics).
         </li>
         <li>
-          <strong>Functionality Cookies:</strong> Remember your preferences and
-          settings.
-        </li>
-        <li>
-          <strong>Analytics Cookies:</strong> Used by services like Google
-          Analytics to track site performance.
+          <strong>Functional Cookies:</strong> Store user preferences such as
+          theme selection.
         </li>
       </ul>
 
-      <h2 className="text-xl font-semibold mt-6 mb-2">4. Managing Cookies</h2>
-      <p className="para">
-        You can control or disable cookies through your browser settings. Please
-        note that disabling cookies may affect certain features or functionality
-        of our website.
+      <h2 className="text-xl font-semibold mt-6 mb-2">
+        4. Third-Party Cookies
+      </h2>
+      <p className="para mb-4">
+        Some cookies may be set by trusted third-party services, including:
       </p>
 
-      <h2 className="text-xl font-semibold mt-6 mb-2">
-        5. Third-Party Cookies
-      </h2>
-      <p className="para">
-        In some cases, we use cookies provided by trusted third parties (e.g.,
-        Google Analytics, authentication services). These cookies may collect
-        anonymized usage statistics and technical information.
+      <ul className="list-disc pl-6 mb-4 text-[#667085] dark:text-[#C0C5D0] space-y-2">
+        <li>Google Authentication (OAuth)</li>
+        <li>Google Analytics</li>
+        <li>Hosting and infrastructure providers</li>
+      </ul>
+
+      <p className="para mb-4">
+        These third parties may process limited technical information necessary
+        to provide their services.
+      </p>
+
+      <h2 className="text-xl font-semibold mt-6 mb-2">5. Managing Cookies</h2>
+      <p className="para mb-4">
+        You can control or disable cookies through your browser settings. Please
+        note that disabling essential cookies may affect certain features of the
+        platform, including login functionality.
       </p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">
         6. Changes to This Policy
       </h2>
-      <p className="para">
-        We may update this Cookies Policy from time to time. Any changes will be
-        posted on this page with a revised “last updated” date.
+      <p className="para mb-4">
+        We may update this Cookies Policy periodically. Any updates will be
+        posted on this page with a revised “Last updated” date.
       </p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">7. Contact Us</h2>

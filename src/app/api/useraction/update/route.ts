@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/authOptions";
 import { connectToDatabase } from "@/lib/mongodb";
 import { User } from "@/models/User";
 import { revalidatePath } from "next/cache";
+import { rateLimit } from "@/lib/rateLimit";
 
 export async function PUT(req:Request) {
   const session = await getServerSession(authOptions);
@@ -16,6 +17,27 @@ export async function PUT(req:Request) {
   await connectToDatabase();
   try {
     const body = await req.json();
+
+    const rlResult = rateLimit({
+      key: `update-user:${session.user._id.toString()}`,
+      windowMs: 60 * 60 * 1000, // 1 hour
+      max: 20, // allow reasonable edits but block obvious abuse
+    });
+
+    if (!rlResult.ok) {
+      return new Response(
+        JSON.stringify({
+          message:
+            "You are updating your profile too frequently. Please wait a while before trying again.",
+          code: "RATE_LIMITED",
+          retryAfterSeconds: rlResult.retryAfterSeconds,
+        }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
 
     // ✅ Check if username exists
     if (body.username) {

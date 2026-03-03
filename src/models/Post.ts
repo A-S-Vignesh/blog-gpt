@@ -33,7 +33,7 @@ const PostSchema = new Schema<IPost>(
     image: {
       type: String,
       default:
-        "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.jpg",
+        "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.png",
     },
     imagePublicId: { type: String, default: "" },
     tags: { type: [String], default: [] },

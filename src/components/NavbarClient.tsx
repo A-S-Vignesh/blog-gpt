@@ -79,9 +79,10 @@ useEffect(() => {
 
   const navLinks = [
     { name: "Home", href: "/", icon: <FaHome /> },
-    { name: "Blog", href: "/post", icon: <FaBlog />},
-    { name: "About", href: "/about", icon: <FaInfoCircle />},
-    { name: "Contact", href: "/contact", icon: <FaEnvelope />},
+    { name: "Blog", href: "/post", icon: <FaBlog /> },
+    { name: "Pricing", href: "/pricing", icon: <FaRobot /> },
+    { name: "About", href: "/about", icon: <FaInfoCircle /> },
+    { name: "Contact", href: "/contact", icon: <FaEnvelope /> },
   ];
     
   return (

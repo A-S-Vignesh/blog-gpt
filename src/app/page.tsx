@@ -11,7 +11,6 @@ import {
   FaSearch,
   FaCloudUploadAlt,
   FaStar,
-  FaCheck,
   FaChevronRight,
 } from "react-icons/fa";
 
@@ -232,85 +231,63 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Monetization Section */}
+      {/* Who is TheBlogGPT for? */}
       <section className="py-16 bg-gray-50 dark:bg-dark-100 px-6 sm:px-16 md:px-20 lg:px-28">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-            Plans for Every Creator
+            Who is TheBlogGPT for?
           </h2>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Choose the plan that fits your blogging needs
+            Whether you blog solo or run a content team, TheBlogGPT helps you
+            create quality posts faster.
           </p>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-center gap-8 max-w-5xl mx-auto">
-          <div className="bg-white dark:bg-dark-100 rounded-xl p-8 shadow-lg border-2 border-gray-200 dark:border-gray-700">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Free Plan
-            </h3>
-            <p className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">
-              $0
-              <span className="text-lg font-normal text-gray-500 dark:text-gray-400">
-                /forever
-              </span>
-            </p>
-            <ul className="space-y-3 mb-8">
-              <li className="flex items-center text-gray-600 dark:text-gray-400">
-                <FaCheck className="text-green-500 mr-2" /> 5 blog posts per
-                month
-              </li>
-              <li className="flex items-center text-gray-600 dark:text-gray-400">
-                <FaCheck className="text-green-500 mr-2" /> Basic SEO
-                optimization
-              </li>
-              <li className="flex items-center text-gray-600 dark:text-gray-400">
-                <FaCheck className="text-green-500 mr-2" /> Standard image
-                uploads
-              </li>
-              <li className="flex items-center text-gray-500 dark:text-gray-500">
-                <span className="mr-2">•</span> Limited customization
-              </li>
-            </ul>
-            <button className="w-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white py-3 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-              Get Started Free
-            </button>
-          </div>
-
-          <div className="bg-white dark:bg-dark-100 rounded-xl p-8 shadow-lg border-2 border-blue-500 relative">
-            <div className="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1 rounded-bl-lg rounded-tr-lg font-medium">
-              Popular
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          {[
+            {
+              title: "Solo bloggers",
+              desc: "Publish consistently without burning out. Generate drafts in seconds, then edit and publish under your own voice.",
+              icon: "✍️",
+            },
+            {
+              title: "Marketing teams",
+              desc: "Scale content production for campaigns, newsletters, and SEO. One tool for ideation, drafting, and publishing.",
+              icon: "📈",
+            },
+            {
+              title: "Agencies & freelancers",
+              desc: "Deliver more client content without hiring. Use AI for first drafts, then refine and ship on time.",
+              icon: "🎯",
+            },
+            {
+              title: "Developers & founders",
+              desc: "Keep your blog updated without context switching. Turn ideas into SEO-friendly posts in minutes.",
+              icon: "⚡",
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="bg-white dark:bg-dark-100 rounded-xl p-6 shadow-md border-2 border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-800 transition-all"
+            >
+              <span className="text-3xl mb-4 block">{item.icon}</span>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                {item.title}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                {item.desc}
+              </p>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Pro Plan
-            </h3>
-            <p className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">
-              $9
-              <span className="text-lg font-normal text-gray-500 dark:text-gray-400">
-                /month
-              </span>
-            </p>
-            <ul className="space-y-3 mb-8">
-              <li className="flex items-center text-gray-600 dark:text-gray-400">
-                <FaCheck className="text-green-500 mr-2" /> Unlimited blog posts
-              </li>
-              <li className="flex items-center text-gray-600 dark:text-gray-400">
-                <FaCheck className="text-green-500 mr-2" /> Advanced SEO
-                optimization
-              </li>
-              <li className="flex items-center text-gray-600 dark:text-gray-400">
-                <FaCheck className="text-green-500 mr-2" /> AI image generation
-              </li>
-              <li className="flex items-center text-gray-600 dark:text-gray-400">
-                <FaCheck className="text-green-500 mr-2" /> Priority support
-              </li>
-              <li className="flex items-center text-gray-600 dark:text-gray-400">
-                <FaCheck className="text-green-500 mr-2" /> Detailed analytics
-              </li>
-            </ul>
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition duration-300">
-              Upgrade to Pro
-            </button>
-          </div>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <Link
+            href="/auth/signin"
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-300"
+          >
+            Start creating free
+          </Link>
         </div>
       </section>
 

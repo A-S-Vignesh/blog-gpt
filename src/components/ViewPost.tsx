@@ -184,7 +184,7 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts }) => {
             alt="post image"
             src={
               post?.image ??
-              "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.jpg"
+              "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.png"
             }
             fill
             sizes="

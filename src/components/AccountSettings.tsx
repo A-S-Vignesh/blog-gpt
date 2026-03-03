@@ -21,6 +21,7 @@ import {
   ConfirmUsernameChange,
   InfoModal,
 } from "@/components/ConformUsernameChage";
+import { getPlanById } from "@/config/plans";
 
 type ModalState = {
   type: "success" | "error";
@@ -40,6 +41,9 @@ const AccountSettings = () => {
     },
     geminiApiKey: "",
     image: "",
+    plan: "free",
+    aiGenerationCount: 0,
+    aiUsagePeriodStart: "",
   });
 
   // Form state
@@ -67,6 +71,9 @@ const AccountSettings = () => {
             socials: { twitter: "", linkedin: "", github: "" },
             geminiApiKey: "",
             image: "/assets/images/default-avatar.png",
+            plan: "free",
+            aiGenerationCount: 0,
+            aiUsagePeriodStart: "",
           });
         }
 
@@ -82,6 +89,9 @@ const AccountSettings = () => {
           socials: { twitter: "", linkedin: "", github: "" },
           geminiApiKey: "",
           image: "/assets/images/default-avatar.png",
+          plan: "free",
+          aiGenerationCount: 0,
+          aiUsagePeriodStart: "",
         });
       }
     };
@@ -89,7 +99,7 @@ const AccountSettings = () => {
     fetchUserData();
   }, []);
 
-  const handleChange = (e:any) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -115,7 +125,7 @@ const AccountSettings = () => {
   };
 
 
-  const handleSubmit = async (e:any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     const isUsernameChanged =
@@ -131,7 +141,7 @@ const AccountSettings = () => {
     await saveProfile(isUsernameChanged);
   };
 
-  const saveProfile = async (isUsernameChanged:string|boolean) => {
+  const saveProfile = async (isUsernameChanged: string | boolean) => {
     setIsSaving(true);
 
     try {
@@ -249,9 +259,36 @@ const AccountSettings = () => {
                   <span className="font-medium">{formData.username}</span>
                 </div>
 
-                <p className="text-gray-700 dark:text-gray-300 mb-6">
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
                   {formData.bio || "No bio added yet"}
                 </p>
+
+                {/* Plan & usage summary */}
+                <div className="mb-6 text-left bg-gray-50 dark:bg-dark-100 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                  {(() => {
+                    const plan = getPlanById(
+                      (userData as any).plan || "free"
+                    );
+                    const limit = plan.aiGenerationsPerMonth;
+                    const used = (userData as any).aiGenerationCount ?? 0;
+                    return (
+                      <>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                          Current plan:{" "}
+                          <span className="text-blue-600 dark:text-blue-400">
+                            {plan.name}
+                          </span>
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          AI generations this month:{" "}
+                          <span className="font-medium">
+                            {limit === null ? "Unlimited" : `${used} / ${limit}`}
+                          </span>
+                        </p>
+                      </>
+                    );
+                  })()}
+                </div>
 
                 <div className="flex justify-center gap-4 mb-6">
                   {/* Twitter */}

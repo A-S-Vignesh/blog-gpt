@@ -1,5 +1,7 @@
 import { model, models, Schema,Types, Document, Model } from "mongoose";
 
+export type PlanId = "free" | "pro" | "business";
+
 export interface IUser extends Document {
   _id: Types.ObjectId;
   email: string;
@@ -22,6 +24,16 @@ export interface IUser extends Document {
   following: Schema.Types.ObjectId[];
   geminiApiKey?: string;
   slug?: string;
+  plan: PlanId;
+  planStatus: "active" | "past_due" | "canceled";
+  planRenewsAt?: Date | null;
+  aiGenerationCount: number;
+  aiUsagePeriodStart?: Date | null;
+  /**
+   * Extra AI credits purchased as add-ons.
+   * These are consumed only after the monthly quota is exhausted.
+   */
+  aiExtraCredits?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -98,6 +110,32 @@ export const UserSchema = new Schema<IUser>(
       type: String,
       unique: true,
       sparse: true,
+    },
+    plan: {
+      type: String,
+      enum: ["free", "pro", "business"],
+      default: "free",
+    },
+    planStatus: {
+      type: String,
+      enum: ["active", "past_due", "canceled"],
+      default: "active",
+    },
+    planRenewsAt: {
+      type: Date,
+      default: null,
+    },
+    aiGenerationCount: {
+      type: Number,
+      default: 0,
+    },
+    aiUsagePeriodStart: {
+      type: Date,
+      default: null,
+    },
+    aiExtraCredits: {
+      type: Number,
+      default: 0,
     },
   },
   {
