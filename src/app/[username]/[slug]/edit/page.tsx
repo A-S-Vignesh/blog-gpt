@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import Post from "@/models/Post"; // adjust path if needed
 import { connectToDatabase } from "@/lib/mongodb"; // adjust your DB import
 
+
 export default async function EditPostPage({
   params,
 }: {

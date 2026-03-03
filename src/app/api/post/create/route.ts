@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import sanitizeHtml from "sanitize-html";
+import { rateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -17,6 +18,24 @@ export async function POST(request: Request) {
     const userId = session.user._id.toString();
     const { title, content, slug, image, tags } = await request.json();
 
+    const rlResult = rateLimit({
+      key: `create-post:${userId}`,
+      windowMs: 60 * 60 * 1000, // 1 hour
+      max: 10, // up to 10 new posts per hour per user
+    });
+
+    if (!rlResult.ok) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "You are creating posts too quickly. Please wait a while before creating another post.",
+          code: "RATE_LIMITED",
+          retryAfterSeconds: rlResult.retryAfterSeconds,
+        }),
+        { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     if (
       !title ||
       !content ||
@@ -25,7 +44,10 @@ export async function POST(request: Request) {
       tags.length === 0
     ) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({
+          error: "Missing required fields",
+          code: "BAD_REQUEST",
+        }),
         { status: 400 }
       );
     }
@@ -33,7 +55,10 @@ export async function POST(request: Request) {
     // 2. Title too short
     if (title.trim().length < 10) {
       return new Response(
-        JSON.stringify({ error: "Title is too short (min 10 characters)" }),
+        JSON.stringify({
+          error: "Title is too short (min 10 characters)",
+          code: "TITLE_TOO_SHORT",
+        }),
         { status: 400 }
       );
     }
@@ -43,6 +68,19 @@ export async function POST(request: Request) {
       return new Response(
         JSON.stringify({
           error: "Content is too short (minimum 300 characters required)",
+          code: "CONTENT_TOO_SHORT",
+        }),
+        { status: 400 }
+      );
+    }
+
+    // 3b. Content too long (safety upper bound to avoid abuse)
+    const MAX_CONTENT_LENGTH = 20000;
+    if (content.length > MAX_CONTENT_LENGTH) {
+      return new Response(
+        JSON.stringify({
+          error: `Content is too long (max ${MAX_CONTENT_LENGTH} characters). Please shorten your post.`,
+          code: "CONTENT_TOO_LONG",
         }),
         { status: 400 }
       );
@@ -51,7 +89,10 @@ export async function POST(request: Request) {
     // 4. Slug empty after cleaning
     if (slug.trim().length < 3) {
       return new Response(
-        JSON.stringify({ error: "Slug is too short or invalid" }),
+        JSON.stringify({
+          error: "Slug is too short or invalid",
+          code: "SLUG_INVALID",
+        }),
         { status: 400 }
       );
     }
@@ -59,7 +100,10 @@ export async function POST(request: Request) {
     // 5. Tag length (optional)
     if (tags.some((t) => t.trim().length < 2)) {
       return new Response(
-        JSON.stringify({ error: "Each tag must be at least 2 characters" }),
+        JSON.stringify({
+          error: "Each tag must be at least 2 characters",
+          code: "TAG_TOO_SHORT",
+        }),
         { status: 400 }
       );
     }
@@ -91,6 +135,40 @@ export async function POST(request: Request) {
       },
 
       allowedSchemes: ["http", "https", "mailto"],
+
+      transformTags: {
+        a: (tagName, attribs) => {
+          let href = attribs.href || "";
+
+          const isMailto = /^mailto:/i.test(href);
+          const isAbsolute = /^https?:\/\//i.test(href);
+          const isBareDomain = /^[a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/i.test(href); // e.g., codolve.com or codolve.com/page
+
+          if (!isMailto && !isAbsolute) {
+            if (isBareDomain) {
+              // Prepend https:// to bare domains
+              href = `https://${href}`;
+            } else {
+              // Strip internal/relative links
+              return {
+                tagName: "span",
+                attribs: {},
+                text: attribs.href || "",
+              };
+            }
+          }
+
+          return {
+            tagName: "a",
+            attribs: {
+              ...attribs,
+              href,
+              target: "_blank",
+              rel: "nofollow noopener noreferrer",
+            },
+          };
+        },
+      },
     });
 
     const slugify = (value: String) => {
@@ -117,7 +195,7 @@ export async function POST(request: Request) {
     }
 
     let imageUrl =
-      "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.jpg";
+      "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.png";
     let publicId = "";
 
     if (typeof image === "string" && image.startsWith("data:image")) {
@@ -141,10 +219,10 @@ export async function POST(request: Request) {
         .replace(/&nbsp;/g, " ");
 
     const textOnly =
-      content
-        ?.replace(/<[^>]+>/g, " ") // remove HTML tags
-        ?.replace(/\s+/g, " ") // collapse extra spaces
-        ?.trim() || "";
+      cleanHTML
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim() || "";
 
     const plainContent = decodeEntities(textOnly);
     const shortDescription =

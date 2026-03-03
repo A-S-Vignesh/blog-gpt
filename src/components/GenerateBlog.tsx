@@ -88,43 +88,11 @@ export default function GenerateBlog() {
       const slug = generateSlug(userInput.title);
       const tags = generateTags(userInput.prompt);
 
-      const promptString = `Write a detailed, SEO-friendly blog post about "${userInput.prompt}" in clean HTML format only.
-
-Important rules:
-- Do NOT return Markdown.
-- Do NOT use backticks (\`\`\`) anywhere.
-- Do NOT label the response as "html", "code", or any language.
-- Do NOT wrap the content inside <html>, <body>, or <head> tags.
-- Return only plain HTML tags for the article content.
-
-Start with a short, engaging introductory paragraph using a <p> tag. The intro must be 4–5 sentences and must NOT contain any heading.
-
-After the intro, continue with proper semantic HTML elements:
-- <h2> for main sections
-- <h3> for subsections
-- <p> for paragraphs
-- <ul> or <ol> for lists
-- <pre><code>...</code></pre> for code blocks (no Markdown formatting inside)
-
-Ensure the content is well structured, well formatted, and easy to read.
-
-Return ONLY the HTML snippet — no explanations, no prose before it, and absolutely no backticks.
-`;
-
-      const imgePrompt = `Create a high-quality, realistic, SEO-friendly blog cover image that visually represents the topic: "${userInput.prompt}". 
-
-The image should be clean, professional, and modern, suitable for a blog post thumbnail. Use bright colors, minimal text (if any), and clear visuals that immediately convey the subject. 
-
-Style: flat illustration / modern vector / realistic photo (choose based on context).  
-Aspect ratio: 16:9 (landscape).  
-No watermarks, no text, no logos.  
-`;
-
       // 1️⃣ Generate text first
       const textRes = await fetch("/api/post/generate/text", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: promptString }),
+        body: JSON.stringify({ prompt: userInput.prompt }),
       });
 
       if (!textRes.ok) {
@@ -140,7 +108,7 @@ No watermarks, no text, no logos.
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: imgePrompt,
+            prompt: userInput.prompt,
           }),
         });
 
@@ -250,7 +218,8 @@ No watermarks, no text, no logos.
           </h1>
           <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
             Create unique, SEO-optimized content in seconds with our AI-powered
-            blog generator
+            blog generator. Free: 5 AI generations/month, Pro: 150/month,
+            Business: 500/month once paid subscriptions are available.
           </p>
         </div>
       </section>

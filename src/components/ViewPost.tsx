@@ -26,6 +26,7 @@ import { PopulatedClientPost } from "@/types/post";
 import RelatedPosts from "./RelatedPosts";
 import LikeButton from "./ui/LikeButton";
 import { useToast } from "@/provider/ToastProvider";
+import { sanitizeForRender } from "@/utils/sanitizeHtmlForRender";
 // import { postActions } from "@/redux/slice/post";
 // import { getRequest } from "@/utils/requestHandlers";
 
@@ -272,7 +273,7 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts, user }) => {
             alt="post image"
             src={
               post?.image ??
-              "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.jpg"
+              "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.png"
             }
             fill
             sizes="
@@ -289,7 +290,9 @@ const ViewPost: React.FC<ViewPostProps> = ({ post, relatedPosts, user }) => {
         {/* paragraph */}
         <div
           className="para para-page mt-6 sm:mt-10 prose dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: post?.content || "" }}
+          dangerouslySetInnerHTML={{
+            __html: sanitizeForRender(post?.content || ""),
+          }}
         />
 
         {/* slogan */}

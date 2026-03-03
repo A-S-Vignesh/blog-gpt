@@ -25,7 +25,7 @@ const Footer = () => {
             <Link
               href="https://codolve.com"
               target="_blank"
-              rel="noopener noreferrer"
+              rel="nofollow"
               className="bg-clip-text text-transparent bg-gradient-to-r dark:from-cyan-400 from-cyan-600 dark:to-blue-400 to-blue-600 font-semibold hover:opacity-80 transition"
             >
               Codolve

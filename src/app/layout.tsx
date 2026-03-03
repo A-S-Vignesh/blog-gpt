@@ -1,9 +1,10 @@
 // app/layout.tsx
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/redux/provider";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import CommonFooter from "@/components/CommonFooter";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "next-themes";
@@ -82,10 +83,6 @@ export default function RootLayout({
       suppressHydrationWarning
       className="bg-white dark:bg-dark-100"
     >
-      <head>
-        <meta name="color-scheme" content="light dark" />
-        <meta name="apple-mobile-web-app-title" content="Blog GPT" />
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -99,6 +96,7 @@ export default function RootLayout({
             </Providers>
           </ThemeProvider>
         </ToastProvider>
+        <GoogleAnalytics gaId="G-VWS6MTPDHT" />
         <AnalyticsLoader />
       </body>
     </html>

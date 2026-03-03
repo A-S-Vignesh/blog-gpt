@@ -17,12 +17,15 @@ const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
   return (
     <div className="flex flex-col w-full sm:max-w-[390px] sm:w-full rounded-md max-h-max gap-2 mb-6">
       <div className="relative overflow-hidden rounded-md shrink-0 h-[250px] w-full sm:w-auto">
-        <Link href={`/post/${post.slug}`} className="block relative w-full h-full">
+        <Link
+          href={`/post/${post.slug}`}
+          className="block relative w-full h-full"
+        >
           <Image
             src={
               post.image
                 ? post.image
-                : "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.jpg"
+                : "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.png"
             }
             alt="post-image"
             fill
@@ -46,9 +49,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
         </Link>
 
         {post.excerpt && (
-          <div className="para line-clamp-3 text-md prose">
-            {post.excerpt}
-          </div>
+          <div className="para line-clamp-3 text-md prose">{post.excerpt}</div>
         )}
         <Tags limit={3} tags={post.tags} />
       </div>

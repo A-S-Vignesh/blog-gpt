@@ -31,7 +31,7 @@ function LargeFooter() {
                 { name: "Home", href: "/" },
                 { name: "About", href: "/about" },
                 { name: "Contact", href: "/contact" },
-                // { name: "Pricing", href: "/pricing" },
+                { name: "Pricing", href: "/pricing" },
               ].map(({ name, href }) => (
                 <li key={name}>
                   <Link

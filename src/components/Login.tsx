@@ -29,7 +29,7 @@ const Login = () => {
                 />
               </div>
 
-              <h2 className="text-4xl font-bold mt-16 mb-6">Welcome Back!</h2>
+              <h1 className="text-4xl font-bold mt-16 mb-6">Welcome Back!</h1>
               <p className="text-blue-100 max-w-md">
                 Access your account to create, manage, and publish AI-powered
                 content with Gemini AI.

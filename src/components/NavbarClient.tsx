@@ -77,7 +77,8 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
 
   const navLinks = [
     { name: "Home", href: "/", icon: <FaHome /> },
-    { name: "Post", href: "/post", icon: <FaBlog /> },
+    { name: "Blog", href: "/post", icon: <FaBlog /> },
+    { name: "Pricing", href: "/pricing", icon: <FaRobot /> },
     { name: "About", href: "/about", icon: <FaInfoCircle /> },
     { name: "Contact", href: "/contact", icon: <FaEnvelope /> },
   ];
