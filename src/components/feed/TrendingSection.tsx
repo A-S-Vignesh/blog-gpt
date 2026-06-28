@@ -46,13 +46,6 @@ export default function TrendingSection() {
           View all
         </Link>
       </div>
-
-      {/* Trending Cards — uniform 2-column grid. The previous version
-          made the first card span both columns with a 16:9 image, which
-          blew up to ~675px tall on desktop and dwarfed everything else.
-          A simple equal grid scales much better and the "trending" framing
-          comes from the section heading, not from making one card huge.
-          The top card gets a subtle orange ring as a soft accent. */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {trendingPosts.map((post: any, index: number) => (
           <Link

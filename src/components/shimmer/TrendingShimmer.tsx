@@ -1,7 +1,7 @@
 "use client";
 
 export default function TrendingShimmer() {
-  const items = [0, 1, 2, 3,4]; // 4 shimmer cards (1 big + 3 small)
+  const items = [0, 1, 2, 3,4,5]; // 4 shimmer cards (1 big + 3 small)
 
   return (
     <div className="mb-12">
@@ -19,14 +19,12 @@ export default function TrendingShimmer() {
         {items.map((_, index) => (
           <div
             key={index}
-            className={`${index === 0 ? "md:col-span-2" : ""} h-full`}
+            className={`h-full`}
           >
             <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow animate-pulse flex flex-col h-full">
               {/* Image shimmer */}
               <div
-                className={`${
-                  index === 0 ? "h-64" : "h-48"
-                } bg-gray-200 dark:bg-gray-700 shimmer`}
+                className={`h-48 bg-gray-200 dark:bg-gray-700 shimmer`}
               />
 
               <div className="p-6 flex flex-col gap-4">

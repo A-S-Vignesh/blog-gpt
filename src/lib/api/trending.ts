@@ -1,5 +1,5 @@
 export async function getTrendingPosts() {
-  const res = await fetch("/api/post/trending?limit=5", {
+  const res = await fetch("/api/post/trending?limit=6", {
     cache: "no-store",
   });
 

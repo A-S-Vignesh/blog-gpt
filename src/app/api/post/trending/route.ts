@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const limit = Math.min(
       30,
-      Math.max(1, Number(searchParams.get("limit")) || 5),
+      Math.max(1, Number(searchParams.get("limit")) || 6),
     );
 
     const posts = await Post.aggregate([
