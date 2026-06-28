@@ -13,7 +13,16 @@ import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useAppDispatch } from "@/redux/hooks";
 import { setPost } from "@/redux/features/generateSlice";
-import commonWords from "@/utils/commonWords";
+import { extractTags } from "@/utils/tags";
+import { saveGeneratedDraft } from "@/utils/generatedDraft";
+
+// Mirror the server limits so invalid input is caught before we spend an AI
+// call. Title min matches the publish requirement (create route needs >= 10);
+// prompt max matches MAX_PROMPT_LENGTH on the generate route.
+const TITLE_MIN = 10;
+const TITLE_MAX = 120;
+const PROMPT_MIN = 20;
+const PROMPT_MAX = 4000;
 
 export default function GenerateBlog() {
   const [userInput, setUserInput] = useState({
@@ -23,7 +32,7 @@ export default function GenerateBlog() {
 
   const [generateImage, setGenerateImage] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [generationStep, setGenerationStep] = useState(0);
   const [generationComplete, setGenerationComplete] = useState(false);
   const dispatch = useAppDispatch();
@@ -57,28 +66,27 @@ export default function GenerateBlog() {
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
+      .trim()
       .replace(/[^\w\s-]/g, "")
       .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .trim();
-  };
-
-  const generateTags = (prompt: string): string[] => {
-    const words = prompt.toLowerCase().split(/\s+/);
-
-    const uniqueWords = [
-      ...new Set(
-        words.filter((word) => word.length > 3 && !commonWords.includes(word))
-      ),
-    ];
-
-    return uniqueWords
-      .slice(0, 5)
-      .map((word) => `${word.charAt(0).toUpperCase() + word.slice(1)}`);
+      .replace(/-+/g, "-");
   };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+
+    // Guard: never spend an AI call on input the server will reject.
+    const titleTrim = userInput.title.trim();
+    const promptTrim = userInput.prompt.trim();
+    if (titleTrim.length < TITLE_MIN || titleTrim.length > TITLE_MAX) {
+      setError(`Title must be ${TITLE_MIN}–${TITLE_MAX} characters.`);
+      return;
+    }
+    if (promptTrim.length < PROMPT_MIN || promptTrim.length > PROMPT_MAX) {
+      setError(`Prompt must be ${PROMPT_MIN}–${PROMPT_MAX} characters.`);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setGenerationStep(0);
@@ -86,13 +94,15 @@ export default function GenerateBlog() {
 
     try {
       const slug = generateSlug(userInput.title);
-      const tags = generateTags(userInput.prompt);
 
       // 1️⃣ Generate text first
       const textRes = await fetch("/api/post/generate/text", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: userInput.prompt }),
+        body: JSON.stringify({
+          prompt: userInput.prompt,
+          title: userInput.title,
+        }),
       });
 
       if (!textRes.ok) {
@@ -100,6 +110,14 @@ export default function GenerateBlog() {
         throw new Error(err.error || "Failed to generate content");
       }
       const textData = await textRes.json();
+
+      // Detect tags from the actual generated article (plus title/prompt),
+      // so they reflect what the post is really about.
+      const tags = extractTags({
+        title: userInput.title,
+        content: textData.content,
+        prompt: userInput.prompt,
+      });
 
       // 2️⃣ Optionally generate image
       let imageData = { image: "" };
@@ -119,16 +137,17 @@ export default function GenerateBlog() {
         imageData = await imageRes.json();
       }
 
-      // 3️⃣ Update state
-      dispatch(
-        setPost({
-          title: userInput.title,
-          content: textData.content,
-          slug,
-          tags: tags,
-          image: imageData.image,
-        })
-      );
+      // 3️⃣ Update state. Persist to sessionStorage too so the create page can
+      // recover the draft after a refresh (Redux is in-memory only).
+      const draft = {
+        title: userInput.title,
+        content: textData.content,
+        slug,
+        tags,
+        image: imageData.image,
+      };
+      dispatch(setPost(draft));
+      saveGeneratedDraft(draft);
 
       setGenerationComplete(true);
       setUserInput({ title: "", prompt: "" });
@@ -158,6 +177,14 @@ export default function GenerateBlog() {
         return "Generating your blog post...";
     }
   };
+
+  const titleTrimmed = userInput.title.trim();
+  const promptTrimmed = userInput.prompt.trim();
+  const titleValid =
+    titleTrimmed.length >= TITLE_MIN && titleTrimmed.length <= TITLE_MAX;
+  const promptValid =
+    promptTrimmed.length >= PROMPT_MIN && promptTrimmed.length <= PROMPT_MAX;
+  const formValid = titleValid && promptValid;
 
   return (
     <div className="min-h-screen bg-white dark:bg-dark-100">
@@ -217,9 +244,8 @@ export default function GenerateBlog() {
             <span className="text-blue-600 dark:text-blue-400">with AI</span>
           </h1>
           <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
-            Create unique, SEO-optimized content in seconds with our AI-powered
-            blog generator. Free: 5 AI generations/month, Pro: 150/month,
-            Business: 500/month once paid subscriptions are available.
+            Turn a topic into a structured first draft with our AI blog
+            generator. Free: 5 AI generations a month, Pro: 150, Business: 500.
           </p>
         </div>
       </section>
@@ -272,11 +298,22 @@ export default function GenerateBlog() {
                   type="text"
                   id="title"
                   value={userInput.title}
+                  maxLength={TITLE_MAX}
                   onChange={(e) =>
                     setUserInput({ ...userInput, title: e.target.value })
                   }
                   required
                 />
+                <p
+                  className={`mt-2 text-sm ${
+                    titleTrimmed.length > 0 && !titleValid
+                      ? "text-red-500"
+                      : "text-gray-500 dark:text-gray-400"
+                  }`}
+                >
+                  Minimum {TITLE_MIN} characters · {titleTrimmed.length}/
+                  {TITLE_MAX}
+                </p>
               </div>
 
               <div className="bg-white dark:bg-dark-100 rounded-xl shadow-md p-6 border-2 border-gray-200 dark:border-gray-700">
@@ -298,17 +335,28 @@ export default function GenerateBlog() {
                   placeholder="Describe what you want the blog post to cover"
                   id="prompt"
                   value={userInput.prompt}
+                  maxLength={PROMPT_MAX}
                   onChange={(e) =>
                     setUserInput({ ...userInput, prompt: e.target.value })
                   }
                   rows={6}
                   required
                 ></textarea>
+                <p
+                  className={`mt-2 text-sm ${
+                    promptTrimmed.length > 0 && !promptValid
+                      ? "text-red-500"
+                      : "text-gray-500 dark:text-gray-400"
+                  }`}
+                >
+                  Minimum {PROMPT_MIN} characters · {promptTrimmed.length}/
+                  {PROMPT_MAX}
+                </p>
               </div>
 
               {/* Image Generation Option */}
               <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl p-5 border-2 border-gray-200 dark:border-gray-700">
-                <div className="flex items-start">
+                <div className="flex items-start opacity-60">
                   <div className="flex items-center h-5">
                     <input
                       id="generateImage"
@@ -316,13 +364,13 @@ export default function GenerateBlog() {
                       checked={generateImage}
                       onChange={() => setGenerateImage(!generateImage)}
                       disabled
-                      className="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 cursor-not-allowed"
                     />
                   </div>
                   <div className="ml-3">
                     <label
                       htmlFor="generateImage"
-                      className="font-medium text-gray-900 dark:text-white flex items-center"
+                      className="font-medium text-gray-900 dark:text-white flex items-center cursor-not-allowed"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -338,18 +386,10 @@ export default function GenerateBlog() {
                           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      Generate Featured Image (Beta)
+                      Generate Featured Image
                     </label>
                     <p className="text-gray-500 dark:text-gray-400 mt-2">
-                      Create an AI-generated image for your blog post header.
-                      <span className="ml-1 text-red-500 font-medium">
-                        (Consumes more AI credits)
-                      </span>
-                    </p>
-                    <p className="text-gray-500 dark:text-gray-400 mt-2">
-                      <span className="ml-1 text-red-500 font-medium text-sm">
-                        (Due to traffice image generation is disabled for now)
-                      </span>
+                      Featured image generation is temporarily unavailable.
                     </p>
                   </div>
                 </div>
@@ -379,8 +419,8 @@ export default function GenerateBlog() {
                 </Link>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:opacity-90 transition flex items-center justify-center disabled:opacity-70 shadow-md hover:shadow-lg"
+                  disabled={loading || !formValid}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:opacity-90 transition flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                 >
                   {loading ? (
                     <>

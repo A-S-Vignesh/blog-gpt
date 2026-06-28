@@ -2,7 +2,12 @@ export default function PostCard({ post }:{post:any}) {
   return (
     <div className="border-b py-6 hover:bg-gray-50 transition cursor-pointer">
       <div className="flex items-center gap-2 mb-2">
-        <img src={post.author.image} className="w-6 h-6 rounded-full" />
+        <img
+          src={post.author.image}
+          alt={`${post.author.username}'s avatar`}
+          loading="lazy"
+          className="w-6 h-6 rounded-full"
+        />
         <span className="text-sm font-medium">{post.author.username}</span>
       </div>
 

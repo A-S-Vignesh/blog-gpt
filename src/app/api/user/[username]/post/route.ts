@@ -8,11 +8,14 @@ export const GET = async (
   { params }: { params: Promise<{ username: string }> }
 ) => {
   try {
-    const { username } = await params;
+    const { username: raw } = await params;
+    const username = raw.toLowerCase();
     await connectToDatabase();
 
-    // ✅ Find the user by username first
-    const user = await User.findOne({ username }).select("_id");
+    // Case-insensitive match to handle any legacy mixed-case data.
+    const user = await User.findOne({ username })
+      .collation({ locale: "en", strength: 2 })
+      .select("_id");
     if (!user) {
       return new Response(JSON.stringify({ error: "User not found" }), {
         status: 404,

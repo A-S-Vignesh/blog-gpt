@@ -3,60 +3,64 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+// Bump this when the cookie categories / policy change so returning users are
+// asked to consent again (their stored choice no longer matches the version).
+const CONSENT_VERSION = 1;
+
+function readConsent(): { version?: number; analytics?: boolean } | null {
+  try {
+    return JSON.parse(localStorage.getItem("cookieConsent") || "null");
+  } catch {
+    return null;
+  }
+}
+
 export default function CookiesBox() {
   const [showMore, setShowMore] = useState(false);
   const [showBox, setShowBox] = useState(false);
-  const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
+  // Default OFF — analytics is never pre-enabled before explicit consent
+  // (pre-ticked consent isn't valid under GDPR / ePrivacy).
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
 
-
-  // Show cookie box only if no saved preference
+  // Show the banner when there's no consent for the CURRENT version; otherwise
+  // restore the saved analytics choice. Also re-open on demand from the footer.
   useEffect(() => {
-    const savedConsent = localStorage.getItem("cookieConsent");
-    if (!savedConsent) {
+    const consent = readConsent();
+    if (!consent || consent.version !== CONSENT_VERSION) {
       setShowBox(true);
     } else {
-      const parsed = JSON.parse(savedConsent);
-      setAnalyticsEnabled(parsed.analytics ?? true);
+      setAnalyticsEnabled(consent.analytics ?? false);
     }
+
+    const handleReopen = () => {
+      const saved = readConsent();
+      if (saved) setAnalyticsEnabled(saved.analytics ?? false);
+      setShowMore(false);
+      setShowBox(true);
+    };
+    window.addEventListener("openCookieSettings", handleReopen);
+    return () => window.removeEventListener("openCookieSettings", handleReopen);
   }, []);
 
-  // Save Accept All
-  const handleAcceptAll = () => {
+  // Persist a decision (with version + timestamp for auditability) and notify
+  // AnalyticsLoader so it loads or tears down tracking immediately.
+  const saveConsent = (analytics: boolean) => {
     localStorage.setItem(
       "cookieConsent",
       JSON.stringify({
+        version: CONSENT_VERSION,
         essential: true,
-        analytics: true,
-      })
+        analytics,
+        timestamp: new Date().toISOString(),
+      }),
     );
     setShowBox(false);
-    window.location.reload(); // reload to trigger GA load
+    window.dispatchEvent(new Event("cookieConsentUpdated"));
   };
 
-  // Save Reject All
-  const handleRejectAll = () => {
-    localStorage.setItem(
-      "cookieConsent",
-      JSON.stringify({
-        essential: true,
-        analytics: false,
-      })
-    );
-    setShowBox(false);
-  };
-
-  // Save custom settings
-  const handleSaveSettings = () => {
-    localStorage.setItem(
-      "cookieConsent",
-      JSON.stringify({
-        essential: true,
-        analytics: analyticsEnabled,
-      })
-    );
-    setShowBox(false);
-    window.location.reload();
-  };
+  const handleAcceptAll = () => saveConsent(true);
+  const handleRejectAll = () => saveConsent(false);
+  const handleSaveSettings = () => saveConsent(analyticsEnabled);
 
   if (!showBox) return null;
 
@@ -141,22 +145,30 @@ export default function CookiesBox() {
               .
             </p>
 
+            {/* Actions — Reject and Accept are equally prominent (GDPR), with
+                granular controls one tap away. */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleRejectAll}
+                className="py-2 px-4 text-sm font-semibold rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                Reject all
+              </button>
+              <button
+                type="button"
+                onClick={handleAcceptAll}
+                className="py-2 px-4 text-sm font-semibold rounded-lg bg-[#ddad81] hover:bg-[#634647] text-[#634647] hover:text-[#ddad81] dark:bg-[#634647] dark:text-[#ddad81] dark:hover:bg-[#ddad81] dark:hover:text-[#634647] transition-colors"
+              >
+                Accept all
+              </button>
+            </div>
             <button
-              onClick={() => setShowMore(true)}
-              className="mb-2 text-sm mr-auto text-zinc-700 dark:text-zinc-300 cursor-pointer font-semibold hover:text-[#634647] dark:hover:text-[#ddad81] underline underline-offset-2"
-            >
-              More Options
-            </button>
-
-            <button
-              onClick={handleAcceptAll}
-              className="absolute font-semibold right-6 bottom-6 cursor-pointer py-2 px-8 text-sm rounded-lg
-              bg-[#ddad81] hover:bg-[#634647] text-[#634647] hover:text-[#ddad81]
-              dark:bg-[#634647] dark:text-[#ddad81] dark:hover:bg-[#ddad81] dark:hover:text-[#634647]
-              transition-colors"
               type="button"
+              onClick={() => setShowMore(true)}
+              className="mx-auto mt-3 text-sm font-semibold text-zinc-500 dark:text-zinc-400 hover:text-[#634647] dark:hover:text-[#ddad81] hover:underline transition-colors"
             >
-              Accept all
+              More options
             </button>
           </div>
         )}
@@ -199,6 +211,7 @@ export default function CookiesBox() {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
+                    aria-label="Toggle analytics cookies"
                     checked={analyticsEnabled}
                     onChange={(e) => setAnalyticsEnabled(e.target.checked)}
                     className="sr-only peer"
@@ -218,31 +231,29 @@ export default function CookiesBox() {
               </p>
             </div>
 
-            {/* Buttons */}
-            <div className="flex justify-end gap-3">
+            {/* Actions */}
+            <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => setShowMore(false)}
-                className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:underline"
+                type="button"
+                onClick={handleRejectAll}
+                className="py-2 px-4 text-sm font-semibold rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
               >
-                Back
+                Reject all
               </button>
-
               <button
+                type="button"
                 onClick={handleSaveSettings}
-                className="py-2 px-6 text-sm rounded-lg bg-[#ddad81] hover:bg-[#634647]
-                text-[#634647] hover:text-[#ddad81]
-                dark:bg-[#634647] dark:text-[#ddad81] dark:hover:bg-[#ddad81] dark:hover:text-[#634647]
-                transition-colors font-semibold"
+                className="py-2 px-4 text-sm font-semibold rounded-lg bg-[#ddad81] hover:bg-[#634647] text-[#634647] hover:text-[#ddad81] dark:bg-[#634647] dark:text-[#ddad81] dark:hover:bg-[#ddad81] dark:hover:text-[#634647] transition-colors"
               >
-                Save Settings
+                Save settings
               </button>
             </div>
-
             <button
-              onClick={handleRejectAll}
-              className="mt-3 text-sm text-red-600 font-semibold underline underline-offset-2"
+              type="button"
+              onClick={() => setShowMore(false)}
+              className="mx-auto mt-3 text-sm font-semibold text-zinc-500 dark:text-zinc-400 hover:text-[#634647] dark:hover:text-[#ddad81] hover:underline transition-colors"
             >
-              Reject all
+              ← Back
             </button>
           </div>
         )}

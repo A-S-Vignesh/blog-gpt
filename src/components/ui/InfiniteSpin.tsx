@@ -21,11 +21,13 @@ const InfiniteSpin: React.FC<Props> = ({
   speed = 1.8,
   segment = 0.1,
 }) => {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
-  // Default colors depending on theme
-  const activeColor = color || (theme === "dark" ? "#4F46E5" : "#4F46E5"); // blue-400 / indigo-600
-  const baseColor = trailColor || (theme === "dark" ? "#1E293B" : "#EEF2FF"); // slate-800 / light indigo
+  // Default colors depending on the resolved theme (handles "system").
+  const activeColor =
+    color || (resolvedTheme === "dark" ? "#4F46E5" : "#4F46E5"); // blue-400 / indigo-600
+  const baseColor =
+    trailColor || (resolvedTheme === "dark" ? "#1E293B" : "#EEF2FF"); // slate-800 / light indigo
 
   const PATH_LEN = 1000;
   const visible = Math.max(

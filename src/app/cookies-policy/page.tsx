@@ -5,9 +5,9 @@ export default function CookiesPolicyPage() {
 
       <p className="para mb-4">
         This Cookies Policy explains how <strong>The Blog GPT</strong> uses
-        cookies and similar tracking technologies when you visit our website. By
-        continuing to use our platform, you consent to the use of cookies as
-        described in this policy.
+        cookies and similar tracking technologies when you visit our website. We
+        only place non-essential cookies after obtaining your explicit consent
+        through our cookie consent banner.
       </p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">1. What Are Cookies?</h2>
@@ -58,6 +58,7 @@ export default function CookiesPolicyPage() {
       <ul className="list-disc pl-6 mb-4 text-[#667085] dark:text-[#C0C5D0] space-y-2">
         <li>Google Authentication (OAuth)</li>
         <li>Google Analytics</li>
+        <li>Vercel Analytics</li>
         <li>Hosting and infrastructure providers</li>
       </ul>
 
@@ -68,9 +69,11 @@ export default function CookiesPolicyPage() {
 
       <h2 className="text-xl font-semibold mt-6 mb-2">5. Managing Cookies</h2>
       <p className="para mb-4">
-        You can control or disable cookies through your browser settings. Please
-        note that disabling essential cookies may affect certain features of the
-        platform, including login functionality.
+        You can manage or withdraw your cookie preferences at any time using the{" "}
+        <strong>Cookie Settings</strong> link in the footer of our website. You
+        may also control cookies through your browser settings. Please note that
+        disabling essential cookies may affect certain features of the platform,
+        including login functionality.
       </p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">
@@ -94,9 +97,7 @@ export default function CookiesPolicyPage() {
         .
       </p>
 
-      <p className="mt-10 text-sm text-gray-500">
-        Last updated: {new Date().toLocaleDateString()}
-      </p>
+      <p className="mt-10 text-sm text-gray-500">Last updated: March 3, 2026</p>
     </section>
   );
 }

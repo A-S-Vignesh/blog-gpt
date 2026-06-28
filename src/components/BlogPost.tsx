@@ -5,6 +5,7 @@ import Tags from "@/components/Tags";
 import Date from "@/components/Date";
 import { IPost } from "@/models/Post";
 import { PopulatedClientPost } from "@/types/post";
+import { optimizeImage, COMMON_IMAGE_SIZES } from "@/lib/images";
 // import ReactMarkdown from "react-markdown";
 // import remarkGfm from "remark-gfm";
 // import rehypeRaw from "rehype-raw";
@@ -18,21 +19,21 @@ const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
     <div className="flex flex-col w-full sm:max-w-[390px] sm:w-full rounded-md max-h-max gap-2 mb-6">
       <div className="relative overflow-hidden rounded-md shrink-0 h-[250px] w-full sm:w-auto">
         <Link
-          href={`/post/${post.slug}`}
+          href={`/${post.creator.username}/${post.slug}`}
           className="block relative w-full h-full"
         >
           <Image
-            src={
-              post.image
-                ? post.image
-                : "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.png"
-            }
-            alt="post-image"
+            src={optimizeImage(
+              post.image ||
+                "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.png",
+              { width: 800 },
+            )}
+            alt={post.title || "post-image"}
             fill
             className={`${
               post.image ? "" : "bg-gray-200 dark:bg-gray-700"
             } rounded-md object-cover hover:scale-110 transition ease-linear duration-200`}
-            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 390px"
+            sizes={COMMON_IMAGE_SIZES.card}
             loading="lazy"
           />
         </Link>
@@ -42,7 +43,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
         <Date date={post.date} creator={post.creator} />
 
         <Link
-          href={`/post/${post.slug}`}
+          href={`/${post.creator.username}/${post.slug}`}
           className="text-[20px] sm:text-[24px] cursor-pointer line-clamp-1 capitalize mb-3 text-black dark:text-white font-semibold"
         >
           {post.title}

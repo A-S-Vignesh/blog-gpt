@@ -1,6 +1,6 @@
 import BlogPost from "@/components/BlogPost";
 import LoadMore from "@/components/LoadMore";
-import { PopulatedClientPost } from "@/types/post";
+import { getPaginatedPosts } from "@/lib/data/posts";
 import { Metadata } from "next";
 
 export const revalidate = 600; // refresh every 10 minutes
@@ -76,18 +76,7 @@ export const metadata:Metadata = {
 };
 
 export default async function PostPage() {
-
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/post?skip=0`, {
-    next: { revalidate: 60 },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch posts");
-  }
-
-  const { data }: { data: PopulatedClientPost[] } = await res.json();
-
-  const initialPosts: PopulatedClientPost[] = data;
+  const { data: initialPosts } = await getPaginatedPosts({ skip: 0 });
 
   return (
     <>

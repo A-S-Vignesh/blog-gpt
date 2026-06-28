@@ -34,6 +34,27 @@ import {
 } from "react-icons/fa";
 import { useEffect } from "react";
 
+// Defined at module scope (not inside TiptapEditor) so it isn't re-created on
+// every render. It closes over nothing but its own props.
+const Button = ({ onClick, icon: Icon, active, title }: any) => (
+  <button
+    type="button"
+    onClick={onClick}
+    title={title}
+    className={`
+      p-2.5 rounded-lg transition-all duration-200 border shadow-sm
+      flex items-center justify-center
+      ${
+        active
+          ? "bg-blue-500 text-white border-blue-500 shadow-blue-500/20"
+          : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md"
+      }
+    `}
+  >
+    <Icon size={16} />
+  </button>
+);
+
 export default function TiptapEditor({ value, onChange }: any) {
   const editor = useEditor({
     extensions: [
@@ -104,25 +125,6 @@ export default function TiptapEditor({ value, onChange }: any) {
       editor.commands.setContent(value);
     }
   }, [value, editor]);
-
-  const Button = ({ onClick, icon: Icon, active, title }: any) => (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      className={`
-        p-2.5 rounded-lg transition-all duration-200 border shadow-sm
-        flex items-center justify-center
-        ${
-          active
-            ? "bg-blue-500 text-white border-blue-500 shadow-blue-500/20"
-            : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md"
-        }
-      `}
-    >
-      <Icon size={16} />
-    </button>
-  );
 
   const addImage = () => {
     const url = window.prompt("Enter image URL:");

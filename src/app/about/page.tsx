@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   FaUsers,
   FaLightbulb,
@@ -9,6 +10,13 @@ import { FaGem, FaCode, FaShieldAlt } from "react-icons/fa";
 import Link from "next/link";
 import LargeFooter from "@/components/LargeFooter";
 import CtaSection from "@/components/CtaSection";
+
+export const metadata: Metadata = {
+  title: "About | The Blog GPT",
+  description:
+    "The Blog GPT is an AI-assisted blogging platform. Describe a topic, get a structured first draft from AI, then edit it in your own voice and publish.",
+  alternates: { canonical: "https://thebloggpt.com/about" },
+};
 
 const AboutPage = () => {
   return (
@@ -24,9 +32,10 @@ const AboutPage = () => {
               </span>
             </h1>
             <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 leading-relaxed">
-              We're revolutionizing content creation with AI-powered tools that
-              help writers, marketers, and creators produce high-quality content
-              faster than ever before.
+              The Blog GPT is an AI-assisted blogging platform. Describe a topic,
+              get a structured first draft from AI, then edit it in your own
+              voice and publish. The AI handles the blank page; you stay in
+              control of the writing.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -35,9 +44,6 @@ const AboutPage = () => {
               >
                 Start Writing Now
               </Link>
-              {/* <button className="border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-semibold py-3 px-8 rounded-lg hover:bg-blue-50 dark:hover:bg-dark-100 transition duration-300">
-                Meet Our Team
-              </button> */}
             </div>
           </div>
           <div className="md:w-1/2 flex justify-center">
@@ -53,9 +59,9 @@ const AboutPage = () => {
                   </h3>
                 </div>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  To empower creators with AI tools that enhance creativity,
-                  save time, and produce exceptional content that resonates with
-                  audiences.
+                  Make blogging faster without making it generic. We help you
+                  skip the blank page and spend your time refining ideas instead
+                  of formatting them.
                 </p>
 
                 <div className="flex items-center">
@@ -63,12 +69,13 @@ const AboutPage = () => {
                     <FaChartLine className="text-blue-600 dark:text-blue-300 text-2xl" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Our Vision
+                    What We&apos;re Building
                   </h3>
                 </div>
                 <p className="text-gray-600 dark:text-gray-400 mt-4">
-                  To become the leading AI-powered content platform where every
-                  creator can bring their ideas to life with ease.
+                  A simple, honest place where anyone can turn an idea into a
+                  clean, well-structured post, and share it with readers who
+                  care.
                 </p>
               </div>
             </div>
@@ -91,9 +98,9 @@ const AboutPage = () => {
               <div className="relative h-80 bg-gray-200 dark:bg-gray-800 rounded-2xl overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 opacity-70"></div>
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="text-xl font-bold">Founded in 2023</h3>
+                  <h3 className="text-xl font-bold">Made for writers</h3>
                   <p className="text-blue-100">
-                    By a team of passionate writers and AI engineers
+                    An independent, open-source project
                   </p>
                 </div>
               </div>
@@ -109,13 +116,14 @@ const AboutPage = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                      The Beginning
+                      Why it exists
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Frustrated by the time-consuming process of content
-                      creation, our founders set out to build a solution that
-                      leverages AI to streamline writing while maintaining
-                      quality and creativity.
+                      The hardest part of blogging is staring at an empty page.
+                      The Blog GPT turns a topic and a short brief into a
+                      structured first draft, with an introduction, headings,
+                      and sections, so you can start editing instead of starting
+                      from scratch.
                     </p>
                   </div>
                 </div>
@@ -128,13 +136,13 @@ const AboutPage = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                      Rapid Growth
+                      Drafts, not autopilot
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Since our launch, we've helped thousands of creators
-                      publish over 50,000 blog posts. Our user base has grown to
-                      include bloggers, marketers, and businesses in over 30
-                      countries.
+                      The AI writes the first version; you make it good. Adjust
+                      the tone, add your own images and examples, and publish
+                      only when it sounds like you. Your draft is never locked.
+                      Everything is editable in a rich editor.
                     </p>
                   </div>
                 </div>
@@ -147,12 +155,13 @@ const AboutPage = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                      Today & Beyond
+                      Where we are
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400">
-                      We continue to innovate with new AI capabilities,
-                      expanding our platform to support more content types while
-                      maintaining our commitment to quality and user experience.
+                      We&apos;re focused on the basics done well: fast drafts, a
+                      clean editor, and a simple place to publish and be read.
+                      The platform is still young and growing, and we improve it
+                      based on real feedback.
                     </p>
                   </div>
                 </div>
@@ -167,10 +176,10 @@ const AboutPage = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-              Our Core Values
+              What We Care About
             </h2>
             <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              The principles that guide everything we do
+              The principles behind how we build
             </p>
           </div>
 
@@ -178,39 +187,39 @@ const AboutPage = () => {
             {[
               {
                 icon: <FaHeart className="text-red-500 text-2xl" />,
-                title: "User-Centric",
+                title: "Built for writers",
                 description:
-                  "We prioritize our users needs above all, constantly improving based on feedback to deliver exceptional value.",
+                  "We build for the people who actually write, and improve based on the feedback they send us.",
               },
               {
                 icon: <FaGem className="text-blue-500 text-2xl" />,
-                title: "Quality Focus",
+                title: "Useful drafts",
                 description:
-                  "We believe in creating tools that produce high-quality, authentic content that stands out.",
+                  "A draft is a starting point. We focus on giving you a clean, structured base that's genuinely worth editing.",
               },
               {
                 icon: <FaCode className="text-green-500 text-2xl" />,
-                title: "Innovation",
+                title: "Practical AI",
                 description:
-                  "We embrace cutting-edge AI technology to solve real content creation challenges.",
+                  "We use AI to solve one real, boring problem, the blank page, not to replace your judgment.",
               },
               {
                 icon: <FaUsers className="text-purple-500 text-2xl" />,
-                title: "Collaboration",
+                title: "A reading community",
                 description:
-                  "We foster a collaborative environment where ideas are shared and valued.",
+                  "Published posts live in a shared feed where readers can follow writers, like posts, and leave comments.",
               },
               {
                 icon: <FaShieldAlt className="text-amber-500 text-2xl" />,
-                title: "Integrity",
+                title: "Honesty",
                 description:
-                  "We maintain transparency in our operations and respect user privacy and data security.",
+                  "No fake numbers and no hidden limits. The AI writes drafts; you make them good. We say so plainly.",
               },
               {
                 icon: <FaRocket className="text-indigo-500 text-2xl" />,
-                title: "Growth Mindset",
+                title: "Still improving",
                 description:
-                  "We continuously learn and adapt to help our users and our platform grow.",
+                  "We're early, and we'd rather ship something honest and keep getting better than overpromise.",
               },
             ].map((value, index) => (
               <div
@@ -235,10 +244,10 @@ const AboutPage = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-              Our Technology
+              How It Works Under the Hood
             </h2>
             <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Powered by cutting-edge AI and designed for creators
+              Modern AI, a clean editor, and a focus on what helps you publish
             </p>
           </div>
 
@@ -248,10 +257,10 @@ const AboutPage = () => {
                 <div className="text-center p-6">
                   <div className="text-6xl mb-4">🤖</div>
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Gemini AI
+                    Powered by AI
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Advanced language model at our core
+                    The AI that drafts your posts
                   </p>
                 </div>
               </div>
@@ -261,35 +270,36 @@ const AboutPage = () => {
               <div className="space-y-8">
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                    Advanced AI Engine
+                    Built on AI
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    Our platform leverages Google's Gemini AI technology,
-                    fine-tuned specifically for content creation. This allows us
-                    to generate high-quality, coherent, and contextually
-                    appropriate content across various domains.
+                    The Blog GPT uses a capable AI model, guided by prompts
+                    designed for blog writing. It drafts an introduction,
+                    headings, and sections, a real structure you can refine,
+                    not a wall of text.
                   </p>
                 </div>
 
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                    SEO Optimization
+                    Easy to find in search
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    Built-in SEO analysis ensures your content ranks well on
-                    search engines. Our algorithms analyze top-performing
-                    content to provide optimization suggestions.
+                    Posts are built with search in mind: clear H2/H3 headings,
+                    readable formatting, meta-friendly excerpts, clean URLs, and
+                    an auto-generated sitemap. Good structure helps, though
+                    ranking always depends on your content and your niche.
                   </p>
                 </div>
 
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                    Continuous Learning
+                    Yours to edit
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Our AI models continuously learn from user interactions and
-                    feedback, constantly improving content quality and
-                    relevance.
+                    You&apos;re never locked into the AI&apos;s draft. Everything
+                    is editable in a rich text editor, and we keep refining the
+                    prompts and tools based on how people actually use them.
                   </p>
                 </div>
               </div>

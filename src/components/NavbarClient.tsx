@@ -37,9 +37,12 @@ interface NavbarClientProps {
 
 const NavbarClient = ({ userData }: NavbarClientProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const { theme, setTheme } = useTheme();
-  // const [isDarkMode,setDarkMode]=use
-  const isDarkMode = theme === "dark";
+  // Use `resolvedTheme` (not `theme`): for a new user on the default "system"
+  // theme, `theme` is the string "system", so `theme === "dark"` is false even
+  // when the OS is dark — which showed the dark logo on a dark background.
+  // `resolvedTheme` maps "system" to the actual "dark"/"light".
+  const { resolvedTheme } = useTheme();
+  const isDarkMode = resolvedTheme === "dark";
 
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
@@ -75,9 +78,15 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
     </div>
   );
 
+  // Marketing nav items are ONLY shown to logged-out visitors. Once a user
+  // signs in, the navbar shifts to a workspace shell: logo + actions +
+  // avatar dropdown — matching Medium / Vercel / Twitter / Instagram /
+  // Hashnode. Workspace navigation lives in the LeftSidebar inside the
+  // (app) route group; marketing items a logged-in user may still need
+  // (like Pricing for upgrades) live inside the avatar dropdown.
   const navLinks = [
     { name: "Home", href: "/", icon: <FaHome /> },
-    { name: "Blog", href: "/post", icon: <FaBlog /> },
+    { name: "Blog", href: "/explore", icon: <FaBlog /> },
     { name: "Pricing", href: "/pricing", icon: <FaRobot /> },
     { name: "About", href: "/about", icon: <FaInfoCircle /> },
     { name: "Contact", href: "/contact", icon: <FaEnvelope /> },
@@ -107,7 +116,8 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
+          {/* Desktop marketing nav — guests only. Logged-in users navigate
+              the workspace via the LeftSidebar and the avatar dropdown. */}
           <div className="hidden lg:flex ml-10 space-x-8">
             {!userData &&
               navLinks.map((link) => (
@@ -190,6 +200,13 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
                       >
                         <FaUser className="mr-3" /> Account Settings
                       </Link>
+                      <Link
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        href="/billing"
+                      >
+                        <FaRobot className="mr-3" /> Upgrade Plan
+                      </Link>
                     </div>
                     <div className="p-2 border-t border-gray-200 dark:border-gray-700">
                       <button
@@ -208,7 +225,7 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
             </>
           ) : (
             <button
-              onClick={() => signIn("google")}
+              onClick={() => signIn("google", { callbackUrl: "/feed" })}
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition duration-300"
             >
               Sign in
@@ -226,6 +243,8 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
 
           <button
             onClick={() => setIsOpen(true)}
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isOpen}
             className="text-gray-700 dark:text-gray-300 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition"
           >
             <FaBars size={24} />
@@ -241,7 +260,7 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
         >
           <div className="flex justify-between items-center mb-10">
             <Link
-              href="/"
+              href={userData ? "/feed" : "/"}
               className="flex items-center"
               onClick={() => setIsOpen(false)}
             >
@@ -269,20 +288,24 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
             </button>
           </div>
 
-          {/* Mobile Navigation Links */}
-          <div className="space-y-4 mb-10">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className="flex items-center py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
-                onClick={() => setIsOpen(false)}
-              >
-                <span className="mr-3 text-lg">{link.icon}</span>
-                <span className="text-lg font-medium">{link.name}</span>
-              </Link>
-            ))}
-          </div>
+          {/* Mobile marketing nav — guests only (mirrors desktop). Logged-in
+              users navigate via the LeftSidebar hamburger inside (app) pages
+              and the avatar block below. */}
+          {!userData && (
+            <div className="space-y-4 mb-10">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="flex items-center py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span className="mr-3 text-lg">{link.icon}</span>
+                  <span className="text-lg font-medium">{link.name}</span>
+                </Link>
+              ))}
+            </div>
+          )}
 
           {/* Conditional Mobile Buttons */}
           {userData ? (
@@ -338,6 +361,13 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
                 >
                   <FaUser className="mr-3" /> Account Settings
                 </Link>
+                <Link
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center py-3 px-4 mb-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
+                  href="/billing"
+                >
+                  <FaRobot className="mr-3" /> Upgrade Plan
+                </Link>
                 <button
                   onClick={() => {
                     setIsOpen(false);
@@ -353,7 +383,7 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
             <button
               onClick={() => {
                 setIsOpen(false);
-                signIn("google");
+                signIn("google", { callbackUrl: "/feed" });
               }}
               className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-300"
             >

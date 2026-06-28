@@ -2,11 +2,39 @@ import { model, models, Schema,Types, Document, Model } from "mongoose";
 
 export type PlanId = "free" | "pro" | "business";
 
+/**
+ * Build a format validator that only runs when the field is actually being set
+ * or changed. On an existing document where we only touched unrelated fields
+ * (e.g. an AI-usage counter, plan status, or deletion flag), the field's format
+ * is NOT re-checked — so a legacy/edge-case value (a short legacy username, or
+ * an accented OAuth name) can't block those unrelated saves with a 500. New
+ * accounts and explicit profile edits still validate normally, and query-level
+ * updates (where `this` is the query, not a document) fall through to the regex.
+ */
+function validateFormatWhenModified(field: string, re: RegExp) {
+  return function (this: unknown, value: string): boolean {
+    const doc = this as { isModified?: (path: string) => boolean };
+    if (typeof doc?.isModified === "function" && !doc.isModified(field)) {
+      return true;
+    }
+    return re.test(value);
+  };
+}
+
 export interface IUser extends Document {
   _id: Types.ObjectId;
   email: string;
   name: string;
   username: string;
+  /**
+   * The user's prior handle, kept after their ONE-TIME username change so old
+   * /{username} and /{username}/{slug} links 301-redirect to the new handle,
+   * and so the retired handle is never reassigned to someone else. Absent until
+   * a change is made.
+   */
+  previousUsername?: string;
+  /** Set the moment the one-time username change is used; presence = locked. */
+  usernameChangedAt?: Date | null;
   bio?: string;
   socials: {
     twitter?: string;
@@ -18,10 +46,9 @@ export interface IUser extends Document {
   role: "admin" | "author" | "user";
   emailVerified: boolean;
   isActive: boolean;
-  bookmarks: Schema.Types.ObjectId[];
-  likes: Schema.Types.ObjectId[];
-  followers: Schema.Types.ObjectId[];
-  following: Schema.Types.ObjectId[];
+  followersCount: number;
+  followingCount: number;
+  bookmarksCount: number;
   geminiApiKey?: string;
   slug?: string;
   plan: PlanId;
@@ -34,6 +61,16 @@ export interface IUser extends Document {
    * These are consumed only after the monthly quota is exhausted.
    */
   aiExtraCredits?: number;
+  /** Razorpay customer + subscription identifiers. */
+  razorpayCustomerId?: string;
+  razorpaySubscriptionId?: string;
+  /** Soft-block flag — set true to refuse sign-in. */
+  banned?: boolean;
+  bannedReason?: string;
+  /** GDPR deletion fields. Set when user requests deletion. */
+  deletionScheduledFor?: Date | null;
+  deletionCancelToken?: string;
+  deletionRequestedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,20 +85,32 @@ export const UserSchema = new Schema<IUser>(
     name: {
       type: String,
       required: [true, "Name is required!"],
-      match: [
-        /^[a-zA-Z\s\-]+$/,
-        "Name must contain only letters, spaces, or hyphens!",
-      ],
+      validate: {
+        validator: validateFormatWhenModified("name", /^[a-zA-Z\s\-]+$/),
+        message: "Name must contain only letters, spaces, or hyphens!",
+      },
     },
     username: {
       type: String,
       required: [true, "Username is required!"],
-      unique: [true, "Username already exists!"],
-      match: [
-        /^(?=.{6,20}$)(?![_-])(?!.*[_-]{2})[a-zA-Z0-9_-]+(?<![_-])$/,
-        "Username must be 6-20 characters, alphanumeric with optional underscores or hyphens.",
-      ],
+      // Case is PRESERVED (no `lowercase: true`) so the display handle keeps the
+      // user's chosen capitalization. Uniqueness is enforced case-INSENSITIVELY
+      // by a collation index declared below (not a field-level `unique`), so
+      // "Bob" and "bob" can't both exist. Letters of either case are allowed.
+      trim: true,
+      validate: {
+        validator: validateFormatWhenModified(
+          "username",
+          /^(?=.{6,20}$)(?![_-])(?!.*[_-]{2})[a-zA-Z0-9_-]+(?<![_-])$/,
+        ),
+        message:
+          "Username must be 6-20 characters: letters, numbers, _ or - (no leading/trailing or doubled separators).",
+      },
     },
+    // The retired handle from the user's one-time change. No default, so it is
+    // absent (not "") until set, keeping the sparse index below lean.
+    previousUsername: { type: String },
+    usernameChangedAt: { type: Date, default: null },
     bio: {
       type: String,
       default: "",
@@ -90,18 +139,9 @@ export const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: true,
     },
-    bookmarks: [
-      { type: Schema.Types.ObjectId, ref: "Post" }
-    ],
-    likes: [
-      { type: Schema.Types.ObjectId, ref: "Post" }
-    ],
-    followers: [
-      { type: Schema.Types.ObjectId, ref: "User" }
-    ],
-    following: [
-      { type: Schema.Types.ObjectId, ref: "User" }
-    ],
+    followersCount: { type: Number, default: 0 },
+    followingCount: { type: Number, default: 0 },
+    bookmarksCount: { type: Number, default: 0 },
     geminiApiKey: {
       type: String,
       default: "",
@@ -137,10 +177,43 @@ export const UserSchema = new Schema<IUser>(
       type: Number,
       default: 0,
     },
+    razorpayCustomerId: { type: String, default: "", index: true },
+    razorpaySubscriptionId: { type: String, default: "", index: true },
+    banned: { type: Boolean, default: false, index: true },
+    bannedReason: { type: String, default: "" },
+    deletionScheduledFor: { type: Date, default: null, index: true },
+    deletionCancelToken: { type: String, default: "", index: true },
+    deletionRequestedAt: { type: Date, default: null },
   },
   {
     timestamps: true,
   }
+);
+
+// Case-insensitive UNIQUE index on username (collation strength 2 = ignore
+// case). This both enforces "vignesh-devil" and "Vignesh-Devil" as the same
+// (no duplicates) and backs case-insensitive lookups. Replaces the old
+// field-level `unique: true` (which was case-sensitive). The pre-existing
+// `username_1` index must be dropped first — see migrateUsernameIndex.ts.
+UserSchema.index(
+  { username: 1 },
+  {
+    unique: true,
+    collation: { locale: "en", strength: 2 },
+    name: "username_ci_unique",
+  },
+);
+
+// Sparse, case-insensitive index on the retired handle. Backs the old-username
+// 301-redirect lookup and the "is this handle reserved by someone's history?"
+// reservation check. Sparse: only changed users carry the field, so it stays small.
+UserSchema.index(
+  { previousUsername: 1 },
+  {
+    collation: { locale: "en", strength: 2 },
+    name: "previous_username_ci",
+    sparse: true,
+  },
 );
 
 export const User: Model<IUser> = models.User || model<IUser>("User", UserSchema);

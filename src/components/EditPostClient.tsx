@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Form from "./Form";
 
-export default function EditPostClient({ slug }: { slug: string }) {
+export default function EditPostClient({
+  username,
+  slug,
+}: {
+  username: string;
+  slug: string;
+}) {
   const router = useRouter();
 
   const [post, setPost] = useState({
@@ -22,7 +28,7 @@ export default function EditPostClient({ slug }: { slug: string }) {
 
     const fetchPost = async () => {
       try {
-        const res = await fetch(`/api/post/${slug}`);
+        const res = await fetch(`/api/post/${username}/${slug}`);
         const data = await res.json();
 
         setPost({
@@ -40,7 +46,7 @@ export default function EditPostClient({ slug }: { slug: string }) {
     };
 
     fetchPost();
-  }, [slug]);
+  }, [username, slug]);
 
   if (loading)
     return <FormSkeleton />;
@@ -52,7 +58,7 @@ export default function EditPostClient({ slug }: { slug: string }) {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/post/${slug}`, {
+      const res = await fetch(`/api/post/${username}/${slug}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(post),
@@ -60,7 +66,7 @@ export default function EditPostClient({ slug }: { slug: string }) {
 
       if (res.ok) {
         const updated = await res.json();
-        router.push(`/post/${updated.slug}`);
+        router.push(`/${username}/${updated.slug}`);
       } else {
         console.error("Failed to update post");
       }
@@ -72,7 +78,7 @@ export default function EditPostClient({ slug }: { slug: string }) {
   };
 
   const handleCancel = () => {
-    router.push(`/post/${slug}`);
+    router.push(`/${username}/${slug}`);
   };
 
   return (

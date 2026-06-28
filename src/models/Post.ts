@@ -11,8 +11,23 @@ export interface IPost extends Document {
   tags: string[];
   category?: string;
   status?: "draft" | "published" | "archived";
+  moderationStatus?: "pending" | "approved" | "flagged";
+  moderationReason?: string;
+  moderationCategories?: string[];
+  moderationCheckedAt?: Date;
   views?: number;
-  likes?: Schema.Types.ObjectId[];
+  /** Denormalized counter — source of truth is the Like collection. */
+  likesCount?: number;
+  /** Denormalized counter — source of truth is the Comment collection. */
+  commentsCount?: number;
+  /** Post owner can disable new comments. Undefined on legacy posts == allowed. */
+  allowComments?: boolean;
+  /** Denormalized counter — source of truth is the Bookmark collection. */
+  bookmarksCount?: number;
+  /** Total share clicks across all channels (tracked best-effort, no source of truth). */
+  sharesCount?: number;
+  /** Per-channel share tally: { twitter: 12, whatsapp: 4, ... }. */
+  sharesByChannel?: Record<string, number>;
   readingTime?: number;
   metaTitle?: string;
   metaDescription?: string;
@@ -42,8 +57,22 @@ const PostSchema = new Schema<IPost>(
       enum: ["draft", "published", "archived"],
       default: "draft",
     },
+    moderationStatus: {
+      type: String,
+      enum: ["pending", "approved", "flagged"],
+      default: "pending",
+      index: true,
+    },
+    moderationReason: { type: String, default: "" },
+    moderationCategories: { type: [String], default: [] },
+    moderationCheckedAt: { type: Date },
     views: { type: Number, default: 0 },
-    likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    likesCount: { type: Number, default: 0, index: true },
+    commentsCount: { type: Number, default: 0 },
+    allowComments: { type: Boolean, default: true },
+    bookmarksCount: { type: Number, default: 0 },
+    sharesCount: { type: Number, default: 0 },
+    sharesByChannel: { type: Map, of: Number, default: () => new Map() },
     readingTime: { type: Number, default: 0 },
     metaTitle: { type: String, default: "" },
     metaDescription: { type: String, default: "" },
@@ -54,6 +83,11 @@ const PostSchema = new Schema<IPost>(
 );
 
 PostSchema.index({ creator: 1, slug: 1 }, { unique: true });
+PostSchema.index({ status: 1 });
+// Feed/listing by status, newest-first.
+PostSchema.index({ status: 1, createdAt: -1 });
+// A creator's posts filtered by status (e.g. their drafts/published).
+PostSchema.index({ creator: 1, status: 1 });
 
 const Post = models.Post || model<IPost>("Post", PostSchema);
 export default Post;

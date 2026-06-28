@@ -3,11 +3,26 @@ import Post from "@/models/Post";
 import { NextResponse, NextRequest } from "next/server";
 import Comment from "@/models/Comment";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import cloudinary from "@/lib/cloudinary";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import sanitizeHtml from "sanitize-html";
+import {
+  POST_LIST_TAG,
+  postDetailTag,
+  postRelatedTag,
+} from "@/lib/data/posts";
+import { ApiError, apiErrorResponse } from "@/lib/api/errors";
+import { rateLimit } from "@/lib/rateLimit";
+import { moderateContent } from "@/lib/ai/moderation";
+import { moderateImage } from "@/lib/ai/imageModeration";
+import { normalizeTags, MAX_TAGS } from "@/utils/tags";
+import {
+  buildExcerpt,
+  dataUriByteSize,
+  MAX_IMAGE_BYTES,
+} from "@/lib/postContent";
 
 type UpdatePostBody = {
   title: string;
@@ -32,18 +47,22 @@ export async function GET(
       "name username image"
     );
 
-    // Validate post exists AND belongs to the correct username
-    if (!post || post.creator.username !== username) {
+    // Validate post exists AND belongs to the correct username (case-insensitive
+    // — usernames resolve regardless of URL casing).
+    if (
+      !post ||
+      post.creator.username?.toLowerCase() !== username.toLowerCase()
+    ) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    // 2️⃣ Count likes
-    const likesCount = post.likes?.length || 0;
+    // Likes count is the denormalized counter on Post — kept in sync by the
+    // like endpoint via `countDocuments` on the Like collection.
+    const likesCount = post.likesCount ?? 0;
 
-    // 3️⃣ Count comments
-    const commentsCount = await Comment.countDocuments({
-      postId: post._id,
-    });
+    // Use the denormalized counter (kept in sync by the comment create/delete
+    // endpoints) instead of re-counting the whole collection on every request.
+    const commentsCount = post.commentsCount ?? 0;
 
     // 4️⃣ Fetch first-level comments
     const comments = await Comment.find({
@@ -85,6 +104,23 @@ export async function PATCH(
   }
 
   try {
+    // Throttle before any expensive work — each edit runs a Gemini moderation
+    // pass and may upload to Cloudinary, both of which cost money per call.
+    const rl = await rateLimit({
+      key: `edit-post:${session.user._id.toString()}`,
+      windowMs: 60 * 60 * 1000,
+      max: 20,
+    });
+    if (!rl.ok) {
+      return apiErrorResponse(
+        new ApiError(
+          "RATE_LIMITED",
+          "You're editing too frequently. Please wait a bit and try again.",
+          { retryAfterSeconds: rl.retryAfterSeconds },
+        ),
+      );
+    }
+
     const { title, content, image, tags }: UpdatePostBody = await req.json();
     if (
       !title ||
@@ -125,10 +161,12 @@ export async function PATCH(
       );
     }
 
-    // 5. Tag length (optional)
-    if (tags.some((t) => t.trim().length < 2)) {
+    // 5. Normalize tags (lowercase, strip "#", dedupe, cap) — server is the
+    // source of truth for what gets stored.
+    const cleanTags = normalizeTags(tags, MAX_TAGS);
+    if (cleanTags.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Each tag must be at least 2 characters" }),
+        JSON.stringify({ error: "Add at least one valid tag (2+ characters)" }),
         { status: 400 }
       );
     }
@@ -164,27 +202,61 @@ export async function PATCH(
     const post = await Post.findOne({ slug });
 
     if (!post) {
-      return new Response("No post found!", { status: 404 });
+      return apiErrorResponse(new ApiError("NOT_FOUND", "Post not found."));
     }
 
-    // ✅ Check if the user is the creator
     if (post.creator.toString() !== session.user._id) {
-      return NextResponse.json(
-        { error: "Forbidden: Not your post" },
-        { status: 403 }
+      return apiErrorResponse(
+        new ApiError("FORBIDDEN", "You can only edit your own posts."),
       );
     }
 
-    // 👇 If image changed, delete old one
+    const verdict = await moderateContent(cleanHTML, { title });
+    if (verdict.status === "flagged") {
+      return apiErrorResponse(
+        new ApiError(
+          "CONTENT_FLAGGED",
+          "This update was flagged by our content policy and cannot be saved. Edit the content and try again.",
+          { reason: verdict.reason, categories: verdict.categories },
+        ),
+      );
+    }
+
     if (post.image !== image && post.imagePublicId) {
       await cloudinary.uploader.destroy(post.imagePublicId);
     }
 
-    // ✅ Upload new image if it's base64
     let updatedImage = image;
     let updatedPublicId = post.imagePublicId;
+    // True when image moderation couldn't run — allow the edit but mark the
+    // post "pending" for review rather than auto-approving.
+    let imageReviewPending = false;
 
     if (image.startsWith("data:image")) {
+      // Reject oversized uploads BEFORE sending to Cloudinary (cost / DoS).
+      if (dataUriByteSize(image) > MAX_IMAGE_BYTES) {
+        return apiErrorResponse(
+          new ApiError(
+            "PAYLOAD_TOO_LARGE",
+            `Image is too large (max ${Math.round(
+              MAX_IMAGE_BYTES / (1024 * 1024),
+            )}MB).`,
+          ),
+        );
+      }
+      // Screen the new image for disallowed content before storing it.
+      const imgVerdict = await moderateImage(image);
+      if (imgVerdict.status === "flagged") {
+        return apiErrorResponse(
+          new ApiError(
+            "CONTENT_FLAGGED",
+            "This image was flagged by our content policy and cannot be saved. Please choose a different image.",
+            { reason: imgVerdict.reason, categories: imgVerdict.categories },
+          ),
+        );
+      }
+      if (imgVerdict.status === "error") imageReviewPending = true;
+
       const uploaded = await cloudinary.uploader.upload(image, {
         folder: "blog-gpt/posts",
       });
@@ -196,11 +268,20 @@ export async function PATCH(
     post.content = cleanHTML;
     post.image = updatedImage;
     post.imagePublicId = updatedPublicId;
-    post.tags = tags;
+    post.tags = cleanTags;
+    // Keep the excerpt (meta description) in sync with the edited content.
+    post.excerpt = buildExcerpt(
+      cleanHTML.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
+    );
+    post.moderationStatus =
+      verdict.status === "safe" && !imageReviewPending ? "approved" : "pending";
+    post.moderationCheckedAt = new Date();
 
     await post.save();
 
-    // ✅ Trigger revalidation for this specific post page
+    revalidateTag(POST_LIST_TAG, "default");
+    revalidateTag(postDetailTag(post.slug), "default");
+    revalidateTag(postRelatedTag(post.slug), "default");
     revalidatePath(`/${session.user.username}/${post.slug}`);
     revalidatePath("/post");
     revalidatePath(`/${session.user.username}`);
@@ -246,8 +327,10 @@ export async function DELETE(
 
     await Post.deleteOne({ slug });
 
-    // ✅ Trigger revalidations
-    revalidatePath("/posts");
+    revalidateTag(POST_LIST_TAG, "default");
+    revalidateTag(postDetailTag(slug), "default");
+    revalidateTag(postRelatedTag(slug), "default");
+    revalidatePath("/post");
     revalidatePath(`/${session.user.username}/${slug}`);
     revalidatePath(`/${session.user.username}`);
 

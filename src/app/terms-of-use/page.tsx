@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const TermsOfUsePage = () => {
   return (
     <section className="max-w-5xl mx-auto px-6 py-12 text-gray-800 dark:text-gray-200">
@@ -69,14 +71,63 @@ const TermsOfUsePage = () => {
         without written permission.
       </p>
 
-      <h2 className="text-xl font-semibold mt-6 mb-2">7. Termination</h2>
+      <h2 className="text-xl font-semibold mt-6 mb-2">
+        7. Subscriptions, Billing &amp; Cancellation
+      </h2>
+      <p className="mb-4 para">
+        The Blog GPT offers free and paid subscription plans. The features and
+        prices of each plan are shown on our{" "}
+        <Link
+          href="/pricing"
+          className="underline text-blue-600 dark:text-blue-400"
+        >
+          Pricing page
+        </Link>
+        . By subscribing to a paid plan, you agree to the following:
+      </p>
+      <ul className="list-disc ml-6 mb-4 para space-y-2">
+        <li>
+          <strong>Payment processing.</strong> Payments are processed securely
+          by Razorpay. We do not store your full card or bank details.
+        </li>
+        <li>
+          <strong>Billing &amp; auto-renewal.</strong> Paid plans are billed in
+          advance on a recurring basis (monthly or yearly, as selected) and renew
+          automatically until you cancel.
+        </li>
+        <li>
+          <strong>Cancellation.</strong> You may cancel at any time from your
+          billing settings. Cancellation stops future renewals; your plan stays
+          active until the end of the current billing period, after which your
+          account reverts to the free plan.
+        </li>
+        <li>
+          <strong>No refunds.</strong> Payments are non-refundable. Cancelling
+          prevents future charges but does not refund the current or past billing
+          periods, except where a refund is required by applicable law.
+        </li>
+        <li>
+          <strong>Price changes.</strong> We may change plan prices or features
+          with reasonable notice; changes take effect on your next billing cycle.
+        </li>
+        <li>
+          <strong>Taxes.</strong> Prices may be exclusive of applicable taxes,
+          which will be added where required.
+        </li>
+        <li>
+          <strong>Failed payments.</strong> If a renewal payment fails, we may
+          downgrade your account to the free plan and its usage limits.
+        </li>
+      </ul>
+
+      <h2 className="text-xl font-semibold mt-6 mb-2">8. Termination</h2>
       <p className="mb-4 para">
         We may suspend or terminate your account at our discretion if you
         violate these Terms or engage in harmful activity.
       </p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">
-        8. Limitation of Liability
+        9. Limitation of Liability
       </h2>
       <p className="mb-4 para">
         The Blog GPT is provided "as is" without warranties of any kind. We are
@@ -84,19 +135,19 @@ const TermsOfUsePage = () => {
         resulting from your use of the platform.
       </p>
 
-      <h2 className="text-xl font-semibold mt-6 mb-2">9. Governing Law</h2>
+      <h2 className="text-xl font-semibold mt-6 mb-2">10. Governing Law</h2>
       <p className="mb-4 para">
         These Terms shall be governed by and interpreted in accordance with the
         laws of India.
       </p>
 
-      <h2 className="text-xl font-semibold mt-6 mb-2">10. Changes to Terms</h2>
+      <h2 className="text-xl font-semibold mt-6 mb-2">11. Changes to Terms</h2>
       <p className="mb-4 para">
         We may update these Terms from time to time. Continued use of the
         platform after changes means you accept the revised Terms.
       </p>
 
-      <h2 className="text-xl font-semibold mt-6 mb-2">11. Contact</h2>
+      <h2 className="text-xl font-semibold mt-6 mb-2">12. Contact</h2>
       <p className="mb-4 para">
         For questions regarding these Terms, please contact:
         <a
@@ -108,9 +159,7 @@ const TermsOfUsePage = () => {
         </a>
       </p>
 
-      <p className="mt-10 text-sm text-gray-500">
-        Last updated: {new Date().toLocaleDateString()}
-      </p>
+      <p className="mt-10 text-sm text-gray-500">Last updated: June 26, 2026</p>
     </section>
   );
 };

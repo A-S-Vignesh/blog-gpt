@@ -5,11 +5,11 @@ function CtaSection() {
       <section className="py-16 px-6 sm:px-16 md:px-20 lg:px-28 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-            Ready to Transform Your Content Creation?
+            Ready to Write Your Next Blog Post?
           </h2>
           <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-            Join thousands of creators who are already using Blog-GPT to produce
-            amazing content faster.
+            Start with the free plan: describe a topic, get a structured draft,
+            and publish in minutes.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link

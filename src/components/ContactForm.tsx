@@ -13,13 +13,13 @@ const ContactForm = () => {
 
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
-    >("idle");
+  >("idle");
   const [showModal, setShowModal] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -66,11 +66,15 @@ const ContactForm = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
-            <label className="block mb-2 text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="name"
+              className="block mb-2 text-gray-700 dark:text-gray-300"
+            >
               Name
             </label>
             <input
               type="text"
+              id="name"
               name="name"
               value={formData.name}
               onChange={handleChange}
@@ -80,11 +84,15 @@ const ContactForm = () => {
           </div>
 
           <div>
-            <label className="block mb-2 text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="email"
+              className="block mb-2 text-gray-700 dark:text-gray-300"
+            >
               Email
             </label>
             <input
               type="email"
+              id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
@@ -95,11 +103,15 @@ const ContactForm = () => {
         </div>
 
         <div>
-          <label className="block mb-2 text-gray-700 dark:text-gray-300">
+          <label
+            htmlFor="subject"
+            className="block mb-2 text-gray-700 dark:text-gray-300"
+          >
             Subject
           </label>
           <input
             type="text"
+            id="subject"
             name="subject"
             value={formData.subject}
             onChange={handleChange}
@@ -109,10 +121,14 @@ const ContactForm = () => {
         </div>
 
         <div>
-          <label className="block mb-2 text-gray-700 dark:text-gray-300">
+          <label
+            htmlFor="message"
+            className="block mb-2 text-gray-700 dark:text-gray-300"
+          >
             Message
           </label>
           <textarea
+            id="message"
             name="message"
             rows={6}
             value={formData.message}
@@ -135,6 +151,24 @@ const ContactForm = () => {
           <FaPaperPlane className="mr-2" />
           {status === "loading" ? "Sending..." : "Send Message"}
         </button>
+
+        {status === "error" && (
+          <div
+            role="alert"
+            className="rounded-lg border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-center text-sm font-medium text-red-600 dark:text-red-400"
+          >
+            {errorMessage || "Failed to send message. Please try again."}
+          </div>
+        )}
+
+        <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+          By submitting, you agree to our{" "}
+          <a href="/privacy-policy" className="underline hover:text-blue-600">
+            Privacy Policy
+          </a>
+          . We collect your name and email solely to respond to your enquiry and
+          will not share them with third parties.
+        </p>
       </form>
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">

@@ -60,7 +60,14 @@ export const generateUsername = async (name: string): Promise<string> => {
 
   // If the candidate already matches regex, check DB otherwise try to fix/collide
   if (USERNAME_REGEX.test(base)) {
-    const exists = await User.findOne({ username: base }).lean().exec();
+    // Treat a candidate as taken if it's an existing handle OR a retired one
+    // (previousUsername) — retired handles are reserved so their redirects work.
+    const exists = await User.findOne({
+      $or: [{ username: base }, { previousUsername: base }],
+    })
+      .collation({ locale: "en", strength: 2 })
+      .lean()
+      .exec();
     if (!exists) return base;
   }
 
@@ -94,8 +101,13 @@ export const generateUsername = async (name: string): Promise<string> => {
     }
 
     // check DB uniqueness
-    // eslint-disable-next-line no-await-in-loop
-    const exists = await User.findOne({ username: candidate }).lean().exec();
+     
+    const exists = await User.findOne({
+      $or: [{ username: candidate }, { previousUsername: candidate }],
+    })
+      .collation({ locale: "en", strength: 2 })
+      .lean()
+      .exec();
     if (!exists) return candidate;
   }
 

@@ -3,6 +3,10 @@
 import Form from "@/components/Form";
 // import { generatePostAction } from "@/redux/slice/generatePost";
 import { clearPost } from "@/redux/features/generateSlice";
+import {
+  loadGeneratedDraft,
+  clearGeneratedDraft,
+} from "@/utils/generatedDraft";
 import { useAppSelector } from "@/redux/hooks";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -24,22 +28,21 @@ const CreateBlog = () => {
     image: null as string | ArrayBuffer | null,
     tags: [] as string[],
   });
-  console.log("Generate post", generatePost);
-
   useEffect(() => {
-    if (generatePost) {
+    // Prefer the in-memory Redux draft (set when navigating from generate).
+    // Fall back to the sessionStorage copy so a refresh on this page doesn't
+    // wipe the generated post.
+    const source = generatePost ?? loadGeneratedDraft();
+    if (source) {
       setPost({
-        title: generatePost.title || "",
-        content: generatePost.content || "",
-        slug: generatePost.slug || "",
-        image: generatePost.image || "",
-        tags: generatePost.tags || [],
+        title: source.title || "",
+        content: source.content || "",
+        slug: source.slug || "",
+        image: source.image || "",
+        tags: source.tags || [],
       });
     }
   }, [generatePost]);
-
-  console.log("Post content", post);
-
 
   const cleanSlug = (value: string) => {
     return value
@@ -89,6 +92,9 @@ const CreateBlog = () => {
       const data = await response.json();
 
       if (response.ok) {
+        // Draft is now published — clear both the in-memory and persisted copies.
+        clearGeneratedDraft();
+        dispatch(clearPost());
         showToast("Post created successfully!", "success");
         router.push("/");
       } else {
@@ -107,6 +113,7 @@ const CreateBlog = () => {
   };
 
   const handleCancel = () => {
+    clearGeneratedDraft();
     dispatch(clearPost());
     router.push("/");
   };

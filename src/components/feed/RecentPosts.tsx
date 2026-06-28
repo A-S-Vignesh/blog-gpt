@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   FaHeart,
   FaComment,
@@ -10,59 +11,125 @@ import {
   FaRegClock,
   FaFire,
 } from "react-icons/fa";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { PopulatedClientPost } from "@/types/post";
-import { set } from "mongoose";
 import RecentShimmer from "../shimmer/RecentShimmer";
+import Tags from "../Tags";
+import InfinitySpin from "../ui/InfiniteSpin";
+
+type RecentApiResponse = {
+  data: PopulatedClientPost[];
+  page: { remaining: number; nextPage: number };
+};
+
+async function fetchRecentPosts({
+  pageParam = 0,
+}: {
+  pageParam?: number;
+}): Promise<RecentApiResponse> {
+  const res = await fetch(`/api/post/recent?skip=${pageParam}&limit=6`);
+  if (!res.ok) throw new Error("Failed to load recent posts");
+  return res.json();
+}
 
 const RecentPosts = () => {
-  const [posts, setPosts] = useState<PopulatedClientPost[]>();
-  const [loading, setLoading] = useState(true);
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["recent-posts"],
+    queryFn: fetchRecentPosts,
+    getNextPageParam: (lastPage) =>
+      lastPage.page.remaining > 0 ? lastPage.page.nextPage : undefined,
+    staleTime: 60_000,
+    initialPageParam: 0,
+  });
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    setLoading(true);
+    if (!hasNextPage || isFetchingNextPage) return;
+    const target = loadMoreRef.current;
+    if (!target) return;
 
-    const fetchPosts = async () => {
-      try {
-        const res = await fetch("/api/post?skip=0");
-        const json = await res.json();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "200px 0px", threshold: 0 },
+    );
 
-        setPosts(json.data); // ✅ correct
-      } catch (err) {
-        console.error("Failed to fetch posts:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    observer.observe(target);
+    return () => observer.unobserve(target);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-    fetchPosts();
-  }, []); // ✅ IMPORTANT
-  if (loading) return (
-    <RecentShimmer />
-  )
+  const allPosts: PopulatedClientPost[] =
+    data?.pages.flatMap((page) => page.data ?? []) ?? [];
 
-  if (!posts) return null;
+  if (isLoading) {
+    return (
+      <div className="mb-12">
+        <div className="flex items-center mb-6">
+          <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg mr-3">
+            <FaRegClock className="text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Recent Posts
+          </h2>
+        </div>
+        <RecentShimmer />
+      </div>
+    );
+  }
 
-  // const toggleLike = (id: number) => {
-  //   setPosts((posts) =>
-  //     posts.map((post) =>
-  //       post.id === id
-  //         ? {
-  //             ...post,
-  //             isLiked: !post.isLiked,
-  //             likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-  //           }
-  //         : post
-  //     )
-  //   );
-  // };
+  if (isError) {
+    return (
+      <div className="mb-12">
+        <div className="flex items-center mb-6">
+          <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg mr-3">
+            <FaRegClock className="text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Recent Posts
+          </h2>
+        </div>
+        <p className="text-red-500 text-sm">
+          Failed to load posts. Please try again later.
+        </p>
+      </div>
+    );
+  }
 
-  // const toggleBookmark = (id: number) => {
-  //   setPosts((posts) =>
-  //     posts.map((post) =>
-  //       post.id === id ? { ...post, isBookmarked: !post.isBookmarked } : post
-  //     )
-  //   );
-  // };
+  if (allPosts.length === 0) {
+    return (
+      <div className="mb-12">
+        <div className="flex items-center mb-6">
+          <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg mr-3">
+            <FaRegClock className="text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Recent Posts
+          </h2>
+        </div>
+        <p className="text-gray-600 dark:text-gray-400 text-sm">
+          No posts yet. Be the first to{" "}
+          <Link
+            href="/post/create"
+            className="text-blue-600 dark:text-blue-400 font-medium underline"
+          >
+            create a post
+          </Link>
+          .
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-12">
@@ -75,16 +142,20 @@ const RecentPosts = () => {
             Recent Posts
           </h2>
         </div>
-        <button className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
-          See more
-        </button>
+        <Link
+          href="/explore"
+          className="text-blue-600 dark:text-blue-400 hover:underline font-medium text-sm"
+        >
+          See all
+        </Link>
       </div>
 
       <div className="space-y-6">
-        {posts.map((post) => (
-          <div
+        {allPosts.map((post) => (
+          <Link
             key={post._id}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow"
+            href={`/${post.creator.username}/${post.slug}`}
+            className="block bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 hover:shadow-lg hover:-translate-y-0.5 transition"
           >
             <div className="flex flex-col md:flex-row gap-6">
               {/* Post Content */}
@@ -107,20 +178,21 @@ const RecentPosts = () => {
                       <p className="font-medium text-gray-900 dark:text-white">
                         {post.creator.name}
                       </p>
-                      {post.likesCount === 1 && (
+                      {post.likesCount > 20 && (
                         <span className="ml-2 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs rounded-full flex items-center">
                           <FaFire className="mr-1" /> Trending
                         </span>
                       )}
                     </div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {post.date} • {post.readingTime}
+                      {post.readingTime ? `${post.readingTime} min read` : ""} ·{" "}
+                      {new Date(post.date).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
 
                 {/* Title and Excerpt */}
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 hover:text-blue-600 dark:hover:text-blue-400 transition">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 hover:text-blue-600 dark:hover:text-blue-400 transition line-clamp-2">
                   {post.title}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
@@ -129,48 +201,35 @@ const RecentPosts = () => {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {post.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                  <Tags tags={post.tags} limit={3} />
                 </div>
 
                 {/* Engagement Stats */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <button
-                      // onClick={() => toggleLike(post.id)}
-                      className={`flex items-center ${
-                        post.likes
-                          ? "text-red-500 dark:text-red-400"
-                          : "text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
-                      }`}
-                    >
+                    <div className="flex items-center text-gray-600 dark:text-gray-400">
                       <FaHeart className="mr-1" />
-                      <span className="text-sm">{post.likes}</span>
-                    </button>
-                    <button className="flex items-center text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400">
+                      <span className="text-sm">{post.likesCount}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600 dark:text-gray-400">
                       <FaComment className="mr-1" />
-                      <span className="text-sm">{post.comments}</span>
-                    </button>
+                      <span className="text-sm">{post.commentsCount}</span>
+                    </div>
                   </div>
 
                   <div className="flex items-center space-x-3">
                     <button
-                      // onClick={() => toggleBookmark(post.id)}
-                      className={`p-2 rounded-lg ${
-                        post
-                          ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
-                          : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-                      }`}
+                      type="button"
+                      onClick={(e) => e.preventDefault()}
+                      className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                       <FaBookmark />
                     </button>
-                    <button className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <button
+                      type="button"
+                      onClick={(e) => e.preventDefault()}
+                      className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
                       <FaShareAlt />
                     </button>
                   </div>
@@ -178,7 +237,7 @@ const RecentPosts = () => {
               </div>
 
               {/* Featured Image (Desktop) */}
-              <div className="hidden md:block w-48 h-48 relative rounded-xl overflow-hidden shrink-0">
+              <div className="hidden md:block aspect-3/2 h-64 relative rounded-xl overflow-hidden shrink-0">
                 <Image
                   src={post.image || "/assets/images/laptop.jpg"}
                   alt={post.title}
@@ -187,16 +246,26 @@ const RecentPosts = () => {
                 />
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
-      {/* Load More Button */}
-      <div className="text-center mt-8">
-        <button className="px-6 py-3 border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-medium rounded-xl hover:bg-blue-50 dark:hover:bg-gray-800 transition">
-          Load More Posts
-        </button>
-      </div>
+      {/* Infinite scroll trigger */}
+      <div ref={loadMoreRef} className="h-8" />
+
+      {/* Spinner while loading next page */}
+      {isFetchingNextPage && (
+        <div className="w-full flex items-center justify-center mt-4">
+          <InfinitySpin />
+        </div>
+      )}
+
+      {/* All caught up */}
+      {!hasNextPage && allPosts.length > 0 && (
+        <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">
+          You&apos;ve seen all recent posts ✓
+        </p>
+      )}
     </div>
   );
 };

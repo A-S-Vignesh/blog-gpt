@@ -3,12 +3,15 @@
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
-// import TrendingShimmer from "../shimmer/TrendingShimmer";
 import Tags from "../Tags";
 import { FaFire, FaHeart, FaComment, FaShareAlt } from "react-icons/fa";
 import { getTrendingPosts } from "@/lib/api/trending";
 import { useRouter } from "next/navigation";
 import TrendingShimmer from "../shimmer/TrendingShimmer";
+import { optimizeImage } from "@/lib/images";
+
+const DEFAULT_COVER =
+  "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.png";
 
 export default function TrendingSection() {
   const router = useRouter();
@@ -37,30 +40,50 @@ export default function TrendingSection() {
           </h2>
         </div>
         <Link
-          href="/explore/trending"
+          href="/explore"
           className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
         >
           View all
         </Link>
       </div>
 
-      {/* Trending Cards */}
+      {/* Trending Cards — uniform 2-column grid. The previous version
+          made the first card span both columns with a 16:9 image, which
+          blew up to ~675px tall on desktop and dwarfed everything else.
+          A simple equal grid scales much better and the "trending" framing
+          comes from the section heading, not from making one card huge.
+          The top card gets a subtle orange ring as a soft accent. */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {trendingPosts.map((post: any, index: number) => (
           <Link
             key={post._id}
-            className={`${index === 0 ? "md:col-span-2" : ""} h-full`}
+            className="h-full"
             href={`/${post.creator.username}/${post.slug}`}
           >
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:scale-[1.01] hover:shadow-xl transition h-full flex flex-col">
-              {/* Image */}
-              <div className={`relative ${index === 0 ? "h-64" : "h-48"}`}>
+            <div
+              className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:scale-[1.01] hover:shadow-xl transition h-full flex flex-col ${
+                index === 0
+                  ? "ring-2 ring-orange-500/50 dark:ring-orange-400/50"
+                  : ""
+              }`}
+            >
+              {/* Image — 3:2 across the board. Half-width cells keep the
+                  image at a comfortable ~300-400px tall on desktop. */}
+              <div className="relative w-full aspect-3/2">
                 <Image
-                  src={post.image}
+                  src={optimizeImage(post.image || DEFAULT_COVER, {
+                    width: 800,
+                  })}
                   alt={post.title}
                   fill
-                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 45vw, 600px"
+                  className="object-cover object-center"
                 />
+                {index === 0 && (
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-orange-500 text-white text-xs font-semibold inline-flex items-center shadow">
+                    <FaFire className="mr-1" /> #1 Trending
+                  </div>
+                )}
               </div>
 
               <div className="p-6 flex flex-col grow">

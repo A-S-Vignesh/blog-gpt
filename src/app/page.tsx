@@ -1,12 +1,10 @@
-import FeedHomepage from "@/components/feed/FeedHomePage";
 import LargeFooter from "@/components/LargeFooter";
 import PwaSection from "@/components/PwaSection";
-import HomePage from "@/components/static/HomePage";
 import { authOptions } from "@/lib/authOptions";
 import { Metadata } from "next";
 import { getServerSession } from "next-auth";
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import {
   FaGoogle,
   FaRobot,
@@ -15,22 +13,31 @@ import {
   FaSave,
   FaSearch,
   FaCloudUploadAlt,
-  FaStar,
   FaChevronRight,
 } from "react-icons/fa";
+
+/**
+ * `/` is the public marketing landing page for anonymous visitors — and for
+ * search crawlers, which are always logged-out, so SEO is unaffected.
+ * Authenticated users are redirected to their personalized `/feed` (the
+ * standard pattern used by X, Reddit, LinkedIn, etc.). Because the redirect is
+ * conditional on the session, the crawlable marketing page and its metadata
+ * are still served to everyone who isn't signed in.
+ */
+const SIGNUP_HREF = "/auth/signin?callbackUrl=%2Ffeed";
 
 export const metadata: Metadata = {
   title: "The Blog GPT | AI-Powered Blog Platform",
   description:
-    "Discover engaging AI-generated blogs powered by Gemini AI. Read insightful posts, explore trending topics, and generate smart content effortlessly on The Blog GPT.",
+    "The Blog GPT turns a topic into a structured blog draft with AI: intro, headings, and sections. Edit it in your own voice, add images, and publish to a community of writers and readers.",
   keywords: [
-    "AI blog",
+    "AI blog generator",
+    "AI blogging platform",
     "Blog-GPT",
-    "Gemini AI blog",
-    "Vignesh A S",
-    "Next.js blogging",
+    "write blog posts with AI",
+    "AI writing assistant",
     "AI content generation",
-    "Modern blog platform",
+    "modern blog platform",
   ],
   authors: [
     {
@@ -41,7 +48,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "The Blog GPT",
     description:
-      "Explore AI-generated blogs using Gemini AI. Discover, read, and generate smart content.",
+      "Explore AI-generated blogs. Read posts, follow writers, and draft your own with AI.",
     url: "https://thebloggpt.com",
     siteName: "The Blog GPT",
     type: "website",
@@ -81,7 +88,11 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
-  if (session) {
+  const isLoggedIn = Boolean(session?.user);
+
+  // Signed-in users belong in their personalized workspace, not on the
+  // marketing page. Anonymous visitors (and crawlers) fall through to it.
+  if (isLoggedIn) {
     redirect("/feed");
   }
 
@@ -91,11 +102,12 @@ export default async function Home() {
       <section className="min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-12 bg-white dark:bg-dark-100 flex flex-col md:flex-row items-center justify-between">
         <div className="w-full md:w-1/2 mb-10 md:mb-0">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-gray-900 dark:text-white">
-            Generate High-Quality Blogs Instantly with AI
+            Write SEO Blog Posts Faster with AI
           </h1>
           <p className="text-xl mt-6 text-gray-700 dark:text-gray-300">
-            Create, edit, and publish SEO optimized blogs using Gemini AI all in
-            one place.
+            Describe a topic and our AI writes a structured first draft, with an
+            intro, headings, and sections. Edit it in your own voice, add images,
+            and publish.
           </p>
           <div className="flex flex-wrap gap-4 mt-8">
             <Link
@@ -104,12 +116,21 @@ export default async function Home() {
             >
               See Blogs <FaChevronRight className="ml-2" />
             </Link>
-            <Link
-              href="/auth/signin"
-              className="border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-semibold py-3 px-8 rounded-lg hover:bg-blue-50 dark:hover:bg-dark-100 transition duration-300"
-            >
-              Free Signup
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/feed"
+                className="border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-semibold py-3 px-8 rounded-lg hover:bg-blue-50 dark:hover:bg-dark-100 transition duration-300"
+              >
+                Open your feed
+              </Link>
+            ) : (
+              <Link
+                href={SIGNUP_HREF}
+                className="border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-semibold py-3 px-8 rounded-lg hover:bg-blue-50 dark:hover:bg-dark-100 transition duration-300"
+              >
+                Free Signup
+              </Link>
+            )}
           </div>
         </div>
         <div className="w-full md:w-1/2 flex justify-center">
@@ -156,8 +177,8 @@ export default async function Home() {
             },
             {
               icon: <FaRobot className="text-purple-500" />,
-              title: "Generate content using AI",
-              desc: "Let Gemini AI create SEO-optimized blog drafts based on your topic",
+              title: "Generate a draft with AI",
+              desc: "Let AI turn your topic into a structured first draft",
             },
             {
               icon: <FaEdit className="text-green-500" />,
@@ -187,10 +208,10 @@ export default async function Home() {
       <section className="py-16 px-6 sm:px-16 md:px-20 lg:px-28">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-            Powerful Features
+            What You Can Do
           </h2>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Everything you need to create amazing blog content
+            Everything you need to draft, edit, and publish a blog post
           </p>
         </div>
 
@@ -198,23 +219,23 @@ export default async function Home() {
           {[
             {
               icon: <FaRobot className="text-indigo-500" />,
-              title: "Gemini AI-Powered Blog Generator",
-              desc: "Generate complete blog posts with just a topic suggestion",
+              title: "AI-Powered Blog Generator",
+              desc: "Generate a full blog draft from just a topic",
             },
             {
               icon: <FaSearch className="text-blue-500" />,
-              title: "SEO Optimized Content",
-              desc: "AI creates content that ranks well in search engines",
+              title: "Clean, structured posts",
+              desc: "Drafts come with clear headings and readable formatting, easy to read and easy for search engines to crawl",
             },
             {
               icon: <FaCloudUploadAlt className="text-teal-500" />,
-              title: "Cloudinary Image Upload",
-              desc: "Easily add and manage images for your posts",
+              title: "Add Your Own Images",
+              desc: "Upload and manage images to make each post your own",
             },
             {
               icon: <FaEdit className="text-green-500" />,
               title: "Easy Post Editing",
-              desc: "Intuitive editor for refining your content",
+              desc: "A rich text editor for refining your draft",
             },
             {
               icon: <FaShareAlt className="text-orange-500" />,
@@ -224,7 +245,7 @@ export default async function Home() {
             {
               icon: <FaSave className="text-amber-500" />,
               title: "Save and Manage Posts",
-              desc: "Organize all your blog content in one place",
+              desc: "Keep all your posts together and edit them anytime",
             },
           ].map((feature, index) => (
             <div
@@ -293,95 +314,49 @@ export default async function Home() {
 
         <div className="mt-12 text-center">
           <Link
-            href="/auth/signin"
+            href={isLoggedIn ? "/post/generate" : SIGNUP_HREF}
             className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-300"
           >
-            Start creating free
+            {isLoggedIn ? "Generate your next post" : "Start creating free"}
           </Link>
         </div>
       </section>
 
-      {/* Testimonials Section */}
+      {/* Why Blog-GPT Section */}
       <section className="py-16 px-6 sm:px-16 md:px-20 lg:px-28">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-            Trusted by Bloggers Worldwide
+            Why Choose Blog-GPT
           </h2>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Join creators from 10+ countries who use Blog-GPT daily
+            A faster way to go from idea to a published blog post
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {[
             {
-              name: "Sarah Johnson",
-              role: "Tech Blogger",
-              content:
-                "Blog-GPT has cut my writing time in half while improving my SEO rankings. The AI suggestions are incredibly helpful!",
+              title: "Draft in seconds",
+              desc: "Turn a topic and short brief into a structured first draft, so you spend your time refining instead of starting from a blank page.",
             },
             {
-              name: "Michael Chen",
-              role: "Marketing Director",
-              content:
-                "Our content team produces 3x more articles since switching to Blog-GPT. The quality is consistently excellent.",
+              title: "Easy to find",
+              desc: "Posts use clear headings, clean URLs, and an auto-generated sitemap, so readers and search engines can find them.",
             },
             {
-              name: "Emma Rodriguez",
-              role: "Travel Writer",
-              content:
-                "As a solo creator, Blog-GPT feels like having a professional writing partner. The image integration is seamless!",
+              title: "You stay in control",
+              desc: "Every draft is fully editable. Adjust the tone, add your own images, and publish only when it sounds like you.",
             },
-          ].map((testimonial, index) => (
+          ].map((item, index) => (
             <div
               key={index}
               className="bg-white dark:bg-dark-100 rounded-xl p-6 border-2 border-gray-200 dark:border-gray-700 shadow-md hover:shadow-lg transition-shadow"
             >
-              <div className="flex items-center mb-4">
-                <div className="flex items-center">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <FaStar key={i} className="text-yellow-400 mr-1" />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <p className="text-gray-600 dark:text-gray-400 italic mb-6">
-                "{testimonial.content}"
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-lg font-bold">
-                  {testimonial.name.charAt(0)}
-                </div>
-                <div className="ml-4">
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    {testimonial.name}
-                  </h4>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">
-                    {testimonial.role}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-          {[
-            "The Future of AI",
-            "Sustainable Travel",
-            "React Best Practices",
-            "Digital Marketing 2024",
-          ].map((title, index) => (
-            <div
-              key={index}
-              className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 text-center hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-            >
-              <p className="text-gray-900 dark:text-white font-medium">
-                {title}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Published with Blog-GPT
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                {item.title}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                {item.desc}
               </p>
             </div>
           ))}
@@ -392,10 +367,10 @@ export default async function Home() {
       <section className="py-16 bg-gray-50 dark:bg-dark-100 px-6 sm:px-16 md:px-20 lg:px-28">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-            See Blog-GPT in Action
+            A Look at the Interface
           </h2>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Experience our intuitive interface and powerful features
+            The editor, your dashboard, and a published post, at a glance
           </p>
         </div>
 
@@ -474,7 +449,7 @@ export default async function Home() {
                 Published Post
               </h3>
               <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Professional-looking final output
+                How a finished post looks
               </p>
             </div>
           </div>
@@ -482,10 +457,10 @@ export default async function Home() {
 
         <div className="mt-12 text-center">
           <Link
-            href="/auth/signin"
+            href={isLoggedIn ? "/feed" : SIGNUP_HREF}
             className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-300"
           >
-            Sign Up for a Free
+            {isLoggedIn ? "Open your feed" : "Sign up, it's free"}
           </Link>
         </div>
       </section>

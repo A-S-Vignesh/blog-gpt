@@ -12,13 +12,13 @@ export interface ClientPost {
   category?: string;
   status?: "draft" | "published" | "archived";
   views?: number;
-  likes: string[];
-  comments?: string[];
   readingTime?: number;
   metaTitle?: string;
   metaDescription?: string;
   likesCount: number;
   commentsCount: number;
+  sharesCount?: number;
+  allowComments?: boolean;
   scheduledAt?: string;
   date: string;
   createdAt?: string;

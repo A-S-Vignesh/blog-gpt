@@ -50,5 +50,12 @@ const CommentSchema = new Schema<IComment>(
   }
 );
 
+// List a post's comments newest-first.
+CommentSchema.index({ postId: 1, createdAt: -1 });
+// Fetch replies to a given comment.
+CommentSchema.index({ parentCommentId: 1 });
+// A user's comments / cascade deletes.
+CommentSchema.index({ userId: 1 });
+
 const Comment = models.Comment || model<IComment>("Comment", CommentSchema);
 export default Comment;

@@ -6,160 +6,161 @@ import { User } from "@/models/User";
 import { getPlanById } from "@/config/plans";
 import { rateLimit } from "@/lib/rateLimit";
 import { systemInstruction } from "@/config/systemInstruction";
+import { ApiError, apiErrorResponse } from "@/lib/api/errors";
+import { checkPromptSafety } from "@/lib/ai/promptSafety";
+import { DEFAULT_SAFETY_SETTINGS } from "@/lib/ai/safety";
+import { reserveAiCredit, refundAiCredit } from "@/lib/ai/quota";
 
-const isSameBillingMonth = (a?: Date | null, b?: Date | null) => {
-  if (!a || !b) return false;
-  return (
-    a.getUTCFullYear() === b.getUTCFullYear() &&
-    a.getUTCMonth() === b.getUTCMonth()
-  );
-};
+const MAX_PROMPT_LENGTH = 4000;
+const PER_MINUTE_LIMIT = 10;
+const PER_DAY_LIMIT = 50;
 
 export const POST = async (req: Request) => {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session || !session.user?._id) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized", code: "UNAUTHENTICATED" }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        }
+      throw new ApiError("UNAUTHENTICATED", "You must be signed in to generate content.");
+    }
+
+    const userId = session.user._id.toString();
+    const body = (await req.json().catch(() => null)) as
+      | { prompt?: string; title?: string }
+      | null;
+    const prompt = typeof body?.prompt === "string" ? body.prompt : "";
+    const title = typeof body?.title === "string" ? body.title.trim() : "";
+
+    const safety = checkPromptSafety(prompt, MAX_PROMPT_LENGTH);
+    if (!safety.ok) {
+      if (safety.reason === "empty") {
+        throw new ApiError("BAD_REQUEST", "Prompt is required.");
+      }
+      if (safety.reason === "length") {
+        throw new ApiError(
+          "PROMPT_TOO_LONG",
+          `Prompt is too long. Max ${MAX_PROMPT_LENGTH} characters.`,
+        );
+      }
+      throw new ApiError(
+        "PROMPT_REJECTED",
+        safety.reason === "harmful"
+          ? "This prompt requests disallowed content."
+          : "This prompt looks like a prompt-injection attempt and was blocked.",
       );
     }
 
-    const { prompt } = (await req.json()) as { prompt?: string };
-
-    if (!prompt || typeof prompt !== "string") {
-      return new Response(
-        JSON.stringify({ error: "Prompt is required", code: "BAD_REQUEST" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+    const minuteLimit = await rateLimit({
+      key: `ai-text:minute:${userId}`,
+      windowMs: 60_000,
+      max: PER_MINUTE_LIMIT,
+    });
+    if (!minuteLimit.ok) {
+      throw new ApiError(
+        "RATE_LIMITED",
+        "Too many requests. Please wait a few seconds and try again.",
+        { retryAfterSeconds: minuteLimit.retryAfterSeconds },
       );
     }
 
-    // Basic prompt length guard to avoid extremely large payloads
-    const MAX_PROMPT_LENGTH = 4000;
-    if (prompt.length > MAX_PROMPT_LENGTH) {
-      return new Response(
-        JSON.stringify({
-          error: `Prompt is too long (max ${MAX_PROMPT_LENGTH} characters). Please shorten your request.`,
-          code: "PROMPT_TOO_LONG",
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+    const dayLimit = await rateLimit({
+      key: `ai-text:day:${userId}`,
+      windowMs: 24 * 60 * 60 * 1000,
+      max: PER_DAY_LIMIT,
+    });
+    if (!dayLimit.ok) {
+      throw new ApiError(
+        "RATE_LIMITED",
+        `Daily AI request limit reached (${PER_DAY_LIMIT}/day). Try again tomorrow or upgrade your plan.`,
+        { retryAfterSeconds: dayLimit.retryAfterSeconds },
       );
     }
 
     await connectToDatabase();
 
-    const user = await User.findById(session.user._id);
+    const user = await User.findById(session.user._id).select(
+      "plan planStatus",
+    );
     if (!user) {
-      return new Response(
-        JSON.stringify({ error: "User not found", code: "USER_NOT_FOUND" }),
-        {
-          status: 404,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      throw new ApiError("NOT_FOUND", "User account not found.");
     }
 
-    const now = new Date();
-    const userPlan = getPlanById(user.plan || "free");
-
-    // Per-user rate limiting to prevent abuse while still allowing
-    // legitimate viral traffic from many distinct users.
-    const rlResult = rateLimit({
-      key: `ai-text:${user._id.toString()}`,
-      windowMs: 60_000, // 1 minute
-      max: 10, // up to 10 AI generations per minute per user
-    });
-
-    if (!rlResult.ok) {
-      return new Response(
-        JSON.stringify({
-          error:
-            "Too many AI generation requests. Please wait a few seconds and try again.",
-          code: "RATE_LIMITED",
-          retryAfterSeconds: rlResult.retryAfterSeconds,
-        }),
-        {
-          status: 429,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Reset monthly usage counter if we are in a new month
-    if (!isSameBillingMonth(user.aiUsagePeriodStart, now)) {
-      user.aiUsagePeriodStart = now;
-      user.aiGenerationCount = 0;
-    }
-
+    // A lapsed (past_due) subscription falls back to the FREE quota — an unpaid
+    // plan must not keep consuming its higher allowance. A "canceled" plan keeps
+    // access until the period ends (a downgrade cron finalizes it), so it is
+    // intentionally NOT restricted here.
+    const effectivePlanId =
+      user.planStatus === "past_due" ? "free" : user.plan || "free";
+    const userPlan = getPlanById(effectivePlanId);
     const monthlyLimit = userPlan.aiGenerationsPerMonth ?? 0;
-    const usedThisMonth = user.aiGenerationCount ?? 0;
-    const extraCredits = user.aiExtraCredits ?? 0;
 
-    const remainingInPlan = Math.max(monthlyLimit - usedThisMonth, 0);
-    const totalRemaining = remainingInPlan + extraCredits;
+    // Reserve one credit ATOMICALLY before spending money on the model. The DB
+    // enforces the quota, closing the read-then-write race; refunded on failure.
+    const reservation = await reserveAiCredit(userId, monthlyLimit);
+    if (!reservation.ok) {
+      throw new ApiError(
+        "PLAN_LIMIT_REACHED",
+        "You have reached your monthly AI generation limit. Upgrade your plan or purchase extra credits to continue.",
+        { plan: userPlan.id, monthlyLimit },
+      );
+    }
+    const creditSource = reservation.source!;
 
-    if (totalRemaining <= 0) {
-      return new Response(
-        JSON.stringify({
-          error:
-            "You have reached your current AI generation limit. Upgrade your plan or purchase extra credits to continue.",
-          code: "PLAN_LIMIT_REACHED",
-        }),
-        {
-          status: 403,
-          headers: { "Content-Type": "application/json" },
-        }
+    const apiKey = process.env.GOOGLE_GENETATIVE_AI;
+    if (!apiKey) {
+      await refundAiCredit(userId, creditSource);
+      throw new ApiError("INTERNAL_ERROR", "AI service is not configured.");
+    }
+    const genAI = new GoogleGenAI({ apiKey });
+
+    // Give the model the chosen title so the article's keyword, headings, and
+    // angle align with it — better topical relevance and on-page SEO.
+    const userContent = title
+      ? `Blog title: "${title}"\n\nWriting instructions:\n${prompt}`
+      : prompt;
+
+    let response;
+    try {
+      response = await genAI.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: userContent,
+        config: {
+          systemInstruction,
+          safetySettings: DEFAULT_SAFETY_SETTINGS as any,
+        },
+      });
+    } catch (err: any) {
+      await refundAiCredit(userId, creditSource);
+      console.error("[ai-text] upstream error:", err);
+      throw new ApiError(
+        "UPSTREAM_ERROR",
+        "AI provider is currently unavailable. Please try again in a moment.",
       );
     }
 
-    const genAI = new GoogleGenAI({
-      apiKey: process.env.GOOGLE_GENETATIVE_AI,
-    });
-
-    const response = await genAI.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        systemInstruction: systemInstruction,
-      },
-    });
+    const blockReason = response.promptFeedback?.blockReason;
+    if (blockReason) {
+      await refundAiCredit(userId, creditSource);
+      throw new ApiError(
+        "CONTENT_FLAGGED",
+        "The AI declined to answer this prompt due to safety filters.",
+        { reason: String(blockReason) },
+      );
+    }
 
     const part = response.candidates?.[0]?.content?.parts?.[0];
-
-    if (!part || !part.text) {
-      throw new Error("No text content generated.");
+    const generated = part?.text;
+    if (!generated) {
+      await refundAiCredit(userId, creditSource);
+      throw new ApiError(
+        "UPSTREAM_ERROR",
+        "AI did not return any content. Please rephrase your prompt and try again.",
+      );
     }
 
-    // Only count successful generations
-    if (remainingInPlan > 0) {
-      user.aiGenerationCount += 1;
-    } else if (extraCredits > 0) {
-      user.aiExtraCredits = extraCredits - 1;
-    }
-    await user.save();
-
-    return new Response(JSON.stringify({ content: part.text }), {
+    return new Response(JSON.stringify({ content: generated }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (error: any) {
-    console.error("Text generation error:", error);
-    return new Response(
-      JSON.stringify({
-        error: "Failed to generate content",
-        details: error.message,
-      }),
-      { status: 500 }
-    );
+  } catch (err) {
+    return apiErrorResponse(err);
   }
 };

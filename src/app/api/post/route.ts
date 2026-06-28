@@ -1,17 +1,22 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import Post from "@/models/Post";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import "@/models/User";
+import { withCache } from "@/lib/api/cache";
 
 export const GET = async (req: NextRequest) => {
   try {
     await connectToDatabase();
 
-    const skip = req.nextUrl.searchParams.get("skip");
+    const url = req.nextUrl;
+    const skipParam = url.searchParams.get("skip");
+    const searchParam = url.searchParams.get("search")?.trim();
+    const tagParam = url.searchParams.get("tag")?.trim();
 
-    if (skip === "all") {
-      const response = await Post.find({}).populate("creator");
-      return new Response(JSON.stringify(response), {
+    // Legacy path to fetch all posts at once, used only where explicitly requested.
+    if (skipParam === "all") {
+      const allPosts = await Post.find({}).populate("creator", "username name image");
+      return new Response(JSON.stringify(allPosts), {
         status: 200,
         headers: {
           "Content-Type": "application/json",
@@ -19,40 +24,67 @@ export const GET = async (req: NextRequest) => {
       });
     }
 
-    const skipValue = parseInt(skip || "0", 10);
-    if (isNaN(skipValue)) {
-      return new Response(JSON.stringify({ error: "Invalid skip parameter" }), {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    const skipValue = parseInt(skipParam || "0", 10);
+    if (isNaN(skipValue) || skipValue < 0) {
+      return new Response(
+        JSON.stringify({ error: "Invalid skip parameter" }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
     }
 
-    const response = await Post.find({})
-      .select("title excerpt slug image tags date creator") // ✅ fetch only needed fields
-      .populate("creator", "username name image") // ✅ populate only required creator fields
-      .sort({ updatedAt: -1, date: -1 })
-      .skip(skipValue)
-      .limit(6)
-      .exec();
+    const query: Record<string, any> = {};
 
-    const postLength = await Post.countDocuments();
+    if (tagParam) {
+      query.tags = tagParam;
+    }
 
-    return new Response(
-      JSON.stringify({
-        data: response,
+    if (searchParam) {
+      const escaped = searchParam.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(escaped, "i");
+      query.$or = [
+        { title: regex },
+        { excerpt: regex },
+        { tags: regex },
+      ];
+    }
+
+    const [response, postLength] = await Promise.all([
+      Post.find(query)
+        .select(
+          "title excerpt slug image tags date creator readingTime likesCount commentsCount",
+        )
+        .populate("creator", "username name image")
+        .sort({ updatedAt: -1, date: -1 })
+        .skip(skipValue)
+        .limit(6)
+        .lean()
+        .exec(),
+      Post.countDocuments(query),
+    ]);
+
+    const data = response.map((post: any) => ({
+      ...post,
+      likesCount: post.likesCount ?? 0,
+      commentsCount: post.commentsCount ?? 0,
+    }));
+
+    // Search/tag-filtered results vary by query string — these are still
+    // cacheable at the edge (URL is the cache key) but with a shorter TTL.
+    const profile = searchParam || tagParam ? "short" : "medium";
+    return withCache(
+      NextResponse.json({
+        data,
         page: {
           remaining: Math.max(postLength - (skipValue + 6), 0),
           nextPage: skipValue + 6,
         },
       }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      profile,
     );
   } catch (error: any) {
     console.error("Error fetching posts:", error);
