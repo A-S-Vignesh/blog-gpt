@@ -88,6 +88,14 @@ PostSchema.index({ status: 1 });
 PostSchema.index({ status: 1, createdAt: -1 });
 // A creator's posts filtered by status (e.g. their drafts/published).
 PostSchema.index({ creator: 1, status: 1 });
+// Public Explore/search feed: newest-PUBLISHED first, with _id as a stable
+// tiebreaker. Backs the `.sort({ date: -1, _id: -1 })` listing queries so the
+// sort stays index-covered (no in-memory sort) as the collection grows. We sort
+// by `date` (publish time), never `updatedAt`, so edits/likes can't reshuffle
+// the feed.
+PostSchema.index({ date: -1, _id: -1 });
+// A creator's posts, newest-published first — backs the profile feed sort.
+PostSchema.index({ creator: 1, date: -1, _id: -1 });
 
 const Post = models.Post || model<IPost>("Post", PostSchema);
 export default Post;

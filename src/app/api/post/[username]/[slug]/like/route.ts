@@ -93,8 +93,14 @@ export async function POST(
     // the (user, post) and (post, createdAt) indexes already in place.
     const likesCount = await Like.countDocuments({ post: postId });
 
-    // Sync the denormalized counter on Post so list views match.
-    await Post.updateOne({ _id: postId }, { $set: { likesCount } });
+    // Sync the denormalized counter on Post so list views match. `timestamps:
+    // false` keeps a like from bumping the post's `updatedAt` — a like is not a
+    // content edit, so it must not reorder feeds or change SEO `dateModified`.
+    await Post.updateOne(
+      { _id: postId },
+      { $set: { likesCount } },
+      { timestamps: false },
+    );
 
     revalidateTag(postDetailTag(slug), "default");
 

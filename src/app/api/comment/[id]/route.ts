@@ -62,14 +62,18 @@ export async function DELETE(
     });
     const removed = deleteRes.deletedCount ?? 0;
     if (removed > 0) {
+      // `timestamps: false`: deleting a comment is engagement, not a content
+      // edit, so it must not bump the post's `updatedAt`.
       await Post.updateOne(
         { _id: comment.postId },
         { $inc: { commentsCount: -removed } },
+        { timestamps: false },
       );
       // Clamp at 0 in case of negative drift.
       await Post.updateOne(
         { _id: comment.postId, commentsCount: { $lt: 0 } },
         { $set: { commentsCount: 0 } },
+        { timestamps: false },
       );
     }
 

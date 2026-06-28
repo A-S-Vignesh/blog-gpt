@@ -162,7 +162,7 @@ async function regexSearch({
         "title slug excerpt image tags date readingTime likesCount commentsCount bookmarksCount creator",
       )
       .populate("creator", "name username image")
-      .sort({ updatedAt: -1, date: -1 })
+      .sort({ date: -1, _id: -1 })
       .skip(skip)
       .limit(limit)
       .lean(),

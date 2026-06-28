@@ -205,9 +205,12 @@ export async function POST(
       depth,
     });
 
+    // `timestamps: false`: a new comment must not bump the post's `updatedAt`
+    // (it is engagement, not a content edit) so feeds/SEO stay stable.
     await Post.updateOne(
       { _id: post._id },
       { $inc: { commentsCount: 1 } },
+      { timestamps: false },
     );
 
     revalidateTag(postDetailTag(slug), "default");

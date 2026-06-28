@@ -104,14 +104,19 @@ export async function POST(
     let followingCount: number;
 
     if (changed) {
+      // `timestamps: false`: a follow is engagement, not a profile edit, so it
+      // must not bump either user's `updatedAt` (keeps it consistent with
+      // like/comment/bookmark and safe for any future user-freshness signal).
       const [targetDoc, followerDoc] = await Promise.all([
         User.findByIdAndUpdate(followingId, [{ $set: adjust("followersCount") }], {
           new: true,
+          timestamps: false,
         })
           .select("followersCount")
           .lean<{ followersCount?: number }>(),
         User.findByIdAndUpdate(followerId, [{ $set: adjust("followingCount") }], {
           new: true,
+          timestamps: false,
         })
           .select("followingCount")
           .lean<{ followingCount?: number }>(),

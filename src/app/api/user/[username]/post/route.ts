@@ -39,7 +39,7 @@ export const GET = async (
     const postQuery = Post.find(query)
       .select("title excerpt slug image tags date creator")
       .populate("creator", "username")
-      .sort({ updatedAt: -1, date: -1 });
+      .sort({ date: -1, _id: -1 });
 
     if (skip !== "all") postQuery.skip(skipValue).limit(6);
 

@@ -59,7 +59,10 @@ export const GET = async (req: NextRequest) => {
           "title excerpt slug image tags date creator readingTime likesCount commentsCount",
         )
         .populate("creator", "username name image")
-        .sort({ updatedAt: -1, date: -1 })
+        // Match the SSR first page (lib/data/posts): stable, immutable sort by
+        // publish date so likes/comments never reshuffle the feed or break the
+        // skip/limit pages.
+        .sort({ date: -1, _id: -1 })
         .skip(skipValue)
         .limit(6)
         .lean()

@@ -32,7 +32,7 @@ export async function getUserPostsByUserId(userId: unknown) {
   return Post.find({ creator: userId })
     .select("title excerpt slug image tags date creator")
     .populate("creator", "username")
-    .sort({ updatedAt: -1, date: -1 })
+    .sort({ date: -1, _id: -1 })
     .limit(6)
     .lean();
 }

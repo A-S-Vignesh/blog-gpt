@@ -86,14 +86,18 @@ export async function POST(
       Bookmark.countDocuments({ user: userId }),
     ]);
 
+    // `timestamps: false`: a bookmark is engagement, not a content/profile
+    // edit, so it must not bump the post's (or user's) `updatedAt`.
     await Promise.all([
       Post.updateOne(
         { _id: postId },
         { $set: { bookmarksCount: postBookmarksCount } },
+        { timestamps: false },
       ),
       User.updateOne(
         { _id: userId },
         { $set: { bookmarksCount: userBookmarksCount } },
+        { timestamps: false },
       ),
     ]);
 

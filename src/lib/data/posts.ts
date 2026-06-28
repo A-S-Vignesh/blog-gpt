@@ -55,7 +55,10 @@ async function fetchPaginatedPosts({
         "title excerpt slug image tags date creator readingTime likesCount commentsCount",
       )
       .populate("creator", "username name image")
-      .sort({ updatedAt: -1, date: -1 })
+      // Sort by publish date (immutable), newest first, with _id as a stable
+      // tiebreaker. NOT updatedAt — that field is bumped by likes/comments, which
+      // would reshuffle the feed on every engagement and destabilize pagination.
+      .sort({ date: -1, _id: -1 })
       .skip(skip)
       .limit(PAGE_SIZE)
       .lean()
