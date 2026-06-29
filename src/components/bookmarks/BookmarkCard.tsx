@@ -83,7 +83,7 @@ export default function BookmarkCard({
               />
             </div>
             <span className="font-medium text-gray-800 dark:text-gray-100">
-              {post.creator.name}
+              {post.creator.name || post.creator.username}
             </span>
           </Link>
           <div className="flex items-center gap-1.5">

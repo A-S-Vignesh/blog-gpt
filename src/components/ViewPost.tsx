@@ -249,7 +249,7 @@ const ViewPost: React.FC<ViewPostProps> = ({
 
               <div>
                 <p className="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 transition">
-                  {post.creator.name}
+                  {post.creator.name || post.creator.username}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   @{post.creator.username}

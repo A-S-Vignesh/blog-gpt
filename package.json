@@ -8,8 +8,9 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "migrate": "tsx migrateUserPlans.ts",
-    "migrate:username-index": "tsx migrateUsernameIndex.ts"
+    "migrate": "tsx migration/migrateUserPlans.ts",
+    "migrate:username-index": "tsx migration/migrateUsernameIndex.ts",
+    "migrate:backfill-users": "tsx migration/migrateUserBackfill.ts"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",

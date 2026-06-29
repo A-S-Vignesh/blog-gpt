@@ -112,7 +112,7 @@ export default function TrendingSection() {
 
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-blue-600 transition">
-                        {post.creator.name}
+                        {post.creator.name || post.creator.username}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {post.readingTime} min read

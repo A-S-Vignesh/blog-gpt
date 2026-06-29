@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import { User } from "./src/models/User";
-import Post from "./src/models/Post";
+import { User } from "../src/models/User";
+import Post from "../src/models/Post";
 
 // ─── Config ─────────────────────────────────────────────────────────────────
 // Change this to your actual Atlas URI if running against production

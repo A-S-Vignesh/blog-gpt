@@ -176,7 +176,7 @@ const RecentPosts = () => {
                   <div>
                     <div className="flex items-center">
                       <p className="font-medium text-gray-900 dark:text-white">
-                        {post.creator.name}
+                        {post.creator.name || post.creator.username}
                       </p>
                       {post.likesCount > 20 && (
                         <span className="ml-2 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs rounded-full flex items-center">
