@@ -3,12 +3,17 @@
 import Form from "@/components/Form";
 // import { generatePostAction } from "@/redux/slice/generatePost";
 import { clearPost } from "@/redux/features/generateSlice";
+import {
+  loadGeneratedDraft,
+  clearGeneratedDraft,
+} from "@/utils/generatedDraft";
 import { useAppSelector } from "@/redux/hooks";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useToast } from "@/provider/ToastProvider";
+import { validatePost, slugify } from "@/lib/validation/post";
 
 const CreateBlog = () => {
   const { showToast } = useToast();
@@ -24,31 +29,21 @@ const CreateBlog = () => {
     image: null as string | ArrayBuffer | null,
     tags: [] as string[],
   });
-  console.log("Generate post", generatePost);
-
   useEffect(() => {
-    if (generatePost) {
+    // Prefer the in-memory Redux draft (set when navigating from generate).
+    // Fall back to the sessionStorage copy so a refresh on this page doesn't
+    // wipe the generated post.
+    const source = generatePost ?? loadGeneratedDraft();
+    if (source) {
       setPost({
-        title: generatePost.title || "",
-        content: generatePost.content || "",
-        slug: generatePost.slug || "",
-        image: generatePost.image || "",
-        tags: generatePost.tags || [],
+        title: source.title || "",
+        content: source.content || "",
+        slug: source.slug || "",
+        image: source.image || "",
+        tags: source.tags || [],
       });
     }
   }, [generatePost]);
-
-  console.log("Post content", post);
-
-
-  const cleanSlug = (value: string) => {
-    return value
-      .toLowerCase() // lowercase
-      .trim() // remove spaces front & back
-      .replace(/[^a-z0-9\s-]/g, "") // remove special chars
-      .replace(/\s+/g, "-") // spaces → hyphens
-      .replace(/-+/g, "-"); // multiple hyphens → one
-  };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -56,18 +51,19 @@ const CreateBlog = () => {
     setError(null);
 
     try {
-      if (!post.title || !post.content || !post.slug || !post.tags) {
-        showToast("Please fill in all required fields", "error");
-        setSubmitting(false);
-        return;
-      }
-
-      // 👉 Clean slug before sending
-      const cleanedSlug = cleanSlug(post.slug);
-
-      // If slug becomes empty after cleaning
-      if (!cleanedSlug) {
-        setError("Slug is invalid. Please enter a proper slug.");
+      // Clean the slug, then validate the FINAL values with the SHARED validator
+      // (identical rules to the server), so an invalid post never leaves the
+      // browser and the user gets the exact reason.
+      const cleanedSlug = slugify(post.slug);
+      const validationError = validatePost({
+        title: post.title,
+        content: post.content,
+        slug: cleanedSlug,
+        tags: post.tags,
+        requireSlug: true,
+      });
+      if (validationError) {
+        showToast(validationError, "error");
         setSubmitting(false);
         return;
       }
@@ -89,13 +85,16 @@ const CreateBlog = () => {
       const data = await response.json();
 
       if (response.ok) {
+        // Draft is now published — clear both the in-memory and persisted copies.
+        clearGeneratedDraft();
+        dispatch(clearPost());
         showToast("Post created successfully!", "success");
-        router.push("/");
+        router.push(`/${data.post.author}/${data.post.slug}`);
       } else {
-        showToast(
-          data.details || data.error || "Failed to create post",
-          "error"
-        );
+        // Use `data.error` (the human-readable string). NOT `data.details`,
+        // which is a structured object (e.g. { required: [...] }) — passing that
+        // to the toast renders an object as a React child and crashes the page.
+        showToast(data.error || "Failed to create post", "error");
         return;
       }
     } catch (error) {
@@ -107,6 +106,7 @@ const CreateBlog = () => {
   };
 
   const handleCancel = () => {
+    clearGeneratedDraft();
     dispatch(clearPost());
     router.push("/");
   };

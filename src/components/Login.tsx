@@ -7,11 +7,16 @@ import { FaLock, FaEnvelope } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 
-const Login = () => {
+const Login = ({ callbackUrl }: { callbackUrl?: string }) => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+
+  // Where to land after Google auth: the page that sent the user here
+  // (e.g. the post they tried to like), falling back to the feed.
+  const signInWithGoogle = () =>
+    signIn("google", { callbackUrl: callbackUrl ?? "/feed" });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 flex items-center justify-center px-4 py-12">
@@ -31,8 +36,8 @@ const Login = () => {
 
               <h1 className="text-4xl font-bold mt-16 mb-6">Welcome Back!</h1>
               <p className="text-blue-100 max-w-md">
-                Access your account to create, manage, and publish AI-powered
-                content with Gemini AI.
+                Access your account to create, manage, and publish content with
+                AI.
               </p>
             </div>
 
@@ -77,7 +82,7 @@ const Login = () => {
             {/* Google Sign-in Button */}
             <div className="mb-8">
               <button
-                onClick={() => signIn("google")}
+                onClick={signInWithGoogle}
                 className="w-full flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-dark-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition duration-300"
               >
                 <FcGoogle className="text-xl mr-3" />
@@ -180,7 +185,7 @@ const Login = () => {
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Don't have an account?{" "}
                 <button
-                  onClick={() => signIn("google")}
+                  onClick={signInWithGoogle}
                   className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
                 >
                   Sign up with Google

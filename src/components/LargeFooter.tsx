@@ -16,7 +16,7 @@ function LargeFooter() {
               The Blog GPT
             </h3>
             <p className="mb-4 text-[#667085] dark:text-[#C0C5D0] text-sm">
-              AI-powered platform for creating, editing, and publishing
+              AI powered platform for creating, editing, and publishing
               professional blog content instantly.
             </p>
           </div>

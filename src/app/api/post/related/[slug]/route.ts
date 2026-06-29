@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Post from "@/models/Post";
+import { withCache } from "@/lib/api/cache";
 
 export async function GET(
   request: Request,
@@ -18,11 +19,6 @@ export async function GET(
         { message: "Post not found", data: [] },
         { status: 404 }
       );
-    }
-
-    // 2. If cached relatedPosts exist → return them
-    if (currentPost.relatedPosts && currentPost.relatedPosts.length > 0) {
-      return NextResponse.json({ data: currentPost.relatedPosts });
     }
 
     let relatedPosts: any[] = [];
@@ -99,11 +95,7 @@ export async function GET(
       usedSlugs.push(...randomPosts.map((p) => p.slug));
     }
 
-    // 6. Save relatedPosts into DB for caching
-    currentPost.relatedPosts = relatedPosts;
-    await currentPost.save();
-
-    return NextResponse.json({ data: relatedPosts });
+    return withCache(NextResponse.json({ data: relatedPosts }), "long");
   } catch (error) {
     console.error("Error fetching related posts:", error);
     return NextResponse.json(

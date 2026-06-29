@@ -4,10 +4,13 @@ import React from "react";
 import { useTheme } from "next-themes";
 
 const DarkModeToggle = () => {
-    const { theme, setTheme } = useTheme();
+    const { setTheme, resolvedTheme } = useTheme();
 
   const handleClick = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
+    // Toggle off the RESOLVED theme so the first click flips what the user
+    // actually sees (a system-dark user clicking once goes to light, not to an
+    // explicit "dark" that looks identical).
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -17,7 +20,7 @@ const DarkModeToggle = () => {
     }
   };
 
-  const isDarkMode = theme === "dark";
+  const isDarkMode = resolvedTheme === "dark";
 
   return (
     <div

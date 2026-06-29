@@ -2,10 +2,13 @@ import { Schema, model, models, Document, Types } from "mongoose";
 
 export interface IComment extends Document {
   postId: Types.ObjectId; // The post being commented on
+  postSlug: string;
   userId: Types.ObjectId; // The user who made the comment
   content: string;
   parentCommentId?: Types.ObjectId | null; // For threaded/reply comments
   likes: Types.ObjectId[]; // Users who liked this comment
+  depth: number; // For threaded comments
+  isEdited: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,6 +20,7 @@ const CommentSchema = new Schema<IComment>(
       ref: "Post",
       required: true,
     },
+    postSlug: { type: String },
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -38,11 +42,20 @@ const CommentSchema = new Schema<IComment>(
         ref: "User",
       },
     ],
+    isEdited: { type: Boolean, default: false },
+    depth: { type: Number, default: 0 }, // For threaded comments
   },
   {
     timestamps: true, // adds createdAt & updatedAt
   }
 );
+
+// List a post's comments newest-first.
+CommentSchema.index({ postId: 1, createdAt: -1 });
+// Fetch replies to a given comment.
+CommentSchema.index({ parentCommentId: 1 });
+// A user's comments / cascade deletes.
+CommentSchema.index({ userId: 1 });
 
 const Comment = models.Comment || model<IComment>("Comment", CommentSchema);
 export default Comment;

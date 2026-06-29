@@ -6,14 +6,20 @@ import { authOptions } from "@/lib/authOptions";
 
 export const GET = async (req: Request, { params }: { params: Promise<{ username: string }> }) => {
   try {
-    const { username } = await params;
+    const raw = await params;
+    const username = raw.username.toLowerCase();
     const session = await getServerSession(authOptions);
 
     await connectToDatabase();
 
-    // Fetch user with minimal fields
+    // Case-insensitive exact match — handles legacy mixed-case data while
+    // remaining indexed-friendly enough for our scale. (Collation would be
+    // faster at scale; revisit if user count grows past ~100k.)
     const user = await User.findOne({ username })
-      .select("name username bio socials image email createdAt")
+      .collation({ locale: "en", strength: 2 })
+      .select(
+        "_id name username bio socials image email createdAt followersCount followingCount bookmarksCount",
+      )
       .lean();
 
     if (!user) {

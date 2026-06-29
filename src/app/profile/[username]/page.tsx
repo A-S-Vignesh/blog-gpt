@@ -1,103 +1,42 @@
-import ViewProfile from "@/components/ViewProfile";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { notFound, permanentRedirect } from "next/navigation";
 import { connectToDatabase } from "@/lib/mongodb";
-import Post from "@/models/Post";
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
-import { PopulatedClientPost } from "@/types/post";
-import { use } from "react";
+import { User } from "@/models/User";
 
-// ✅ Type for route params
-interface ProfilePageProps {
-  params: {
-    username: string;
-  };
-}
+// Legacy redirect: /profile/{username}  →  /{username}
+//
+// User profiles used to live under /profile/. Google may still have those
+// URLs indexed. We look up the user (case-insensitively in case of legacy
+// mixed-case data), redirect to the canonical lowercase path, or return a
+// proper 404 if the user was deleted.
+export const dynamic = "force-dynamic";
 
-// --- SEO & Open Graph Metadata ---
-export async function generateMetadata({
+export default async function LegacyProfileRedirect({
   params,
 }: {
   params: Promise<{ username: string }>;
 }) {
-  const { username } = await params;
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/user/${username}`);
+  const { username: rawUsername } = await params;
+  const usernameLc = rawUsername.toLowerCase();
 
-  if (!res.ok) {
-    return { title: "User Not Found" };
-  }
-
-  const user = await res.json();
-  const name = user.name || user.username;
-  const description = `${
-    user.bio || ""
-  } - Read more about ${name}'s journey and insights on Blog-GPT.`;
-  const image = user.image || "/default-profile.jpg";
-
-  return {
-    title: `${name} - TheBlogGPT`,
-    description,
-    openGraph: {
-      title: `${name} - TheBlogGPT`,
-      description,
-      type: "profile",
-      images: [
-        {
-          url: image,
-          width: 800,
-          height: 600,
-          alt: `${name}'s profile picture`,
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${name} - TheBlogGPT`,
-      description,
-      images: [image],
-    },
-  };
-}
-
-// --- Profile Page ---
-export default async function ProfilePage({
-  params,
-}: {
-  params: Promise<{ username: string }>;
-}) {
-  const session = await getServerSession(authOptions);
-  const { username } = await params;
-
-  // 1️⃣ Fetch profile from API (cached until revalidated)
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/user/${username}`);
-
-  if (!res.ok) return notFound();
-  const user = await res.json();
-
-  // 2️⃣ Fetch posts directly from DB
   await connectToDatabase();
-  
-   const response = await fetch(
-     `${process.env.NEXTAUTH_URL}/api/user/${username}/post`,
-     {
-       next: { revalidate: 60 },
-     }
-   );
 
-   if (!response.ok) {
-     throw new Error("Failed to fetch posts");
+  // Match case-insensitively to handle any legacy mixed-case URLs that may
+  // have been shared externally. New writes are already lowercase-only.
+  const user = await User.findOne({ username: usernameLc })
+    .collation({ locale: "en", strength: 2 })
+    .select("username banned deletionScheduledFor")
+    .lean();
+
+  if (!user) {
+    notFound();
   }
 
-  const { data }: { data: PopulatedClientPost[] }= await response.json();
-  
+  // Don't surface banned or mid-deletion accounts through a redirect.
+  if ((user as any).banned || (user as any).deletionScheduledFor) {
+    notFound();
+  }
 
-
-  const isMyProfile = session?.user?.username === username;
-  const posts = JSON.parse(JSON.stringify(data));
-  const plainUser = JSON.parse(JSON.stringify(user));
-
-  return (
-    <ViewProfile data={plainUser} userPosts={posts} isMyProfile={isMyProfile} username={username} />
-  );
+  // Always redirect to the canonical lowercase username.
+  const canonical = ((user as any).username ?? usernameLc).toLowerCase();
+  permanentRedirect(`/${canonical}`);
 }

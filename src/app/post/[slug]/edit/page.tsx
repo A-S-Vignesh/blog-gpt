@@ -1,36 +1,37 @@
-import EditPostClient from "@/components/EditPostClient";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
-import { redirect } from "next/navigation";
-import Post from "@/models/Post"; // adjust path if needed
-import { connectToDatabase } from "@/lib/mongodb"; // adjust your DB import
+import { notFound, permanentRedirect } from "next/navigation";
+import { connectToDatabase } from "@/lib/mongodb";
+import Post from "@/models/Post";
+import "@/models/User";
 
+// Legacy redirect: /post/{slug}/edit  →  /{username}/{slug}/edit
+// Edit pages typically aren't indexed (they're auth-gated), but users may
+// still have bookmarks or browser history pointing here. A 308 keeps those
+// working without exposing them to a generic 404.
+export const dynamic = "force-dynamic";
 
-export default async function EditPostPage({
+export default async function LegacyPostEditRedirect({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    redirect("/auth/signin");
-  }
+  const { slug: rawSlug } = await params;
+  const slug = rawSlug.toLowerCase();
 
   await connectToDatabase();
 
-  // Fetch the post
-  const post = await Post.findOne({ slug }).select("creator title");
+  const post = (await Post.findOne({ slug })
+    .populate("creator", "username")
+    .select("slug creator")
+    .lean()) as any;
 
   if (!post) {
-    redirect("/404");
+    notFound();
   }
 
-  // Check if this user owns the post
-  if (post.creator.toString() !== session.user._id) {
-    redirect("/403"); // or home → redirect("/")
+  const username = post.creator?.username?.toLowerCase();
+  if (!username) {
+    notFound();
   }
 
-  return <EditPostClient slug={slug} />;
+  permanentRedirect(`/${username}/${slug}/edit`);
 }

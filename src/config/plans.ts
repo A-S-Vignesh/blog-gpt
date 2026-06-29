@@ -1,4 +1,5 @@
 export type PlanId = "free" | "pro" | "business";
+export type BillingCycle = "monthly" | "yearly";
 
 export interface PlanConfig {
   id: PlanId;
@@ -13,7 +14,14 @@ export interface PlanConfig {
    */
   aiGenerationsPerMonth: number | null;
   features: string[];
-  razorpayPlanId?: string;
+  /**
+   * Razorpay plan ids configured in the dashboard for each billing cycle.
+   * Leave empty string for plans that should not be purchasable yet.
+   */
+  razorpayPlanIds: {
+    monthly: string;
+    yearly: string;
+  };
 }
 
 export const PLANS: Record<PlanId, PlanConfig> = {
@@ -30,7 +38,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       "Basic SEO-friendly structure",
       "Standard image uploads",
     ],
-    razorpayPlanId: "",
+    razorpayPlanIds: { monthly: "", yearly: "" },
   },
   pro: {
     id: "pro",
@@ -48,7 +56,10 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       "Advanced SEO tools",
       "Standard support",
     ],
-    razorpayPlanId: "",
+    razorpayPlanIds: {
+      monthly: process.env.RAZORPAY_PLAN_PRO_MONTHLY || "",
+      yearly: process.env.RAZORPAY_PLAN_PRO_YEARLY || "",
+    },
   },
   business: {
     id: "business",
@@ -62,11 +73,12 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       "500 AI generations per month",
       "Unlimited published posts under thebloggpt.com",
       "Team access (up to 5 members)",
-      "Analytics dashboard (coming soon)",
-      "Bulk AI generation (coming soon)",
       "Priority support",
     ],
-    razorpayPlanId: "",
+    razorpayPlanIds: {
+      monthly: process.env.RAZORPAY_PLAN_BUSINESS_MONTHLY || "",
+      yearly: process.env.RAZORPAY_PLAN_BUSINESS_YEARLY || "",
+    },
   },
 };
 
@@ -77,3 +89,30 @@ export const getPlanById = (id: string): PlanConfig => {
   return PLANS[key] ?? PLANS.free;
 };
 
+export const getRazorpayPlanId = (
+  plan: PlanId,
+  cycle: BillingCycle,
+): string => {
+  return PLANS[plan]?.razorpayPlanIds[cycle] || "";
+};
+
+/**
+ * Map a Razorpay plan id back to our internal plan + billing cycle.
+ * Used by the webhook handler where we only get the plan id.
+ */
+export const resolveRazorpayPlan = (
+  razorpayPlanId: string,
+): { plan: PlanId; cycle: BillingCycle } | null => {
+  for (const [planId, config] of Object.entries(PLANS) as [
+    PlanId,
+    PlanConfig,
+  ][]) {
+    if (config.razorpayPlanIds.monthly === razorpayPlanId) {
+      return { plan: planId, cycle: "monthly" };
+    }
+    if (config.razorpayPlanIds.yearly === razorpayPlanId) {
+      return { plan: planId, cycle: "yearly" };
+    }
+  }
+  return null;
+};

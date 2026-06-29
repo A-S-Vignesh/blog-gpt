@@ -1,6 +1,6 @@
 import BlogPost from "@/components/BlogPost";
 import LoadMore from "@/components/LoadMore";
-import { PopulatedClientPost } from "@/types/post";
+import { getPaginatedPosts } from "@/lib/data/posts";
 import { Metadata } from "next";
 
 export const revalidate = 600; // refresh every 10 minutes
@@ -76,22 +76,11 @@ export const metadata:Metadata = {
 };
 
 export default async function PostPage() {
-
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/post?skip=0`, {
-    next: { revalidate: 60 },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch posts");
-  }
-
-  const { data }: { data: PopulatedClientPost[] } = await res.json();
-
-  const initialPosts: PopulatedClientPost[] = data;
+  const { data: initialPosts } = await getPaginatedPosts({ skip: 0 });
 
   return (
     <>
-      <section className="py-16 px-6 sm:px-16 md:px-20 lg:px-28 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800">
+      {/* <section className="py-16 px-6 sm:px-16 md:px-20 lg:px-28 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
             Post{" "}
@@ -103,7 +92,7 @@ export default async function PostPage() {
             Here you can find all the blog posts
           </p>
         </div>
-      </section>
+      </section> */}
 
       <section className="padding min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-3 sm:py-4 bg-white dark:bg-dark-100">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-x-10 lg:gap-x-16 mt-2 md:mt-4">

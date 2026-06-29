@@ -12,13 +12,24 @@ export const GET = async (req:Request) => {
   await connectToDatabase();
 
   try {
-    const user = await User.findById(session.user._id);
+    // Strip secrets / internal fields before returning to the client. The
+    // deletion cancel token is a capability secret, and the user's stored
+    // Gemini API key must NEVER be serialized back to the browser — we expose
+    // only a boolean so the UI can show "key saved" without handling the secret.
+    const user = await User.findById(session.user._id).select(
+      "-deletionCancelToken -deletionRequestedAt -razorpayCustomerId -razorpaySubscriptionId -bannedReason -__v",
+    );
 
     if (!user) {
       return new Response("User not found", { status: 404 });
     }
 
-    return new Response(JSON.stringify(user), {
+    const obj = user.toObject();
+    const hasGeminiApiKey =
+      typeof obj.geminiApiKey === "string" && obj.geminiApiKey.length > 0;
+    delete obj.geminiApiKey;
+
+    return new Response(JSON.stringify({ ...obj, hasGeminiApiKey }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

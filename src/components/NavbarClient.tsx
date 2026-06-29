@@ -17,8 +17,10 @@ import {
   FaEnvelope,
   FaInfoCircle,
   FaSignOutAlt,
+  FaCompass,
 } from "react-icons/fa";
 import { useTheme } from "next-themes";
+import { FaBell, FaBookmark, FaPenNib } from "react-icons/fa6";
 // import { BuiltInProviderType } from "next-auth/providers/google";
 
 interface UserDataType {
@@ -33,41 +35,40 @@ interface NavbarClientProps {
   userData: UserDataType | null;
 }
 
-
 const NavbarClient = ({ userData }: NavbarClientProps) => {
-const [isOpen, setIsOpen] = useState<boolean>(false);
-    const { theme, setTheme } = useTheme();
-    // const [isDarkMode,setDarkMode]=use
-    const isDarkMode = theme === "dark";
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  // Use `resolvedTheme` (not `theme`): for a new user on the default "system"
+  // theme, `theme` is the string "system", so `theme === "dark"` is false even
+  // when the OS is dark — which showed the dark logo on a dark background.
+  // `resolvedTheme` maps "system" to the actual "dark"/"light".
+  const { resolvedTheme } = useTheme();
+  const isDarkMode = resolvedTheme === "dark";
 
-const mobileMenuRef = useRef<HTMLDivElement | null>(null);
-const profileRef = useRef<HTMLDivElement | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+  const profileRef = useRef<HTMLDivElement | null>(null);
 
-const [hasMounted, setHasMounted] = useState<boolean>(false);
-
-
-useEffect(() => {
-  setHasMounted(true);
-}, []);
+  const [hasMounted, setHasMounted] = useState<boolean>(false);
 
   useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (
-      mobileMenuRef.current &&
-      !mobileMenuRef.current.contains(event.target as Node) &&
-      profileRef.current &&
-      !profileRef.current.contains(event.target as Node)
-    ) {
-      setIsOpen(false);
-    }
-  };
+    setHasMounted(true);
+  }, []);
 
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => document.removeEventListener("mousedown", handleClickOutside);
-}, []);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node) &&
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  
   const NavSkeleton = () => (
     <div className="animate-pulse flex gap-4 items-center">
       <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-full" />
@@ -77,21 +78,26 @@ useEffect(() => {
     </div>
   );
 
+  // Marketing nav items are ONLY shown to logged-out visitors. Once a user
+  // signs in, the navbar shifts to a workspace shell: logo + actions +
+  // avatar dropdown — matching Medium / Vercel / Twitter / Instagram /
+  // Hashnode. Workspace navigation lives in the LeftSidebar inside the
+  // (app) route group; marketing items a logged-in user may still need
+  // (like Pricing for upgrades) live inside the avatar dropdown.
   const navLinks = [
     { name: "Home", href: "/", icon: <FaHome /> },
-    { name: "Blog", href: "/post", icon: <FaBlog /> },
+    { name: "Blog", href: "/explore", icon: <FaBlog /> },
     { name: "Pricing", href: "/pricing", icon: <FaRobot /> },
     { name: "About", href: "/about", icon: <FaInfoCircle /> },
     { name: "Contact", href: "/contact", icon: <FaEnvelope /> },
   ];
-    
   return (
-    <nav className="sticky top-0 z-50 bg-white dark:bg-dark-100 border-b border-gray-200 dark:border-gray-700 px-6 sm:px-16 md:px-20 lg:px-28 py-3">
+    <nav className="sticky top-0 z-50 bg-white dark:bg-dark-100 border-b border-gray-200 dark:border-gray-700 px-6 sm:px-16 md:px-20 lg:px-28 py-2 md:py-3">
       <div className="flex justify-between items-center">
         {/* Logo */}
         <div className="flex items-center">
-          <Link href="/" className="flex items-center">
-            <div className="w-[175px] h-[60px] relative mr-3">
+          <Link href={userData ? "/feed" : "/"} className="flex items-center">
+            <div className="w-[175px] h-10 md:h-[50px] relative mr-3">
               {hasMounted ? (
                 <Image
                   src={
@@ -110,17 +116,19 @@ useEffect(() => {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
+          {/* Desktop marketing nav — guests only. Logged-in users navigate
+              the workspace via the LeftSidebar and the avatar dropdown. */}
           <div className="hidden lg:flex ml-10 space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition duration-300"
-              >
-                {link.name}
-              </Link>
-            ))}
+            {!userData &&
+              navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition duration-300"
+                >
+                  {link.name}
+                </Link>
+              ))}
           </div>
         </div>
 
@@ -144,7 +152,7 @@ useEffect(() => {
               </Link>
               <Link
                 href="/post/create"
-                className="flex items-center border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-medium py-2 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-dark-75 transition duration-300"
+                className="flex items-center border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-medium py-2 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 transition duration-300"
               >
                 <FaPen className="mr-2" /> Create
               </Link>
@@ -181,7 +189,7 @@ useEffect(() => {
                       <Link
                         onClick={() => setIsOpen(false)}
                         className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        href={`/profile/${userData.username}`}
+                        href={`/${userData.username}`}
                       >
                         <FaUser className="mr-3" /> My Profile
                       </Link>
@@ -191,6 +199,13 @@ useEffect(() => {
                         href="/settings"
                       >
                         <FaUser className="mr-3" /> Account Settings
+                      </Link>
+                      <Link
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        href="/billing"
+                      >
+                        <FaRobot className="mr-3" /> Upgrade Plan
                       </Link>
                     </div>
                     <div className="p-2 border-t border-gray-200 dark:border-gray-700">
@@ -210,7 +225,7 @@ useEffect(() => {
             </>
           ) : (
             <button
-              onClick={() => signIn("google")}
+              onClick={() => signIn("google", { callbackUrl: "/feed" })}
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition duration-300"
             >
               Sign in
@@ -228,6 +243,8 @@ useEffect(() => {
 
           <button
             onClick={() => setIsOpen(true)}
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isOpen}
             className="text-gray-700 dark:text-gray-300 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition"
           >
             <FaBars size={24} />
@@ -243,11 +260,11 @@ useEffect(() => {
         >
           <div className="flex justify-between items-center mb-10">
             <Link
-              href="/"
+              href={userData ? "/feed" : "/"}
               className="flex items-center"
               onClick={() => setIsOpen(false)}
             >
-              <div className="w-[160px] h-[50px] relative mr-3">
+              <div className="w-40 h-[50px] relative mr-3">
                 <Image
                   src={
                     isDarkMode
@@ -271,20 +288,24 @@ useEffect(() => {
             </button>
           </div>
 
-          {/* Mobile Navigation Links */}
-          <div className="space-y-4 mb-10">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className="flex items-center py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
-                onClick={() => setIsOpen(false)}
-              >
-                <span className="mr-3 text-lg">{link.icon}</span>
-                <span className="text-lg font-medium">{link.name}</span>
-              </Link>
-            ))}
-          </div>
+          {/* Mobile marketing nav — guests only (mirrors desktop). Logged-in
+              users navigate via the LeftSidebar hamburger inside (app) pages
+              and the avatar block below. */}
+          {!userData && (
+            <div className="space-y-4 mb-10">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="flex items-center py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span className="mr-3 text-lg">{link.icon}</span>
+                  <span className="text-lg font-medium">{link.name}</span>
+                </Link>
+              ))}
+            </div>
+          )}
 
           {/* Conditional Mobile Buttons */}
           {userData ? (
@@ -298,7 +319,7 @@ useEffect(() => {
               </Link>
               <Link
                 href="/post/create"
-                className="flex items-center justify-center py-3 px-4 mb-4 border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-medium rounded-lg hover:bg-blue-50 dark:hover:bg-dark-75 transition"
+                className="flex items-center justify-center py-3 px-4 mb-4 border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-medium rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 transition"
                 onClick={() => setIsOpen(false)}
               >
                 <FaPen className="mr-3" /> Create Post
@@ -329,7 +350,7 @@ useEffect(() => {
                 <Link
                   onClick={() => setIsOpen(false)}
                   className="flex items-center py-3 px-4 mb-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
-                  href={`/profile/${userData.username}`}
+                  href={`/${userData.username}`}
                 >
                   <FaUser className="mr-3" /> My Profile
                 </Link>
@@ -339,6 +360,13 @@ useEffect(() => {
                   href="/settings"
                 >
                   <FaUser className="mr-3" /> Account Settings
+                </Link>
+                <Link
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center py-3 px-4 mb-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
+                  href="/billing"
+                >
+                  <FaRobot className="mr-3" /> Upgrade Plan
                 </Link>
                 <button
                   onClick={() => {
@@ -355,7 +383,7 @@ useEffect(() => {
             <button
               onClick={() => {
                 setIsOpen(false);
-                signIn("google");
+                signIn("google", { callbackUrl: "/feed" });
               }}
               className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-300"
             >

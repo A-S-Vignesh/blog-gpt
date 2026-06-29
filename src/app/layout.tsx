@@ -1,15 +1,15 @@
 // app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/redux/provider";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import CommonFooter from "@/components/CommonFooter";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "next-themes";
 import ToastProvider from "@/provider/ToastProvider";
+import CookiesBox from "@/components/CookiesBox";
+import AnalyticsLoader from "@/components/AnalyticsLoader";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -88,14 +88,24 @@ export default function RootLayout({
         <ToastProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <Providers>
-              <Navbar />
-              {children}
-              <CommonFooter />
+              {/* Sticky-footer layout. Without this wrapper the body isn't a
+                  flex column, so the footer's `mt-auto` does nothing and the
+                  footer can briefly render directly below the navbar while
+                  the page content is still streaming in (visible layout
+                  shift). The `flex flex-col min-h-screen` wrapper guarantees
+                  the page-content area always claims at least the remaining
+                  viewport height, keeping the footer pinned to the bottom
+                  even before React hydrates. */}
+              <div className="flex flex-col min-h-screen">
+                <Navbar />
+                <div className="flex-1 flex flex-col min-w-0">{children}</div>
+                <CommonFooter />
+              </div>
+              <CookiesBox />
             </Providers>
           </ThemeProvider>
         </ToastProvider>
-        <GoogleAnalytics gaId="G-VWS6MTPDHT" />
-        <Analytics />
+        <AnalyticsLoader />
       </body>
     </html>
   );

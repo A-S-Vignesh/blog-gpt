@@ -23,20 +23,23 @@ import { PopulatedClientPost } from "@/types/post";
 import { IUser } from "@/models/User";
 import LoadMore from "./LoadMore";
 import ProfileLoadMore from "./ProfileLoadMore";
+import FollowButton from "./ui/FollowButton";
 // import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 interface ViewProfileProps {
   isMyProfile: boolean;
   data: IUser;
   userPosts: PopulatedClientPost[];
-  username:string
+  username: string;
+  initialFollowing?: boolean;
 }
 
 const ViewProfile: React.FC<ViewProfileProps> = ({
   isMyProfile,
   data,
   userPosts,
-  username
+  username,
+  initialFollowing = false,
 }) => {
   const [userData, setUserData] = useState(data);
   // const [userPosts, setUserPost] = useState(userPostsData);
@@ -49,7 +52,7 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
 
   return (
     <>
-      <section className="py-16 px-6 sm:px-16 md:px-20 lg:px-28 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800">
+      {/* <section className="py-16 px-6 sm:px-16 md:px-20 lg:px-28 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
             {isMyProfile ? "Your" : `${userData?.name || userData?.username}`}{" "}
@@ -61,7 +64,7 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
               : "Explore content created by this author"}
           </p>
         </div>
-      </section>
+      </section> */}
       <section className="min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-8 sm:py-10 bg-white dark:bg-dark-100">
         <div className="max-w-6xl mx-auto">
           {/* Profile Card */}
@@ -237,16 +240,30 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
                   </div>
                 )}
 
-                {isMyProfile && (
-                  <div className="flex justify-center gap-4">
+                <div className="flex flex-wrap justify-center items-center gap-4 mt-2">
+                  {isMyProfile ? (
                     <Link
                       href={"/settings"}
                       className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
                     >
                       Edit Profile
                     </Link>
+                  ) : (
+                    <FollowButton
+                      targetUsername={username}
+                      initialFollowing={initialFollowing}
+                      initialFollowersCount={
+                        (userData as any)?.followersCount ?? 0
+                      }
+                    />
+                  )}
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {((userData as any)?.followingCount ?? 0).toLocaleString()}
+                    </span>{" "}
+                    following
                   </div>
-                )}
+                </div>
               </div>
             </div>
 
@@ -254,7 +271,7 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
             {errorState.isError && (
               <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg p-4 mb-6 mx-6">
                 <div className="flex items-center">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <svg
                       className="h-5 w-5 text-red-600 dark:text-red-400"
                       fill="none"

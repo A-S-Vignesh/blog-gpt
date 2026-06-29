@@ -9,8 +9,15 @@ import {
   FaImage,
   FaPencilAlt,
 } from "react-icons/fa";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import {
+  extractTags,
+  normalizeTag,
+  MAX_TAGS,
+  MIN_TAG_LENGTH,
+} from "@/utils/tags";
+import { POST_LIMITS, validatePost } from "@/lib/validation/post";
 const TiptapEditor = dynamic(() => import("@/components/editor/TiptapEditor"), {
   ssr: false,
 });
@@ -41,8 +48,8 @@ const Form: React.FC<FormPropsType> = ({
   const [imageUrl, setImageUrl] = useState<
     string | ArrayBuffer | undefined | null
   >(null);
-  const [tags, setTags] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [tagError, setTagError] = useState<string | null>(null);
 
   const handleUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     let file = e.target.files?.[0];
@@ -79,18 +86,42 @@ const Form: React.FC<FormPropsType> = ({
     e.preventDefault();
   };
 
+  // Add a tag with production-grade rules: normalize (lowercase, strip "#",
+  // collapse spaces), enforce min length, dedupe case-insensitively, and cap
+  // the total. Server re-applies the same rules as the source of truth.
+  const addTag = (raw: string) => {
+    const tag = normalizeTag(raw);
+    if (tag.length < MIN_TAG_LENGTH) {
+      setTagError(`Tags must be at least ${MIN_TAG_LENGTH} characters.`);
+      return;
+    }
+    if (post.tags.length >= MAX_TAGS) {
+      setTagError(`You can add up to ${MAX_TAGS} tags.`);
+      return;
+    }
+    if (post.tags.some((t) => normalizeTag(t) === tag)) {
+      setTagError("That tag has already been added.");
+      return;
+    }
+    setPost({ ...post, tags: [...post.tags, tag] });
+    setInputValue("");
+    setTagError(null);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && inputValue.trim() !== "") {
+    // Enter OR comma commits the tag (comma is what most people type).
+    if ((e.key === "Enter" || e.key === ",") && inputValue.trim() !== "") {
       e.preventDefault();
-
-      if (!post.tags.includes(inputValue.trim())) {
-        setPost({
-          ...post,
-          tags: [...post.tags, inputValue.trim()],
-        });
-      }
-
-      setInputValue("");
+      addTag(inputValue);
+    } else if (
+      e.key === "Backspace" &&
+      inputValue === "" &&
+      post.tags.length > 0
+    ) {
+      // Quick-remove the last tag when the input is empty.
+      e.preventDefault();
+      setPost({ ...post, tags: post.tags.slice(0, -1) });
+      setTagError(null);
     }
   };
 
@@ -99,7 +130,34 @@ const Form: React.FC<FormPropsType> = ({
       ...post,
       tags: post.tags.filter((tag) => tag !== tagToRemove),
     });
+    setTagError(null);
   };
+
+  // Suggestions detected from the title + content the author has written.
+  // Excludes already-selected tags; content is capped for keystroke perf.
+  const suggestedTags = useMemo(() => {
+    if (post.tags.length >= MAX_TAGS) return [];
+    const selected = new Set(post.tags.map((t) => normalizeTag(t)));
+    return extractTags({
+      title: post.title,
+      content: (post.content || "").slice(0, 6000),
+      max: MAX_TAGS + 4,
+    })
+      .filter((t) => !selected.has(t))
+      .slice(0, 8);
+  }, [post.title, post.content, post.tags]);
+
+  // Gate the publish button via the SHARED validator (same rules as the server),
+  // so the user sees exactly what to fix BEFORE clicking, and can't submit an
+  // invalid post. Slug is only validated on create (it's fixed on edit).
+  const validationError = validatePost({
+    title: post.title,
+    content: post.content,
+    slug: post.slug,
+    tags: post.tags,
+    requireSlug: name === "Create",
+  });
+  const canSubmit = !validationError;
 
   useEffect(() => {
     setImageUrl(post?.image);
@@ -112,13 +170,13 @@ const Form: React.FC<FormPropsType> = ({
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
             {name === "Create" ? "Craft Your" : "Refine Your"}{" "}
             <span className="text-blue-600 dark:text-blue-400">
-              {name === "Create" ? "Masterpiece" : "Creation"}
+              {name === "Create" ? "Post" : "Post"}
             </span>
           </h1>
           <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
             {name === "Create"
-              ? "Share your insights with the world. Create something amazing!"
-              : "Perfect your post and make it shine."}
+              ? "Share your ideas with the world."
+              : "Refine your post before you publish."}
           </p>
         </div>
       </section>
@@ -140,9 +198,14 @@ const Form: React.FC<FormPropsType> = ({
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 type="text"
                 value={post?.title}
+                maxLength={POST_LIMITS.TITLE_MAX}
                 onChange={(e) => setPost({ ...post, title: e.target.value })}
                 required
               />
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                {POST_LIMITS.TITLE_MIN}–{POST_LIMITS.TITLE_MAX} characters ·{" "}
+                {(post?.title || "").trim().length}/{POST_LIMITS.TITLE_MAX}
+              </p>
             </div>
 
             <div className="bg-white dark:bg-dark-100 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6">
@@ -195,9 +258,13 @@ const Form: React.FC<FormPropsType> = ({
                   placeholder="Enter a unique URL slug for your post"
                   name="slug"
                   value={post?.slug}
+                  maxLength={POST_LIMITS.SLUG_MAX}
                   onChange={(e) => setPost({ ...post, slug: e.target.value })}
                   required
                 ></input>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  {(post?.slug || "").trim().length}/{POST_LIMITS.SLUG_MAX}
+                </p>
               </div>
             )}
 
@@ -274,9 +341,11 @@ const Form: React.FC<FormPropsType> = ({
                   <FaTag className="text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Tags
+                  Tags <span className="text-red-500">*</span>
                   <span className="block text-sm font-normal text-gray-500 dark:text-gray-400 mt-1">
-                    (Press Enter after each tag)
+                    {post.tags.length === 0
+                      ? "Add at least one tag to publish"
+                      : `Press Enter or comma after each tag · ${post.tags.length}/${MAX_TAGS}`}
                   </span>
                 </h2>
               </div>
@@ -299,14 +368,56 @@ const Form: React.FC<FormPropsType> = ({
 
               {/* Input */}
               <input
-                placeholder="Type a tag and press Enter"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                placeholder={
+                  post.tags.length >= MAX_TAGS
+                    ? `Tag limit reached (${MAX_TAGS})`
+                    : "Type a tag and press Enter or comma"
+                }
+                disabled={post.tags.length >= MAX_TAGS}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-60 disabled:cursor-not-allowed"
                 type="text"
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  if (tagError) setTagError(null);
+                }}
                 onKeyDown={handleKeyDown}
               />
+
+              {tagError && (
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                  {tagError}
+                </p>
+              )}
+
+              {/* Auto-detected tag suggestions from the title + content */}
+              {suggestedTags.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    Suggested tags (detected from your title &amp; content):
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {suggestedTags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => addTag(tag)}
+                        className="flex items-center gap-1 px-3 py-1 rounded-full border border-dashed border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition text-sm"
+                      >
+                        <span className="font-semibold">+</span> #{tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Tell the user exactly what to fix, BEFORE they click. */}
+            {validationError && !submitting && (
+              <p className="text-center text-sm text-amber-600 dark:text-amber-400">
+                {validationError}
+              </p>
+            )}
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -320,8 +431,8 @@ const Form: React.FC<FormPropsType> = ({
               </button>
               <button
                 type="submit"
-                disabled={submitting}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:opacity-90 transition flex items-center justify-center disabled:opacity-70"
+                disabled={submitting || !canSubmit}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:opacity-90 transition flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <FaSave className="mr-2" />
                 {submitting ? `${name}...` : name}

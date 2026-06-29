@@ -7,7 +7,7 @@ const faqs = [
   {
     question: "How does Blog GPT generate blog content?",
     answer:
-      "Blog GPT uses Gemini AI to create blog posts based on the topic or keywords you provide. The system analyzes your input and generates a well structured draft that you can edit, refine, and publish according to your needs.",
+      "Blog GPT uses AI to create blog posts based on the topic or keywords you provide. It turns your input into a well-structured draft that you can edit, refine, and publish according to your needs.",
   },
   {
     question: "Is Blog GPT free to use?",
@@ -27,7 +27,7 @@ const faqs = [
   {
     question: "What kind of customer support does Blog GPT provide?",
     answer:
-      "Blog GPT provides email support for all users, with replies typically within twenty four to forty eight hours. Users on the Pro plan receive faster responses along with access to helpful documentation and video guides.",
+      "Blog GPT provides email support for all users, with replies typically within one to two business days. Paid plans receive faster, prioritized responses.",
   },
 ];
 
@@ -97,7 +97,7 @@ export default function FaqSection() {
             Still have questions?
           </p>
           <a
-            href="mailto:support@bloggpt.com"
+            href="mailto:support@thebloggpt.com"
             className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition"
           >
             Contact Support

@@ -1,61 +1,89 @@
-type RateLimitResult = {
+import { connectToDatabase } from "@/lib/mongodb";
+import RateLimitBucket from "@/models/RateLimitBucket";
+
+export type RateLimitResult = {
   ok: boolean;
   remaining: number;
   retryAfterSeconds?: number;
 };
 
-type RateLimitOptions = {
-  /**
-   * Unique identifier for this bucket.
-   * Prefer user id when available; otherwise, fall back to IP.
-   */
+export type RateLimitOptions = {
+  /** Unique bucket identifier (prefer userId, fall back to IP). */
   key: string;
-  /**
-   * Window size in milliseconds.
-   */
+  /** Fixed window size in milliseconds. */
   windowMs: number;
-  /**
-   * Maximum number of allowed hits within the window.
-   */
+  /** Maximum hits allowed within the window. */
   max: number;
 };
 
-// In-memory counters per server instance. This is not perfect for
-// distributed deployments, but it provides a good first line of defense
-// against abuse without introducing external infrastructure.
-const buckets = new Map<
-  string,
-  {
-    count: number;
-    firstHitAt: number;
-  }
->();
-
-export function rateLimit(options: RateLimitOptions): RateLimitResult {
+/**
+ * MongoDB-backed fixed-window rate limiter.
+ *
+ * Survives across serverless instances because it stores counters in Mongo.
+ * Each (key, windowStart) tuple is a unique doc; the doc is atomically
+ * incremented and auto-expires via a TTL index, so there is no GC to manage.
+ *
+ * Trade-offs vs Redis: ~5-15ms per check (one round-trip) instead of <1ms.
+ * For our scale (low thousands of requests/min) this is the right tool.
+ */
+export async function rateLimit(
+  options: RateLimitOptions,
+): Promise<RateLimitResult> {
   const now = Date.now();
-  const bucket = buckets.get(options.key);
+  const windowStartMs =
+    Math.floor(now / options.windowMs) * options.windowMs;
+  const windowStart = new Date(windowStartMs);
+  // Keep doc alive for one extra window so late writes can't accidentally
+  // resurrect an old counter due to TTL eviction race.
+  const expiresAt = new Date(windowStartMs + options.windowMs * 2);
 
-  if (!bucket || now - bucket.firstHitAt > options.windowMs) {
-    buckets.set(options.key, { count: 1, firstHitAt: now });
+  try {
+    await connectToDatabase();
+
+    const doc = await RateLimitBucket.findOneAndUpdate(
+      { key: options.key, windowStart },
+      {
+        $inc: { count: 1 },
+        $setOnInsert: { expiresAt },
+      },
+      { upsert: true, new: true },
+    ).lean<{ count: number }>();
+
+    const count = doc?.count ?? 1;
+
+    if (count > options.max) {
+      const retryAfterMs = windowStartMs + options.windowMs - now;
+      return {
+        ok: false,
+        remaining: 0,
+        retryAfterSeconds: Math.max(1, Math.ceil(retryAfterMs / 1000)),
+      };
+    }
+
     return {
       ok: true,
-      remaining: options.max - 1,
+      remaining: Math.max(0, options.max - count),
     };
+  } catch (err) {
+    // Fail open: if Mongo is briefly unavailable, do NOT block legitimate
+    // requests. This is a defense-in-depth limiter, not a security gate.
+    console.error("[rateLimit] mongo error, failing open:", err);
+    return { ok: true, remaining: options.max };
   }
-
-  if (bucket.count >= options.max) {
-    const retryAfterMs = bucket.firstHitAt + options.windowMs - now;
-    return {
-      ok: false,
-      remaining: 0,
-      retryAfterSeconds: Math.max(1, Math.ceil(retryAfterMs / 1000)),
-    };
-  }
-
-  bucket.count += 1;
-  return {
-    ok: true,
-    remaining: options.max - bucket.count,
-  };
 }
 
+/**
+ * Extract a best-effort client IP from the request headers.
+ * Use this only as a fallback when no userId is available.
+ */
+export function getClientIp(req: Request): string {
+  const headers = req.headers;
+  const xff = headers.get("x-forwarded-for");
+  if (xff) {
+    const first = xff.split(",")[0]?.trim();
+    if (first) return first;
+  }
+  const real = headers.get("x-real-ip");
+  if (real) return real.trim();
+  return "unknown";
+}
