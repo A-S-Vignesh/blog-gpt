@@ -42,27 +42,14 @@ export async function PUT(req: Request) {
     // only through the dedicated one-time endpoint at /api/useraction/username,
     // so a routine profile save can never alter it (and can't burn the user's
     // single change by accident).
-    const ALLOWED_FIELDS = [
-      "name",
-      "bio",
-      "website",
-      "image",
-      "socials",
-      "geminiApiKey",
-    ];
+    // NOTE: `username` and `geminiApiKey` are intentionally NOT here — each has
+    // its own dedicated endpoint (/useraction/username, /useraction/gemini-key)
+    // so a routine profile save can never alter the handle or the (encrypted)
+    // API key.
+    const ALLOWED_FIELDS = ["name", "bio", "website", "image", "socials"];
     const update: Record<string, unknown> = {};
     for (const key of ALLOWED_FIELDS) {
       if (key in body) update[key] = body[key];
-    }
-
-    // Never CLEAR the saved Gemini key on an ordinary profile save: the key is
-    // no longer sent back to the client to pre-fill the form, so an empty value
-    // means "leave as-is". Only an explicit non-empty value updates it.
-    if (
-      typeof update.geminiApiKey !== "string" ||
-      update.geminiApiKey.trim() === ""
-    ) {
-      delete update.geminiApiKey;
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -79,14 +66,11 @@ export async function PUT(req: Request) {
       throw new ApiError("NOT_FOUND", "User not found.");
     }
 
-    // Derive the "key saved" flag without returning the secret: it's set if the
-    // user just provided one, or already had one stored.
+    // Report whether a key is stored (never the secret). The key is only
+    // changed via the dedicated endpoint, so this just reflects current state.
     const hasGeminiApiKey =
-      ("geminiApiKey" in update &&
-        typeof update.geminiApiKey === "string" &&
-        update.geminiApiKey.trim() !== "") ||
-      (typeof oldUser.geminiApiKey === "string" &&
-        oldUser.geminiApiKey.length > 0);
+      typeof oldUser.geminiApiKey === "string" &&
+      oldUser.geminiApiKey.length > 0;
 
     return new Response(
       JSON.stringify({

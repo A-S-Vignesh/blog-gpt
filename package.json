@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "migrate": "tsx migration/migrateUserPlans.ts",
     "migrate:username-index": "tsx migration/migrateUsernameIndex.ts",
-    "migrate:backfill-users": "tsx migration/migrateUserBackfill.ts"
+    "migrate:backfill-users": "tsx migration/migrateUserBackfill.ts",
+    "migrate:encrypt-keys": "tsx migration/encryptGeminiKeys.ts",
+    "migrate:post-slug": "tsx migration/migrateslug.ts"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",
@@ -46,7 +48,8 @@
     "react-redux": "^9.2.0",
     "react-share": "^5.2.2",
     "resend": "^6.12.3",
-    "sanitize-html": "^2.17.0"
+    "sanitize-html": "^2.17.0",
+    "slugify": "^1.6.9"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -49,6 +49,13 @@ const PrivacyPolicyPage = () => {
           only with your explicit consent
         </li>
         <li>Name and email submitted via our contact form</li>
+        <li>
+          Your own AI provider (Gemini) API key, only if you choose to add one
+          in your settings. It is stored <strong>encrypted at rest</strong>, is
+          never shown back to you or sent to your browser, and we{" "}
+          <strong>never use it for our own purposes</strong> — it belongs to you
+          and is held solely to power your own AI generations.
+        </li>
       </ul>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">

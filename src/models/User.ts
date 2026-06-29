@@ -85,10 +85,12 @@ export const UserSchema = new Schema<IUser>(
     name: {
       type: String,
       required: [true, "Name is required!"],
-      validate: {
-        validator: validateFormatWhenModified("name", /^[a-zA-Z\s\-]+$/),
-        message: "Name must contain only letters, spaces, or hyphens!",
-      },
+      trim: true,
+      // Display name — accept ANY language/script (Tamil, accents, dots,
+      // apostrophes, CJK, etc.). NO character restriction, so an OAuth/Google
+      // name can never block sign-in; only a sane max length is enforced. The
+      // URL-safe, English-only handle is `username` (validated below).
+      maxlength: [100, "Name is too long (max 100 characters)."],
     },
     username: {
       type: String,

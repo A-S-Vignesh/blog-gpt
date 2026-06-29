@@ -117,6 +117,10 @@ const AccountSettings = () => {
   const [usernameInput, setUsernameInput] = useState("");
   const [usernameSaving, setUsernameSaving] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  // BYO Gemini key — its own action; the key is never read back from the server.
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [apiKeySaving, setApiKeySaving] = useState(false);
+  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<ModalState | null>(null);
 
   // Sync the editable form whenever the server data changes (initial load, and
@@ -188,6 +192,70 @@ const AccountSettings = () => {
     }
   };
 
+  const handleSaveApiKey = async () => {
+    const key = apiKeyInput.trim();
+    if (!key) {
+      setApiKeyError("Enter your API key.");
+      return;
+    }
+    setApiKeySaving(true);
+    setApiKeyError(null);
+    try {
+      const res = await fetch("/api/useraction/gemini-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ geminiApiKey: key }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setApiKeyError(data?.error || "Could not save the key.");
+        return;
+      }
+      // Reflect the new state in the cache without ever holding the secret.
+      queryClient.setQueryData(["account-settings"], (old: any) =>
+        old ? { ...old, hasGeminiApiKey: true } : old,
+      );
+      setApiKeyInput("");
+      setShowModal({
+        type: "success",
+        title: "API key saved",
+        message: "Your Gemini key is encrypted and saved.",
+      });
+    } catch {
+      setApiKeyError("Please try again later.");
+    } finally {
+      setApiKeySaving(false);
+    }
+  };
+
+  const handleRemoveApiKey = async () => {
+    setApiKeySaving(true);
+    setApiKeyError(null);
+    try {
+      const res = await fetch("/api/useraction/gemini-key", {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setApiKeyError(data?.error || "Could not remove the key.");
+        return;
+      }
+      queryClient.setQueryData(["account-settings"], (old: any) =>
+        old ? { ...old, hasGeminiApiKey: false } : old,
+      );
+      setApiKeyInput("");
+      setShowModal({
+        type: "success",
+        title: "API key removed",
+        message: "Your Gemini key has been removed.",
+      });
+    } catch {
+      setApiKeyError("Please try again later.");
+    } finally {
+      setApiKeySaving(false);
+    }
+  };
+
   const saveProfile = async () => {
     setIsSaving(true);
 
@@ -201,15 +269,7 @@ const AccountSettings = () => {
           github: formData.socials?.github || "",
         },
       };
-      // Only send the Gemini key when the user actually typed a new one. The key
-      // is never returned to pre-fill the form, so an empty field means "keep my
-      // saved key" — sending "" would otherwise wipe it on the server.
-      if (
-        typeof formData.geminiApiKey === "string" &&
-        formData.geminiApiKey.trim() !== ""
-      ) {
-        updatedData.geminiApiKey = formData.geminiApiKey.trim();
-      }
+      // The Gemini key is handled by its OWN section/endpoint, never here.
 
       const response = await fetch("/api/useraction/update", {
         method: "PUT",
@@ -605,21 +665,38 @@ const AccountSettings = () => {
                 </div>
               </section>
 
-              {/* API key */}
+              {/* Gemini API key — dedicated action, encrypted at rest, never shown */}
               <section className={`${cardClass} p-6`}>
                 <div className="flex items-center gap-2 mb-2">
                   <FaKey className="text-blue-600 dark:text-blue-400" />
                   <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                    API key
+                    Gemini API key
                   </h3>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-                  Optional. Add your own key to power generation from your own
-                  account.
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  Optional. Add your own Google Gemini key to generate from your
+                  own quota instead of the platform&apos;s. It&apos;s encrypted at
+                  rest and never shown again.
                 </p>
 
+                {userData?.hasGeminiApiKey && (
+                  <div className="mb-4 flex items-center justify-between rounded-lg border border-green-200 dark:border-green-900/50 bg-green-50 dark:bg-green-900/15 px-4 py-2.5">
+                    <span className="text-sm text-green-700 dark:text-green-300">
+                      ✓ A key is saved and active.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleRemoveApiKey}
+                      disabled={apiKeySaving}
+                      className="text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 disabled:opacity-60"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+
                 <label htmlFor="geminiApiKey" className={labelClass}>
-                  Gemini API key
+                  {userData?.hasGeminiApiKey ? "Replace key" : "Add key"}
                 </label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -628,15 +705,19 @@ const AccountSettings = () => {
                   <input
                     type={showApiKey ? "text" : "password"}
                     id="geminiApiKey"
-                    name="geminiApiKey"
-                    value={formData?.geminiApiKey || ""}
-                    onChange={handleChange}
+                    value={apiKeyInput}
+                    onChange={(e) => {
+                      setApiKeyInput(e.target.value);
+                      setApiKeyError(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSaveApiKey();
+                      }
+                    }}
                     className={`${inputClass} pl-9 pr-10`}
-                    placeholder={
-                      userData?.hasGeminiApiKey
-                        ? "•••••••• (saved, leave blank to keep)"
-                        : "Paste your API key"
-                    }
+                    placeholder="Paste your Gemini API key"
                     autoComplete="off"
                   />
                   <button
@@ -648,9 +729,28 @@ const AccountSettings = () => {
                     {showApiKey ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
-                  Stored securely and never shown to anyone else. Leave blank to
-                  use the platform default.
+                {apiKeyError && (
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {apiKeyError}
+                  </p>
+                )}
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleSaveApiKey}
+                    disabled={apiKeySaving || !apiKeyInput.trim()}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {apiKeySaving
+                      ? "Saving…"
+                      : userData?.hasGeminiApiKey
+                        ? "Replace key"
+                        : "Save key"}
+                  </button>
+                </div>
+                <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">
+                  Stored encrypted (AES-256). We never display it again or send it
+                  to your browser.
                 </p>
               </section>
 

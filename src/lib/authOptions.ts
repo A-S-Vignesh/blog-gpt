@@ -16,30 +16,64 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async signIn({ profile }) {
-      if (!profile?.email || !profile?.name) return false;
+      // Only the email is truly required. The display name can be in any
+      // language and is sanitized below, so sign-in is NEVER blocked by the name.
+      if (!profile?.email) return false;
 
       await connectToDatabase();
 
       let user = await User.findOne({ email: profile.email });
 
+      let isNewUser = false;
       if (!user) {
-        const username = await generateUsername(profile.name);
-        user = await User.create({
-          email: profile.email,
-          name: profile.name,
-          username,
-          image: (profile as any).picture || "",
-        });
+        // Trim, cap at 100, and fall back to the email local-part so a missing,
+        // odd, or over-long name can't fail validation and block the login.
+        const safeName =
+          (profile.name || profile.email.split("@")[0] || "User")
+            .trim()
+            .slice(0, 100) || "User";
 
-        // Fire-and-forget welcome email. Failures must not block sign-in.
-        const tpl = welcomeEmail({ name: profile.name });
-        void sendEmail({
-          to: profile.email,
-          subject: tpl.subject,
-          html: tpl.html,
-          tag: "welcome",
-        }).catch((err) => console.error("[auth] welcome email failed:", err));
+        // Create the account, retrying on the rare unique-index race so a
+        // concurrent sign-in can never block the login:
+        //   - duplicate EMAIL  → another request just created this user; reuse it
+        //   - duplicate USERNAME → regenerate a fresh handle and retry
+        for (let attempt = 0; attempt < 3 && !user; attempt++) {
+          try {
+            const username = await generateUsername(profile.name || safeName);
+            user = await User.create({
+              email: profile.email,
+              name: safeName,
+              username,
+              image: (profile as any).picture || "",
+            });
+            isNewUser = true;
+          } catch (err: any) {
+            if (err?.code === 11000) {
+              const existing = await User.findOne({ email: profile.email });
+              if (existing) {
+                user = existing; // email race — use the doc that won
+                break;
+              }
+              continue; // username collision — loop regenerates a new handle
+            }
+            throw err;
+          }
+        }
+
+        // Fire-and-forget welcome email (only for genuinely new accounts).
+        if (isNewUser && user) {
+          const tpl = welcomeEmail({ name: safeName });
+          void sendEmail({
+            to: profile.email,
+            subject: tpl.subject,
+            html: tpl.html,
+            tag: "welcome",
+          }).catch((err) => console.error("[auth] welcome email failed:", err));
+        }
       }
+
+      // Could not load or create the account (e.g. repeated unique-index race).
+      if (!user) return false;
 
       // Block sign-in for banned users / users mid-deletion.
       if (user.banned) return false;
