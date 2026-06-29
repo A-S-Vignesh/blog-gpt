@@ -18,6 +18,7 @@ import { rateLimit } from "@/lib/rateLimit";
 import { moderateContent } from "@/lib/ai/moderation";
 import { moderateImage } from "@/lib/ai/imageModeration";
 import { normalizeTags, MAX_TAGS } from "@/utils/tags";
+import { validatePost } from "@/lib/validation/post";
 import {
   buildExcerpt,
   dataUriByteSize,
@@ -135,41 +136,22 @@ export async function PATCH(
       );
     }
 
-    // 2. Title too short
-    if (title.trim().length < 10) {
-      return new Response(
-        JSON.stringify({ error: "Title is too short (min 10 characters)" }),
-        { status: 400 }
-      );
-    }
-
-    // 3. Content too short (SEO check)
-    if (content.trim().length < 300) {
-      return new Response(
-        JSON.stringify({
-          error: "Content is too short (minimum 300 characters required)",
-        }),
-        { status: 400 }
-      );
-    }
-
-    // 4. Slug empty after cleaning
-    if (slug.trim().length < 3) {
-      return new Response(
-        JSON.stringify({ error: "Slug is too short or invalid" }),
-        { status: 400 }
-      );
-    }
-
-    // 5. Normalize tags (lowercase, strip "#", dedupe, cap) — server is the
-    // source of truth for what gets stored.
+    // Normalize tags, then validate ALL field bounds (min AND max) via the
+    // shared validator — same rules as create and the client. Slug isn't
+    // editable here (it's the URL param), so requireSlug is false.
     const cleanTags = normalizeTags(tags, MAX_TAGS);
-    if (cleanTags.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "Add at least one valid tag (2+ characters)" }),
-        { status: 400 }
+    const validationError = validatePost({
+      title,
+      content,
+      tags: cleanTags,
+      requireSlug: false,
+    });
+    if (validationError) {
+      return apiErrorResponse(
+        new ApiError("VALIDATION_FAILED", validationError),
       );
     }
+
     await connectToDatabase();
     const cleanHTML = sanitizeHtml(content, {
       allowedTags: sanitizeHtml.defaults.allowedTags.concat([

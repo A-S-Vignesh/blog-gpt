@@ -17,6 +17,7 @@ import {
   MAX_TAGS,
   MIN_TAG_LENGTH,
 } from "@/utils/tags";
+import { POST_LIMITS, validatePost } from "@/lib/validation/post";
 const TiptapEditor = dynamic(() => import("@/components/editor/TiptapEditor"), {
   ssr: false,
 });
@@ -146,6 +147,18 @@ const Form: React.FC<FormPropsType> = ({
       .slice(0, 8);
   }, [post.title, post.content, post.tags]);
 
+  // Gate the publish button via the SHARED validator (same rules as the server),
+  // so the user sees exactly what to fix BEFORE clicking, and can't submit an
+  // invalid post. Slug is only validated on create (it's fixed on edit).
+  const validationError = validatePost({
+    title: post.title,
+    content: post.content,
+    slug: post.slug,
+    tags: post.tags,
+    requireSlug: name === "Create",
+  });
+  const canSubmit = !validationError;
+
   useEffect(() => {
     setImageUrl(post?.image);
   }, [post]);
@@ -185,9 +198,14 @@ const Form: React.FC<FormPropsType> = ({
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 type="text"
                 value={post?.title}
+                maxLength={POST_LIMITS.TITLE_MAX}
                 onChange={(e) => setPost({ ...post, title: e.target.value })}
                 required
               />
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                {POST_LIMITS.TITLE_MIN}–{POST_LIMITS.TITLE_MAX} characters ·{" "}
+                {(post?.title || "").trim().length}/{POST_LIMITS.TITLE_MAX}
+              </p>
             </div>
 
             <div className="bg-white dark:bg-dark-100 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6">
@@ -240,9 +258,13 @@ const Form: React.FC<FormPropsType> = ({
                   placeholder="Enter a unique URL slug for your post"
                   name="slug"
                   value={post?.slug}
+                  maxLength={POST_LIMITS.SLUG_MAX}
                   onChange={(e) => setPost({ ...post, slug: e.target.value })}
                   required
                 ></input>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  {(post?.slug || "").trim().length}/{POST_LIMITS.SLUG_MAX}
+                </p>
               </div>
             )}
 
@@ -319,10 +341,11 @@ const Form: React.FC<FormPropsType> = ({
                   <FaTag className="text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Tags
+                  Tags <span className="text-red-500">*</span>
                   <span className="block text-sm font-normal text-gray-500 dark:text-gray-400 mt-1">
-                    Press Enter or comma after each tag · {post.tags.length}/
-                    {MAX_TAGS}
+                    {post.tags.length === 0
+                      ? "Add at least one tag to publish"
+                      : `Press Enter or comma after each tag · ${post.tags.length}/${MAX_TAGS}`}
                   </span>
                 </h2>
               </div>
@@ -389,6 +412,13 @@ const Form: React.FC<FormPropsType> = ({
               )}
             </div>
 
+            {/* Tell the user exactly what to fix, BEFORE they click. */}
+            {validationError && !submitting && (
+              <p className="text-center text-sm text-amber-600 dark:text-amber-400">
+                {validationError}
+              </p>
+            )}
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button
@@ -401,8 +431,8 @@ const Form: React.FC<FormPropsType> = ({
               </button>
               <button
                 type="submit"
-                disabled={submitting}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:opacity-90 transition flex items-center justify-center disabled:opacity-70"
+                disabled={submitting || !canSubmit}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:opacity-90 transition flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <FaSave className="mr-2" />
                 {submitting ? `${name}...` : name}

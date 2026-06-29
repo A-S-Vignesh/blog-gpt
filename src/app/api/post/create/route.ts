@@ -11,13 +11,12 @@ import { ApiError, apiErrorResponse } from "@/lib/api/errors";
 import { moderateContent } from "@/lib/ai/moderation";
 import { moderateImage } from "@/lib/ai/imageModeration";
 import { normalizeTags, MAX_TAGS } from "@/utils/tags";
+import { validatePost, slugify } from "@/lib/validation/post";
 import {
   buildExcerpt,
   dataUriByteSize,
   MAX_IMAGE_BYTES,
 } from "@/lib/postContent";
-
-const MAX_CONTENT_LENGTH = 20_000;
 
 const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
   allowedTags: sanitizeHtml.defaults.allowedTags.concat([
@@ -57,14 +56,6 @@ const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     },
   },
 };
-
-const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
 
 const decodeEntities = (str: string) =>
   str
@@ -109,41 +100,25 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!title || !content || !slug || !Array.isArray(tags) || tags.length === 0) {
-      throw new ApiError("VALIDATION_FAILED", "Missing required fields.", {
-        required: ["title", "content", "slug", "tags"],
-      });
-    }
-    if (title.trim().length < 10) {
-      throw new ApiError("VALIDATION_FAILED", "Title is too short (min 10 characters).");
-    }
-    if (content.trim().length < 300) {
-      throw new ApiError(
-        "VALIDATION_FAILED",
-        "Content is too short. Posts must be at least 300 characters.",
-      );
-    }
-    if (content.length > MAX_CONTENT_LENGTH) {
-      throw new ApiError(
-        "PAYLOAD_TOO_LARGE",
-        `Content is too long (max ${MAX_CONTENT_LENGTH} characters). Please shorten your post.`,
-      );
-    }
-    if (slug.trim().length < 3) {
-      throw new ApiError("VALIDATION_FAILED", "Slug is too short or invalid.");
-    }
-    // Normalize server-side (lowercase, strip "#", dedupe, cap) — the stored
-    // source of truth, regardless of what the client sent.
-    const cleanTags = normalizeTags(tags, MAX_TAGS);
-    if (cleanTags.length === 0) {
-      throw new ApiError(
-        "VALIDATION_FAILED",
-        "Add at least one valid tag (2+ characters).",
-      );
+    // Clean inputs first, then validate the FINAL stored values with the shared
+    // validator (same rules the client enforces). This is the authoritative
+    // check — it rejects oversized/short title, slug, content, and tag counts
+    // even if a client bypasses the form.
+    const cleanedSlug = slugify(slug ?? "");
+    const cleanTags = normalizeTags(Array.isArray(tags) ? tags : [], MAX_TAGS);
+
+    const validationError = validatePost({
+      title,
+      content,
+      slug: cleanedSlug,
+      tags: cleanTags,
+      requireSlug: true,
+    });
+    if (validationError) {
+      throw new ApiError("VALIDATION_FAILED", validationError);
     }
 
-    const cleanHTML = sanitizeHtml(content, SANITIZE_OPTIONS);
-    const cleanedSlug = slugify(slug);
+    const cleanHTML = sanitizeHtml(content as string, SANITIZE_OPTIONS);
 
     await connectToDatabase();
 

@@ -15,12 +15,13 @@ import { useAppDispatch } from "@/redux/hooks";
 import { setPost } from "@/redux/features/generateSlice";
 import { extractTags } from "@/utils/tags";
 import { saveGeneratedDraft } from "@/utils/generatedDraft";
+import { POST_LIMITS, slugify } from "@/lib/validation/post";
 
-// Mirror the server limits so invalid input is caught before we spend an AI
-// call. Title min matches the publish requirement (create route needs >= 10);
+// Mirror the shared post limits so invalid input is caught before we spend an
+// AI call. Title limits come from the shared validator (same as create/edit);
 // prompt max matches MAX_PROMPT_LENGTH on the generate route.
-const TITLE_MIN = 10;
-const TITLE_MAX = 120;
+const TITLE_MIN = POST_LIMITS.TITLE_MIN;
+const TITLE_MAX = POST_LIMITS.TITLE_MAX;
 const PROMPT_MIN = 20;
 const PROMPT_MAX = 4000;
 
@@ -63,15 +64,6 @@ export default function GenerateBlog() {
     }
   }, [generationComplete, navigate]);
 
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
-  };
-
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
@@ -93,7 +85,7 @@ export default function GenerateBlog() {
     setGenerationComplete(false);
 
     try {
-      const slug = generateSlug(userInput.title);
+      const slug = slugify(userInput.title);
 
       // 1️⃣ Generate text first
       const textRes = await fetch("/api/post/generate/text", {

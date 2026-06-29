@@ -107,6 +107,7 @@ const commonWords = [
   "also",
   "well",
   "because",
+  "become",
   "but",
   "even",
   "much",
@@ -141,6 +142,19 @@ const commonWords = [
   "hasn't",
   "haven't",
   "hadn't",
+  "update",
+  "create",
+  "delete",
+  "edit",
+  "post",
+  "comment",
+  "reply",
+  "ll",
+  "only",
+  "every",
+  "than",
+  "first",
+  "last",
 ];
 
 export default commonWords;

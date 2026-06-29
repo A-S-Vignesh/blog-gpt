@@ -44,8 +44,20 @@ export default function ToastProvider({
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const showToast = useCallback((message: string, type: ToastType = "info") => {
+    // Defensive: this provider lives in the root layout, so a non-string message
+    // (e.g. a caller accidentally passing an error `details` object) would render
+    // an object as a React child and white-screen the ENTIRE app. Coerce to a
+    // safe string instead and log the offender for the dev.
+    let text: string;
+    if (typeof message === "string") {
+      text = message;
+    } else {
+      console.error("[toast] expected a string message, got:", message);
+      text = "Something went wrong.";
+    }
+
     const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message: text, type }]);
 
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
