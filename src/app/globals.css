@@ -147,6 +147,15 @@ button:disabled {
   animation: fadeOut 3.5s forwards ease-in;
 }
 
+/* Toast: slide in on entry, hold, then fade out near the end. A single
+   declaration runs BOTH (two separate `.class { animation }` rules would
+   override each other, so the slide-in would be lost). */
+.toast-anim {
+  animation:
+    slideIn 0.3s ease-out,
+    fadeOut 3.5s forwards ease-in;
+}
+
 /* Light mode shimmer */
 .shimmer {
   background: linear-gradient(

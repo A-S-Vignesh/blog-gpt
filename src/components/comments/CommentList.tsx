@@ -149,7 +149,7 @@ export default function CommentList({
         </div>
       )}
 
-      {comments.length === 0 ? (
+      {comments.length === 0 && allowComments ? (
         <p className="text-gray-500 dark:text-gray-400 text-sm italic py-6 text-center">
           Be the first to comment.
         </p>

@@ -1,6 +1,18 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
+import {
+  FaCheckCircle,
+  FaTimesCircle,
+  FaExclamationTriangle,
+  FaInfoCircle,
+} from "react-icons/fa";
 
 type ToastType = "success" | "error" | "warning" | "info";
 
@@ -9,6 +21,16 @@ interface Toast {
   message: string;
   type: ToastType;
 }
+
+// Type is conveyed by a vivid icon, not a tinted background — so the card can
+// stay solid/high-contrast (white in light, dark-gray in dark) and always be
+// readable, instead of pale-text-on-pale-bg.
+const TOAST_STYLES: Record<ToastType, { icon: ReactNode; accent: string }> = {
+  success: { icon: <FaCheckCircle />, accent: "text-green-500" },
+  error: { icon: <FaTimesCircle />, accent: "text-red-500" },
+  warning: { icon: <FaExclamationTriangle />, accent: "text-amber-500" },
+  info: { icon: <FaInfoCircle />, accent: "text-blue-500" },
+};
 
 const ToastContext = createContext<any>(null);
 
@@ -34,27 +56,23 @@ export default function ToastProvider({
     <ToastContext.Provider value={{ showToast }}>
       {children}
 
-      {/* Toast Container */}
-      <div className="fixed top-5 right-5 z-[9999] space-y-3">
+      {/* Toast container */}
+      <div className="fixed top-5 right-5 z-9999 flex w-full max-w-xs flex-col gap-3 pointer-events-none">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`
-              px-4 py-3 rounded-md shadow-md border w-72
-              animate-slideIn fadeOut
-              transition-all duration-300
-              ${
-                toast.type === "success"
-                  ? "bg-green-50 border-green-200 text-green-600 dark:text-green-300 dark:border-green-400"
-                  : toast.type === "error"
-                  ? "bg-red-50 border-red-200 text-red-600 dark:text-red-300 dark:border-red-400 dark:bg-dark-100"
-                  : toast.type === "warning"
-                  ? "bg-yellow-50 border-yellow-200 text-yellow-700 dark:text-yellow-300 dark:border-yellow-400"
-                  : "bg-blue-50 border-blue-200 text-blue-600 dark:text-blue-300 dark:border-blue-400"
-              }
-            `}
+            role="status"
+            aria-live="polite"
+            className="toast-anim pointer-events-auto flex items-start gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-lg ring-1 ring-black/5 dark:border-gray-700 dark:bg-gray-800 dark:ring-white/10"
           >
-            <span className="font-medium">{toast.message}</span>
+            <span
+              className={`mt-0.5 shrink-0 text-lg ${TOAST_STYLES[toast.type].accent}`}
+            >
+              {TOAST_STYLES[toast.type].icon}
+            </span>
+            <span className="text-sm font-medium leading-snug text-gray-800 dark:text-gray-100">
+              {toast.message}
+            </span>
           </div>
         ))}
       </div>

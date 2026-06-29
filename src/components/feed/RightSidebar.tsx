@@ -7,7 +7,7 @@ import { FaLightbulb, FaQuestionCircle } from "react-icons/fa";
 // footer is effectively unreachable (the same reason Instagram puts these here).
 const FOOTER_LINKS = [
   { name: "About", href: "/about" },
-  { name: "Pricing", href: "/pricing" },
+  { name: "Pricing", href: "/billing" },
   { name: "Contact", href: "/contact" },
   { name: "Privacy", href: "/privacy-policy" },
   { name: "Terms", href: "/terms-of-use" },
