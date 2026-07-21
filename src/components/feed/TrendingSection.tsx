@@ -115,7 +115,7 @@ export default function TrendingSection() {
                         {post.creator.name || post.creator.username}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {post.readingTime} min read
+                        {Math.max(1, post.readingTime || 0)} min read
                       </p>
                     </div>
                   </button>

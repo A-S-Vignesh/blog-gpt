@@ -154,8 +154,8 @@ const ViewPost: React.FC<ViewPostProps> = ({
   };
 
   return (
-    <section className="app center pb-4 sm:pb-8  bg-white dark:bg-dark-100">
-      <div className="w-full max-w-6xl mx-auto px-2 md:px-4">
+    <section className="app pb-4 sm:pb-8 bg-white dark:bg-dark-100 px-2 md:px-4">
+      <div className="w-full max-w-6xl mx-auto">
         {/* tags */}
         <div className="flex justify-between  items-center">
           <div className="w-full flex flex-wrap justify-start my-4">

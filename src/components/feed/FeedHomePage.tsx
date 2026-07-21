@@ -8,19 +8,6 @@ import RecentPosts from "@/components/feed/RecentPosts";
 export default function FeedHomepage({ user }: { user: any }) {
   return (
     <div className="min-h-screen bg-white dark:bg-dark-100">
-      {/* 📱 MOBILE HEADER (only on small screens) */}
-      <div className="lg:hidden sticky top-0 z-40 bg-white dark:bg-dark-100 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
-            <FaSearch className="text-gray-700 dark:text-gray-300" />
-          </button>
-          <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 relative">
-            <FaBell className="text-gray-700 dark:text-gray-300" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
-        </div>
-      </div>
-
       {/* 📰 FEED */}
       <div className="w-full max-w-4xl mx-auto px-4 py-6">
         <div className="mb-8">

@@ -246,15 +246,22 @@ export async function PATCH(
       updatedPublicId = uploaded.public_id;
     }
 
+    const plainText = cleanHTML
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
     post.title = title;
     post.content = cleanHTML;
     post.image = updatedImage;
     post.imagePublicId = updatedPublicId;
     post.tags = cleanTags;
     // Keep the excerpt (meta description) in sync with the edited content.
-    post.excerpt = buildExcerpt(
-      cleanHTML.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
-    );
+    post.excerpt = buildExcerpt(plainText);
+    // Recompute reading time from the edited body. Floor at 1 so a post never
+    // shows "0 min read" (matches the create route).
+    const wordCount = plainText.split(/\s+/).filter(Boolean).length;
+    post.readingTime = Math.max(1, Math.round(wordCount / 200));
     post.moderationStatus =
       verdict.status === "safe" && !imageReviewPending ? "approved" : "pending";
     post.moderationCheckedAt = new Date();

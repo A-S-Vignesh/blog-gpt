@@ -9,6 +9,7 @@ import {
   getPostComments,
 } from "@/lib/data/posts";
 import { getUserPostState } from "@/lib/data/userState";
+import { slugifyPathSegment } from "@/lib/validation/post";
 
 export const revalidate = 60;
 
@@ -102,24 +103,43 @@ export default async function Page({
   const session = await getServerSession(authOptions);
 
   // Resolve case-INSENSITIVELY by username (getPostBySlug lowercases internally).
-  const [post, relatedPosts] = await Promise.all([
+  let [post, relatedPosts] = await Promise.all([
     getPostBySlug(raw.username, slug),
     getRelatedPosts(slug),
   ]);
 
+  // Fallback for pre-migration slugs — see /post/[slug]/page.tsx for the full
+  // rationale. Only runs when the exact lookup already missed, so it costs
+  // nothing on the normal path; posts created today are slugified at write
+  // time and always hit on the first try.
+  if (!post) {
+    const normalized = slugifyPathSegment(raw.slug);
+    if (normalized && normalized !== slug) {
+      [post, relatedPosts] = await Promise.all([
+        getPostBySlug(raw.username, normalized),
+        getRelatedPosts(normalized),
+      ]);
+    }
+  }
+
   if (!post) notFound();
 
-  // Canonicalize the URL: lowercase slug + the creator's current STORED handle.
-  // A hit on a RETIRED handle (differs ignoring case) is a permanent move → 308
-  // for SEO so old post links pass their ranking to the new URL; a pure case or
-  // slug-case difference is a soft 307. Either way it resolves in a single hop.
+  // Canonicalize the URL: the post's STORED slug + the creator's current STORED
+  // handle. A hit on a RETIRED handle (differs ignoring case) or on a legacy
+  // pre-migration slug is a permanent move → 308 for SEO so old links pass their
+  // ranking to the new URL; a pure case difference is a soft 307. Either way it
+  // resolves in a single hop.
   const creatorUsername =
     (post.creator as { username?: string })?.username ?? raw.username;
-  if (raw.username !== creatorUsername || raw.slug !== slug) {
-    if (raw.username.toLowerCase() !== creatorUsername.toLowerCase()) {
-      permanentRedirect(`/${creatorUsername}/${slug}`);
+  const canonicalSlug = post.slug ?? slug;
+  if (raw.username !== creatorUsername || raw.slug !== canonicalSlug) {
+    if (
+      raw.username.toLowerCase() !== creatorUsername.toLowerCase() ||
+      slug !== canonicalSlug
+    ) {
+      permanentRedirect(`/${creatorUsername}/${canonicalSlug}`);
     }
-    redirect(`/${creatorUsername}/${slug}`);
+    redirect(`/${creatorUsername}/${canonicalSlug}`);
   }
 
   // Comments are fetched OUTSIDE the post's cache so a refresh after posting

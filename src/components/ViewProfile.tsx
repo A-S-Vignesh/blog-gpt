@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   FaUser,
-  FaEnvelope,
   FaPencilAlt,
   FaTwitter,
   FaLinkedin,
@@ -31,6 +30,7 @@ interface ViewProfileProps {
   data: IUser;
   userPosts: PopulatedClientPost[];
   username: string;
+  postsCount?: number;
   initialFollowing?: boolean;
 }
 
@@ -39,6 +39,7 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
   data,
   userPosts,
   username,
+  postsCount = 0,
   initialFollowing = false,
 }) => {
   const [userData, setUserData] = useState(data);
@@ -109,20 +110,6 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
                       <div className="space-y-4 mb-6">
                         <div className="flex items-center">
                           <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg mr-3">
-                            <FaEnvelope className="text-gray-600 dark:text-gray-400" />
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              Email
-                            </p>
-                            <p className="font-medium text-gray-900 dark:text-white">
-                              {userData?.email}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center">
-                          <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg mr-3">
                             <FaPencilAlt className="text-gray-600 dark:text-gray-400" />
                           </div>
                           <div>
@@ -130,7 +117,7 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
                               Posts
                             </p>
                             <p className="font-medium text-gray-900 dark:text-white">
-                              {/* {userPosts?.length || 0} */}
+                              {postsCount.toLocaleString()}
                             </p>
                           </div>
                         </div>

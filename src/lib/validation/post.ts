@@ -51,6 +51,26 @@ export function slugify(value: string): string {
   return s;
 }
 
+/**
+ * Slugify a value taken from a URL path segment.
+ *
+ * Next.js leaves RESERVED characters percent-encoded in dynamic route params —
+ * a request for `/post/a%20b` yields the literal param `"a%20b"`, not `"a b"`.
+ * Slugifying that directly strips the `%` and leaves the digits, so `%20`
+ * becomes `20` and the result is garbage. Legacy indexed URLs are full of
+ * encoded spaces and commas, so they must be decoded before normalizing.
+ */
+export function slugifyPathSegment(segment: string): string {
+  let decoded = segment;
+  try {
+    decoded = decodeURIComponent(segment);
+  } catch {
+    // Malformed percent-sequence (e.g. a stray "%"). decodeURIComponent throws
+    // on those, so fall back to the raw segment rather than 500 the request.
+  }
+  return slugify(decoded);
+}
+
 export type PostValidationInput = {
   title?: string;
   content?: string;

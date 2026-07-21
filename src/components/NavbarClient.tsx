@@ -21,6 +21,7 @@ import {
 } from "react-icons/fa";
 import { useTheme } from "next-themes";
 import { FaBell, FaBookmark, FaPenNib } from "react-icons/fa6";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 // import { BuiltInProviderType } from "next-auth/providers/google";
 
 interface UserDataType {
@@ -37,6 +38,7 @@ interface NavbarClientProps {
 
 const NavbarClient = ({ userData }: NavbarClientProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   // Use `resolvedTheme` (not `theme`): for a new user on the default "system"
   // theme, `theme` is the string "system", so `theme === "dark"` is false even
   // when the OS is dark — which showed the dark logo on a dark background.
@@ -212,7 +214,7 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
                       <button
                         onClick={() => {
                           setIsOpen(false);
-                          signOut();
+                          setShowSignOutConfirm(true);
                         }}
                         className="flex items-center w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition"
                       >
@@ -371,7 +373,7 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
                 <button
                   onClick={() => {
                     setIsOpen(false);
-                    signOut();
+                    setShowSignOutConfirm(true);
                   }}
                   className="flex items-center w-full py-3 px-4 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition mt-4"
                 >
@@ -392,6 +394,16 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
           )}
         </div>
       )}
+      {/* Sign-out confirmation — no more instant, accidental sign-outs. */}
+      <ConfirmDialog
+        open={showSignOutConfirm}
+        title="Sign out?"
+        description="You'll need to sign in again to access your account."
+        confirmLabel="Sign out"
+        cancelLabel="Cancel"
+        onConfirm={() => signOut()}
+        onCancel={() => setShowSignOutConfirm(false)}
+      />
     </nav>
   );
 };

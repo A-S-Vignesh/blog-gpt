@@ -21,7 +21,9 @@ export const getProfileByUsername = cache(async (username: string) => {
   })
     .collation({ locale: "en", strength: 2 })
     .select(
-      "_id name username bio socials image email createdAt followersCount followingCount bookmarksCount",
+      // Email is intentionally NOT selected — a public profile must never expose
+      // it (not even masked). It stays accessible to the owner only via Settings.
+      "_id name username bio socials image createdAt followersCount followingCount bookmarksCount",
     )
     .lean();
 });
@@ -37,12 +39,8 @@ export async function getUserPostsByUserId(userId: unknown) {
     .lean();
 }
 
-/** Mask an email for public display (e.g. on another user's profile). */
-export function maskEmail(email: string): string {
-  const [namePart, domain] = email.split("@");
-  if (!namePart || !domain) return email;
-  const maskedName = namePart.slice(0, 2) + "****" + namePart.slice(-1);
-  const maskedDomain =
-    domain.charAt(0) + "****" + domain.slice(domain.indexOf("."));
-  return `${maskedName}@${maskedDomain}`;
+/** Total number of posts by a user — for the profile post count. */
+export async function getUserPostsCount(userId: unknown): Promise<number> {
+  await connectToDatabase();
+  return Post.countDocuments({ creator: userId });
 }

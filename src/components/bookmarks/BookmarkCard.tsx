@@ -89,7 +89,7 @@ export default function BookmarkCard({
           <div className="flex items-center gap-1.5">
             <FaRegClock />
             <span>
-              {post.readingTime ? `${post.readingTime} min` : "Read"}
+              {Math.max(1, post.readingTime || 0)} min
             </span>
           </div>
         </div>

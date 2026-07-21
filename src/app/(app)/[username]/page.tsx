@@ -7,7 +7,7 @@ import { getUserFollowState } from "@/lib/data/userState";
 import {
   getProfileByUsername,
   getUserPostsByUserId,
-  maskEmail,
+  getUserPostsCount,
 } from "@/lib/data/users";
 
 // --- SEO & Open Graph Metadata ---
@@ -83,20 +83,19 @@ export default async function ProfilePage({
     redirect(`/${user.username}`);
   }
 
-  // Posts and the viewer's follow state are independent — fetch in parallel.
-  const [posts, followState] = await Promise.all([
+  // Posts, the total post count, and the viewer's follow state are independent.
+  const [posts, postsCount, followState] = await Promise.all([
     getUserPostsByUserId(user._id),
+    getUserPostsCount(user._id),
     getUserFollowState(session?.user?._id ?? null, user._id),
   ]);
 
   const isMyProfile =
     session?.user?.username?.toLowerCase() === user.username?.toLowerCase();
 
-  // Deep-clone for the client component, masking the email for non-owners.
+  // Deep-clone for the client component. Email is never selected, so it is
+  // never present here or sent to the browser.
   const plainUser = JSON.parse(JSON.stringify(user));
-  if (!isMyProfile && plainUser.email) {
-    plainUser.email = maskEmail(plainUser.email);
-  }
   const plainPosts = JSON.parse(JSON.stringify(posts));
 
   return (
@@ -104,6 +103,7 @@ export default async function ProfilePage({
       data={plainUser}
       userPosts={plainPosts}
       isMyProfile={isMyProfile}
+      postsCount={postsCount}
       username={user.username}
       initialFollowing={followState.following}
     />

@@ -12,6 +12,7 @@
     "migrate:username-index": "tsx migration/migrateUsernameIndex.ts",
     "migrate:backfill-users": "tsx migration/migrateUserBackfill.ts",
     "migrate:encrypt-keys": "tsx migration/encryptGeminiKeys.ts",
+    "migrate:reading-time": "tsx migration/backfillReadingTime.ts",
     "migrate:post-slug": "tsx migration/migrateslug.ts"
   },
   "dependencies": {

@@ -113,7 +113,7 @@ button:disabled {
 }
 
 .app {
-  @apply flex justify-center items-center flex-col px-6 sm:px-16 md:px-20 lg:px-28
+  @apply flex justify-center items-center flex-col
 }
 
 @keyframes slideIn {

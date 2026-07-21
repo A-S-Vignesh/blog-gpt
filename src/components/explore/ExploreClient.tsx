@@ -240,7 +240,7 @@ function PostCard({
           <div className="flex items-center gap-2">
             <FaRegClock />
             <span>
-              {post.readingTime ? `${post.readingTime} min read` : "Read"}
+              {Math.max(1, post.readingTime || 0)} min read
             </span>
           </div>
         </div>
@@ -254,21 +254,24 @@ function PostCard({
           {post.excerpt}
         </p>
 
-        <div className="mt-auto flex items-center justify-between pt-2">
-          <div className="flex flex-wrap gap-1">
-            {post.tags.slice(0, 3).map((tag) => (
+        <div className="mt-auto flex items-center justify-between gap-3 pt-2">
+          {/* Tags stay on ONE line: the container shrinks (min-w-0) and clips
+              overflow instead of wrapping, so long tags can't break the layout. */}
+          <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+            {post.tags.slice(0, 2).map((tag) => (
               <button
                 key={tag}
                 type="button"
                 onClick={() => onTagClick(tag)}
-                className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[11px] rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-700 dark:hover:text-blue-300 transition"
+                title={`#${tag}`}
+                className="shrink-0 whitespace-nowrap px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[11px] rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-700 dark:hover:text-blue-300 transition"
               >
                 #{tag}
               </button>
             ))}
           </div>
 
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="shrink-0 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
             {post.likesCount ?? 0} likes · {post.commentsCount ?? 0} comments
           </div>
         </div>
