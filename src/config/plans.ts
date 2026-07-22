@@ -52,7 +52,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     features: [
       "150 AI generations per month",
       "Unlimited published posts under thebloggpt.com",
-      "No TheBlogGPT branding badge",
+      "No The Blog GPT branding badge",
       "Advanced SEO tools",
       "Standard support",
     ],

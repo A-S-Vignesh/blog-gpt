@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Terms of Use | The Blog GPT",
+  description:
+    "The terms that govern your use of The Blog GPT, covering accounts, AI-generated content, ownership, payments, and acceptable use.",
+  alternates: { canonical: "https://thebloggpt.com/terms-of-use" },
+};
 
 const TermsOfUsePage = () => {
   return (
@@ -152,7 +160,6 @@ const TermsOfUsePage = () => {
         For questions regarding these Terms, please contact:
         <a
           href="mailto:support@thebloggpt.com"
-          target="_blank"
           className="underline text-blue-600 dark:text-blue-400 ml-1"
         >
           support@thebloggpt.com

@@ -8,16 +8,16 @@ import ExploreClient from "@/components/explore/ExploreClient";
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: "Explore blogs | TheBlogGPT",
+  title: "Explore blogs | The Blog GPT",
   description:
-    "Discover the latest AI-powered blog posts on TheBlogGPT: trending writers, fresh ideas, niche topics. Search, filter, and find your next read.",
+    "Discover the latest AI-powered blog posts on The Blog GPT: trending writers, fresh ideas, niche topics. Search, filter, and find your next read.",
   alternates: { canonical: "https://thebloggpt.com/explore" },
   openGraph: {
-    title: "Explore blogs | TheBlogGPT",
+    title: "Explore blogs | The Blog GPT",
     description:
       "Discover the latest AI-powered blog posts. Trending writers, fresh ideas, niche topics.",
     url: "https://thebloggpt.com/explore",
-    siteName: "TheBlogGPT",
+    siteName: "The Blog GPT",
     type: "website",
     locale: "en_US",
     images: [
@@ -25,13 +25,13 @@ export const metadata: Metadata = {
         url: "https://thebloggpt.com/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Explore blogs on TheBlogGPT",
+        alt: "Explore blogs on The Blog GPT",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Explore blogs | TheBlogGPT",
+    title: "Explore blogs | The Blog GPT",
     description:
       "Discover the latest AI-powered blog posts. Search, filter, and find your next read.",
     images: ["https://thebloggpt.com/og-image.jpg"],

@@ -47,7 +47,7 @@ export default function FaqSection() {
             Frequently Asked Questions
           </h2>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-            Everything you need to know about Blog-GPT
+            Everything you need to know about The Blog GPT
           </p>
         </div>
 

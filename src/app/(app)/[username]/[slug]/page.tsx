@@ -10,6 +10,7 @@ import {
 } from "@/lib/data/posts";
 import { getUserPostState } from "@/lib/data/userState";
 import { slugifyPathSegment } from "@/lib/validation/post";
+import { pageTitle, metaDescription, SITE_NAME } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -29,13 +30,13 @@ export async function generateMetadata({
 
     if (!post) {
       return {
-        title: "Post Not Found | TheBlogGPT",
+        title: "Post Not Found | The Blog GPT",
         description: "Sorry, the blog post you're looking for doesn't exist.",
       };
     }
 
     const plainContent = post.content?.replace(/<[^>]+>/g, "") || "";
-    const shortDescription = plainContent.slice(0, 150).trim();
+    const shortDescription = metaDescription(plainContent);
     const tags = post.tags ?? [];
     // Canonical URL uses the creator's stored username case (matches the page).
     const canonicalUsername =
@@ -43,22 +44,15 @@ export async function generateMetadata({
     const canonicalUrl = `https://thebloggpt.com/${canonicalUsername}/${slug}`;
 
     return {
-      title: `${post.title} | TheBlogGPT`,
+      title: pageTitle(post.title),
       description:
-        shortDescription || "Explore AI-generated blogs on TheBlogGPT.",
-      keywords: [
-        ...tags,
-        "AI blog",
-        "Blog-GPT",
-        "TheBlogGPT",
-        "BlogGPT",
-        "AI Web Dev",
-      ].join(", "),
+        shortDescription || "Explore AI-generated blogs on The Blog GPT.",
+      keywords: [...tags, "AI blog", SITE_NAME, "AI Web Dev"].join(", "),
       openGraph: {
         title: post.title,
         description: shortDescription,
         url: canonicalUrl,
-        siteName: "TheBlogGPT",
+        siteName: "The Blog GPT",
         type: "article",
         article: {
           author: post.creator.name,
@@ -86,8 +80,8 @@ export async function generateMetadata({
     };
   } catch {
     return {
-      title: "Post | TheBlogGPT",
-      description: "Explore the latest AI-powered blog on TheBlogGPT.",
+      title: "Post | The Blog GPT",
+      description: "Explore the latest AI-powered blog on The Blog GPT.",
     };
   }
 }
@@ -176,7 +170,7 @@ export default async function Page({
             },
             publisher: {
               "@type": "Organization",
-              name: "TheBlogGPT",
+              name: "The Blog GPT",
               logo: {
                 "@type": "ImageObject",
                 url: "https://thebloggpt.com/web-app-manifest-512x512.png",

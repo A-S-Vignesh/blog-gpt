@@ -1,3 +1,12 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cookies Policy | The Blog GPT",
+  description:
+    "Which cookies The Blog GPT sets, why we set them, and how to control non-essential analytics cookies through the consent banner.",
+  alternates: { canonical: "https://thebloggpt.com/cookies-policy" },
+};
+
 export default function CookiesPolicyPage() {
   return (
     <section className="max-w-5xl mx-auto px-6 py-12 text-gray-800 dark:text-gray-200">
@@ -89,7 +98,6 @@ export default function CookiesPolicyPage() {
         If you have any questions about our use of cookies, please contact us at{" "}
         <a
           href="mailto:support@thebloggpt.com"
-          target="_blank"
           className="underline text-blue-600 dark:text-blue-400"
         >
           support@thebloggpt.com

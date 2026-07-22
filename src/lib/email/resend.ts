@@ -16,7 +16,7 @@ export function getResendClient(): Resend | null {
 export function getFromAddress(): string {
   return (
     process.env.RESEND_FROM_EMAIL ||
-    "TheBlogGPT <no-reply@thebloggpt.com>"
+    "The Blog GPT <no-reply@thebloggpt.com>"
   );
 }
 

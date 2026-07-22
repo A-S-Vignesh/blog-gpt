@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     "A modern blog website where you can view posts and generate content using AI.",
   keywords: [
     "AI blog",
-    "Blog-GPT",
+    "The Blog GPT",
     "AI content generation",
     "modern blogging",
     "AI tools",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     description:
       "A modern blog website where you can view posts and generate content using AI.",
     url: "https://thebloggpt.com",
-    siteName: "Blog-GPT",
+    siteName: "The Blog GPT",
     type: "website",
     locale: "en_US",
     images: [

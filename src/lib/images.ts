@@ -8,7 +8,17 @@
  * Pass-through for non-Cloudinary URLs (so it's safe to wrap every src).
  */
 
-const CLOUDINARY_HOST_RE = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\//i;
+/** Splits a Cloudinary delivery URL into everything up to `/image/upload/` and the public id that follows. */
+const CLOUDINARY_UPLOAD_RE =
+  /^(https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(.+)$/i;
+
+/**
+ * A transform segment is a comma-separated list of `key_value` pairs
+ * (`f_auto,q_auto,w_800`). Version segments (`v1782810541`) and ordinary
+ * public ids (`laptop_hyujfu.png`) don't match, so this only fires when the
+ * URL has genuinely been transformed already.
+ */
+const TRANSFORM_SEGMENT_RE = /^[a-z]{1,3}_[^/,]+(?:,[a-z]{1,3}_[^/,]+)*$/i;
 
 export type ImageTransformOptions = {
   /** Target width in px. Cloudinary scales proportionally. */
@@ -22,7 +32,15 @@ export function optimizeImage(
   opts: ImageTransformOptions = {},
 ): string {
   if (!url) return "";
-  if (!CLOUDINARY_HOST_RE.test(url)) return url;
+
+  const match = url.match(CLOUDINARY_UPLOAD_RE);
+  if (!match) return url;
+
+  const [, deliveryPrefix, publicId] = match;
+
+  // Already carries a transform: leave it alone rather than stacking a second
+  // one, which would silently override the caller's intent.
+  if (TRANSFORM_SEGMENT_RE.test(publicId.split("/")[0])) return url;
 
   const transforms = ["f_auto"];
   transforms.push(`q_${opts.quality ?? "auto"}`);
@@ -30,13 +48,10 @@ export function optimizeImage(
     transforms.push(`w_${Math.round(opts.width)}`, "c_limit");
   }
 
-  // Insert the transform string right after `/image/upload/` and before the
-  // public-id segment. Cloudinary allows stacking transforms in this slot,
-  // and our existing URLs don't pre-transform, so a simple insert is safe.
-  return url.replace(
-    /(image\/upload\/)(?!.*\/)/i,
-    `$1${transforms.join(",")}/`,
-  );
+  // The transform slot sits between `/image/upload/` and the public id, which
+  // for our uploads includes a version and folder path
+  // (`v1782810541/blog-gpt/posts/<id>.png`).
+  return `${deliveryPrefix}${transforms.join(",")}/${publicId}`;
 }
 
 /**

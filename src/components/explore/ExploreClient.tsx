@@ -116,7 +116,7 @@ export default function ExploreClient({
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             Discover trending, recent, and niche posts from creators on
-            TheBlogGPT.
+            The Blog GPT.
           </p>
         </div>
 

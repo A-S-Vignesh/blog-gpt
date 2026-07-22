@@ -320,7 +320,7 @@ const ViewPost: React.FC<ViewPostProps> = ({
                 lg:h-[400px] lg:max-w-[80%]"
         >
           <Image
-            alt="post image"
+            alt={post?.title ? `Cover image for ${post.title}` : ""}
             src={
               post?.image ??
               "https://res.cloudinary.com/ddj4zaxln/image/upload/laptop_hyujfu.png"

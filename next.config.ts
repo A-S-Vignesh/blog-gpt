@@ -1,5 +1,37 @@
 import type { NextConfig } from "next";
 
+/**
+ * Content-Security-Policy sent on every route. See the note above `headers`
+ * below for why each source list looks the way it does.
+ */
+const CSP = [
+  "default-src 'self'",
+  // 'unsafe-inline' is required by Next's inline bootstrap/flight scripts.
+  // Razorpay = checkout.js; googletagmanager/google-analytics = GA;
+  // va.vercel-scripts = Vercel Analytics; cloudflareinsights + the Cloudflare
+  // email-protection script are injected by the CDN in front of this app.
+  "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com https://static.cloudflareinsights.com",
+  // Tailwind emits a stylesheet, but next/image and inline style props still
+  // need 'unsafe-inline' for element-level styles.
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
+  // Mirrors images.remotePatterns above; data:/blob: cover the editor's local
+  // previews before an upload completes.
+  "img-src 'self' data: blob: https://res.cloudinary.com https://lh3.googleusercontent.com https://images.unsplash.com https://api.dicebear.com https://www.hostinger.com https://www.google-analytics.com https://www.googletagmanager.com",
+  // Razorpay renders checkout in an iframe; Google OAuth is a top-level
+  // redirect but accounts.google.com is allowed in case it falls back to one.
+  "frame-src 'self' https://api.razorpay.com https://*.razorpay.com https://accounts.google.com",
+  "connect-src 'self' https://*.razorpay.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://cloudflareinsights.com",
+  // Razorpay posts the payment result back to its own domain.
+  "form-action 'self' https://api.razorpay.com https://*.razorpay.com",
+  // The three that do the real work: no plugins, no <base> hijacking, no
+  // framing by third parties (the modern replacement for X-Frame-Options).
+  "object-src 'none'",
+  "base-uri 'self'",
+  "frame-ancestors 'self'",
+  "upgrade-insecure-requests",
+].join("; ");
+
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
@@ -73,20 +105,25 @@ const nextConfig: NextConfig = {
    * third-party flows (Google OAuth, Cloudinary, Razorpay checkout, GA, or
    * Next's inline runtime scripts).
    *
-   * Content-Security-Policy is intentionally NOT enforced here. A strict CSP
-   * would need to allowlist (at minimum):
-   *   - script-src:  Google (accounts.google.com, apis.google.com),
-   *                  Razorpay (checkout.razorpay.com),
-   *                  Google Analytics (www.googletagmanager.com,
-   *                  www.google-analytics.com), plus 'unsafe-inline'/nonces
-   *                  for Next's inline bootstrap scripts.
-   *   - frame-src:   accounts.google.com, api.razorpay.com,
-   *                  *.razorpay.com (checkout iframe).
-   *   - img-src:     res.cloudinary.com, lh3.googleusercontent.com,
-   *                  images.unsplash.com, api.dicebear.com, data:, blob:.
-   *   - connect-src: Razorpay, Google APIs, and GA collection endpoints.
-   * Until that allowlist is verified end-to-end, enabling CSP risks breaking
-   * payments/auth, so it is left commented out below.
+   * Content-Security-Policy is enforced below. The allowlist was derived from
+   * the origins this app actually loads, not from guesswork:
+   *   - Razorpay checkout script + iframe (src/components/payments/CheckoutButton.tsx)
+   *   - Google Analytics + Vercel Analytics, both consent-gated
+   *     (src/components/AnalyticsLoader.tsx)
+   *   - Cloudflare's injected email-protection/beacon scripts (the site is
+   *     proxied through Cloudflare)
+   *   - every remote image host declared in `images.remotePatterns` above
+   *
+   * script-src keeps 'unsafe-inline' deliberately. Next streams ~150 inline
+   * bootstrap/flight scripts per page; the nonce alternative requires computing
+   * a per-request nonce in middleware, which forces every route to render
+   * dynamically and gives up ISR/static caching. That is a real performance
+   * regression in exchange for a marginal XSS win here, since all user-authored
+   * HTML is already stripped of scripts and event handlers server-side by
+   * sanitize-html (src/utils/sanitizeHtmlForRender.ts) before it is rendered.
+   *
+   * object-src/base-uri/frame-ancestors are the parts that carry actual weight:
+   * they block plugin embeds, <base> tag hijacking, and clickjacking.
    */
   headers: async () => [
     {
@@ -116,16 +153,12 @@ const nextConfig: NextConfig = {
           key: "X-DNS-Prefetch-Control",
           value: "on",
         },
-        // {
-        //   key: "Content-Security-Policy",
-        //   value:
-        //     "default-src 'self'; " +
-        //     "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com; " +
-        //     "frame-src 'self' https://accounts.google.com https://api.razorpay.com https://*.razorpay.com; " +
-        //     "img-src 'self' data: blob: https://res.cloudinary.com https://lh3.googleusercontent.com https://images.unsplash.com https://api.dicebear.com https://www.hostinger.com; " +
-        //     "connect-src 'self' https://*.razorpay.com https://apis.google.com https://www.google-analytics.com; " +
-        //     "style-src 'self' 'unsafe-inline';",
-        // },
+        // Production only: in dev, Turbopack's HMR websocket and eval-based
+        // module runtime don't fit this policy, and tightening it there would
+        // cost developer experience without protecting any real user.
+        ...(process.env.NODE_ENV === "production"
+          ? [{ key: "Content-Security-Policy", value: CSP }]
+          : []),
       ],
     },
   ],

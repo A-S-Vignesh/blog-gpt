@@ -5,6 +5,7 @@ import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { SITE_NAME, SITE_URL, SITE_ALTERNATE_NAMES } from "@/lib/seo";
 import {
   FaGoogle,
   FaRobot,
@@ -29,11 +30,11 @@ const SIGNUP_HREF = "/auth/signin?callbackUrl=%2Ffeed";
 export const metadata: Metadata = {
   title: "The Blog GPT | AI-Powered Blog Platform",
   description:
-    "The Blog GPT turns a topic into a structured blog draft with AI: intro, headings, and sections. Edit it in your own voice, add images, and publish to a community of writers and readers.",
+    "Turn any topic into a structured blog draft with AI: intro, headings, and sections. Edit it in your own voice, add images, and publish in minutes.",
   keywords: [
     "AI blog generator",
     "AI blogging platform",
-    "Blog-GPT",
+    "The Blog GPT",
     "write blog posts with AI",
     "AI writing assistant",
     "AI content generation",
@@ -98,6 +99,37 @@ export default async function Home() {
 
   return (
     <>
+      {/*
+        Google picks the site name it prints under the URL in search results
+        from the WebSite schema on the HOME PAGE specifically (plus
+        og:site_name). Without it, it infers one, which is how "BlogGPT" and
+        "Blog-GPT" ended up competing with the real brand. `alternateName`
+        tells it the run-together spellings refer to the same site without us
+        displaying them anywhere.
+      */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: SITE_NAME,
+              alternateName: SITE_ALTERNATE_NAMES,
+              url: `${SITE_URL}/`,
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: SITE_NAME,
+              alternateName: SITE_ALTERNATE_NAMES,
+              url: `${SITE_URL}/`,
+              logo: `${SITE_URL}/web-app-manifest-512x512.png`,
+            },
+          ]),
+        }}
+      />
+
       {/* Hero Section */}
       <section className="min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-12 bg-white dark:bg-dark-100 flex flex-col md:flex-row items-center justify-between">
         <div className="w-full md:w-1/2 mb-10 md:mb-0">
@@ -161,7 +193,7 @@ export default async function Home() {
       <section className="py-16 bg-gray-50 dark:bg-dark-100 px-6 sm:px-16 md:px-20 lg:px-28">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-            How Blog-GPT Works
+            How The Blog GPT Works
           </h2>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Create professional blog content in three simple steps
@@ -262,14 +294,14 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Who is TheBlogGPT for? */}
+      {/* Who is The Blog GPT for? */}
       <section className="py-16 bg-gray-50 dark:bg-dark-100 px-6 sm:px-16 md:px-20 lg:px-28">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-            Who is TheBlogGPT for?
+            Who is The Blog GPT for?
           </h2>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Whether you blog solo or run a content team, TheBlogGPT helps you
+            Whether you blog solo or run a content team, The Blog GPT helps you
             create quality posts faster.
           </p>
         </div>
@@ -322,11 +354,11 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Why Blog-GPT Section */}
+      {/* Why The Blog GPT Section */}
       <section className="py-16 px-6 sm:px-16 md:px-20 lg:px-28">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-            Why Choose Blog-GPT
+            Why Choose The Blog GPT
           </h2>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             A faster way to go from idea to a published blog post

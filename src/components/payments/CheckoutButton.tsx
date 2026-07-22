@@ -89,7 +89,7 @@ export default function CheckoutButton({
       const rzp = new window.Razorpay({
         key: data.keyId,
         subscription_id: data.subscriptionId,
-        name: "TheBlogGPT",
+        name: "The Blog GPT",
         description: `${data.planName} (${cycle})`,
         prefill: {
           name: data.userName || session?.user?.name || "",

@@ -27,14 +27,14 @@ export async function generateMetadata({
   const name = user.name || user.username;
   const description = `${
     user.bio || ""
-  } - Read more about ${name}'s journey and insights on Blog-GPT.`;
+  } - Read more about ${name}'s journey and insights on The Blog GPT.`;
   const image = user.image || "/default-profile.jpg";
 
   return {
-    title: `${name} - TheBlogGPT`,
+    title: `${name} - The Blog GPT`,
     description,
     openGraph: {
-      title: `${name} - TheBlogGPT`,
+      title: `${name} - The Blog GPT`,
       description,
       type: "profile",
       images: [
@@ -48,7 +48,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${name} - TheBlogGPT`,
+      title: `${name} - The Blog GPT`,
       description,
       images: [image],
     },

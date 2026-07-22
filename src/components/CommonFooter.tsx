@@ -69,7 +69,7 @@ const Footer = ({ inShell = false }: { inShell?: boolean }) => {
           {/* Left side */}
           <div className="flex flex-col items-center lg:items-start">
             <p className="text-[#667085] dark:text-[#C0C5D0] font-semibold text-base text-center lg:text-left">
-              © {year} TheBlogGPT. All Rights Reserved.
+              © {year} The Blog GPT. All Rights Reserved.
             </p>
           </div>
 

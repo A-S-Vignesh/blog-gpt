@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | The Blog GPT",
+  description:
+    "How The Blog GPT collects, uses, and protects your data, including Google sign-in details, cookies, payment records, and your deletion rights.",
+  alternates: { canonical: "https://thebloggpt.com/privacy-policy" },
+};
 
 const PrivacyPolicyPage = () => {
   return (
@@ -279,7 +287,6 @@ const PrivacyPolicyPage = () => {
         your rights, or request account deletion, please contact us at{" "}
         <a
           href="mailto:support@thebloggpt.com"
-          target="_blank"
           className="underline text-blue-600 dark:text-blue-400"
         >
           support@thebloggpt.com

@@ -68,7 +68,7 @@ const LeftSidebar = ({
             <FaPenAlt className="text-white text-sm" />
           </div>
           <span className="font-bold text-gray-900 dark:text-white">
-            BlogGPT
+            The Blog GPT
           </span>
         </div>
         <button

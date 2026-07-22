@@ -98,7 +98,15 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
       <div className="flex justify-between items-center">
         {/* Logo */}
         <div className="flex items-center">
-          <Link href={userData ? "/feed" : "/"} className="flex items-center">
+          {/* The logo swaps on theme, so it can only render after mount. Until
+              then this anchor contains just a skeleton, which leaves crawlers
+              (and screen readers) with a link that has no text — hence the
+              explicit aria-label rather than relying on the image alt. */}
+          <Link
+            href={userData ? "/feed" : "/"}
+            aria-label="The Blog GPT home"
+            className="flex items-center"
+          >
             <div className="w-[175px] h-10 md:h-[50px] relative mr-3">
               {hasMounted ? (
                 <Image
@@ -107,8 +115,9 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
                       ? "/assets/images/LightLogo.png"
                       : "/assets/images/BlackLogo.png"
                   }
-                  alt="logo"
+                  alt="The Blog GPT"
                   fill
+                  sizes="175px"
                   className="object-contain"
                   priority
                 />

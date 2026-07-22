@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import CancelDeleteClient from "@/components/account/CancelDeleteClient";
 
 export const metadata: Metadata = {
-  title: "Cancel account deletion | TheBlogGPT",
+  title: "Cancel account deletion | The Blog GPT",
   robots: { index: false, follow: false },
 };
 

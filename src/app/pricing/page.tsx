@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Pricing | The Blog GPT",
   description:
     "Choose the right plan for your AI-powered blogging workflow. Start free, then upgrade when you need more power.",
+  alternates: { canonical: "https://thebloggpt.com/pricing" },
 };
 
 export default function PricingPage() {

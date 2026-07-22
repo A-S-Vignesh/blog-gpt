@@ -10,7 +10,7 @@ import BookmarksClient from "@/components/bookmarks/BookmarksClient";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Your bookmarks | TheBlogGPT",
+  title: "Your bookmarks | The Blog GPT",
   description: "Posts you've saved to read later.",
   // Bookmarks are private — keep Google out.
   robots: { index: false, follow: false },

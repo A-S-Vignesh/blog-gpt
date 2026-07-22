@@ -98,7 +98,7 @@ const RightSidebar = () => {
           </button>
         </div>
         <p className="mt-3 text-xs text-gray-400 dark:text-gray-600">
-          © {year} TheBlogGPT
+          © {year} The Blog GPT
         </p>
       </nav>
     </div>

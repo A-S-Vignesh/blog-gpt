@@ -1,4 +1,4 @@
-const SITE_NAME = "TheBlogGPT";
+const SITE_NAME = "The Blog GPT";
 const SITE_URL = "https://thebloggpt.com";
 // Absolute URL (emails can't use relative paths). 2000x353 source, shown at 32px tall.
 const LOGO_URL = "https://thebloggpt.com/assets/images/BlackLogo.png";

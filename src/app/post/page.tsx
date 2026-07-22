@@ -20,7 +20,7 @@ export const metadata:Metadata = {
   keywords: [
     "AI blog posts",
     "all blogs",
-    "Blog-GPT",
+    "The Blog GPT",
     "Gemini AI blog",
     "Next.js blogging",
     "AI content generation",
