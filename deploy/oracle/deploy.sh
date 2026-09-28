@@ -25,6 +25,15 @@ HEALTH_URL=http://127.0.0.1:3000/
 
 cd "$APP_DIR"
 
+# One deploy at a time. Two builds in the same checkout corrupt each other's
+# .next, and a deploy keeps running on the server even after the SSH session
+# that started it drops, so "just run it again" is exactly how they overlap.
+exec 9> /tmp/thebloggpt-deploy.lock
+if ! flock -n 9; then
+  echo "!! Another deploy is still running. Wait for it to finish, then retry." >&2
+  exit 1
+fi
+
 # Secrets live only on the server (never in git). NEXT_PUBLIC_* values are
 # baked into the browser bundle at build time, so the build must see them.
 if [ ! -f .env ]; then
@@ -70,7 +79,8 @@ pm2 start "$ECOSYSTEM"
 echo "==> Waiting for the app to answer"
 healthy=false
 for _ in $(seq 1 30); do
-  if curl -fsS -o /dev/null "$HEALTH_URL"; then
+  # Quiet: the first tries always fail while Next boots; that's not an error.
+  if curl -fs -o /dev/null "$HEALTH_URL"; then
     healthy=true
     break
   fi
