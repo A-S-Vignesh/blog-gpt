@@ -1,6 +1,6 @@
 /**
  * PM2 process file for TheBlogGPT on the Oracle VM.
- * Started by deploy/oracle/deploy.sh; see docs/DEPLOY-ORACLE.md.
+ * Started by deploy/oracle/deploy.sh.
  */
 module.exports = {
   apps: [

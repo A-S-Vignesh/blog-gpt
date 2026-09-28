@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
 
   /**
-   * Self-hosted on the Oracle VM (see docs/DEPLOY-ORACLE.md). Standalone
+   * Self-hosted on the Oracle VM (see deploy/oracle/). Standalone
    * emits a minimal server.js plus only the node_modules it traces, so each
    * deploy is a small self-contained folder the deploy script can swap in
    * atomically while the previous release keeps serving.

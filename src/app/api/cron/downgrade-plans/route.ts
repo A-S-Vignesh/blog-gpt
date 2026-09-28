@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
  * downgrades the owning user to the free plan.
  *
  * Scheduled daily at 03:00 UTC by the server cron in
- * deploy/oracle/thebloggpt.cron (see docs/DEPLOY-ORACLE.md).
+ * deploy/oracle/thebloggpt.cron.
  *
  * Protected by CRON_SECRET (same bearer scheme as process-deletions) so
  * external traffic cannot trigger downgrades.

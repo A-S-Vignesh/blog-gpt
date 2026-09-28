@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
  * Cron-triggered processor for accounts whose grace period has elapsed.
  *
  * Scheduled daily at 00:00 UTC by the server cron in
- * deploy/oracle/thebloggpt.cron (see docs/DEPLOY-ORACLE.md).
+ * deploy/oracle/thebloggpt.cron.
  *
  * Protected by a shared bearer token in CRON_SECRET so external traffic
  * cannot trigger deletion runs.

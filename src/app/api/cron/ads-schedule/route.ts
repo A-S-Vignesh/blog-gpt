@@ -10,8 +10,7 @@ export const dynamic = "force-dynamic";
  *   approved + paid + start date reached -> active
  *   approved/active + end date passed    -> completed
  *
- * Scheduled hourly by the server cron in deploy/oracle/thebloggpt.cron
- * (see docs/DEPLOY-ORACLE.md).
+ * Scheduled hourly by the server cron in deploy/oracle/thebloggpt.cron.
  *
  * Protected by CRON_SECRET, the same bearer scheme the other cron routes use.
  * The system stays correct without this job — serving re-checks dates on every

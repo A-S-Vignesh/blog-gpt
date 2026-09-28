@@ -150,7 +150,7 @@ src/
 
 ## ☁️ Deployment
 
-Self-hosted on an Oracle Cloud ARM VM behind Cloudflare. [`docs/DEPLOY-ORACLE.md`](docs/DEPLOY-ORACLE.md) is the step-by-step setup and day-to-day deploy guide; the scripts and configs it uses live in [`deploy/oracle/`](deploy/oracle/). See [`LAUNCH.md`](LAUNCH.md) for the go-live checklist.
+Self-hosted on an Oracle Cloud ARM VM behind Cloudflare. Everything the server needs lives in [`deploy/oracle/`](deploy/oracle/): `deploy.sh` (pull, build, swap in the new release, health check, automatic rollback), `rollback.sh`, the PM2 and Nginx configs, and the cron schedule. See [`LAUNCH.md`](LAUNCH.md) for the go-live checklist.
 
 ## 🤝 Contributing
 
