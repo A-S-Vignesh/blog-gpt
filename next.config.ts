@@ -8,9 +8,9 @@ const CSP = [
   "default-src 'self'",
   // 'unsafe-inline' is required by Next's inline bootstrap/flight scripts.
   // Razorpay = checkout.js; googletagmanager/google-analytics = GA;
-  // va.vercel-scripts = Vercel Analytics; cloudflareinsights + the Cloudflare
-  // email-protection script are injected by the CDN in front of this app.
-  "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com https://static.cloudflareinsights.com",
+  // cloudflareinsights + the Cloudflare email-protection script are injected
+  // by the CDN in front of this app.
+  "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com",
   // Tailwind emits a stylesheet, but next/image and inline style props still
   // need 'unsafe-inline' for element-level styles.
   "style-src 'self' 'unsafe-inline'",
@@ -21,7 +21,7 @@ const CSP = [
   // Razorpay renders checkout in an iframe; Google OAuth is a top-level
   // redirect but accounts.google.com is allowed in case it falls back to one.
   "frame-src 'self' https://api.razorpay.com https://*.razorpay.com https://accounts.google.com",
-  "connect-src 'self' https://*.razorpay.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://cloudflareinsights.com",
+  "connect-src 'self' https://*.razorpay.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://cloudflareinsights.com",
   // Razorpay posts the payment result back to its own domain.
   "form-action 'self' https://api.razorpay.com https://*.razorpay.com",
   // The three that do the real work: no plugins, no <base> hijacking, no
@@ -35,6 +35,14 @@ const CSP = [
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
+
+  /**
+   * Self-hosted on the Oracle VM (see docs/DEPLOY-ORACLE.md). Standalone
+   * emits a minimal server.js plus only the node_modules it traces, so each
+   * deploy is a small self-contained folder the deploy script can swap in
+   * atomically while the previous release keeps serving.
+   */
+  output: "standalone",
 
   /**
    * Permanent (301) redirects for legacy URLs.
@@ -108,7 +116,7 @@ const nextConfig: NextConfig = {
    * Content-Security-Policy is enforced below. The allowlist was derived from
    * the origins this app actually loads, not from guesswork:
    *   - Razorpay checkout script + iframe (src/components/payments/CheckoutButton.tsx)
-   *   - Google Analytics + Vercel Analytics, both consent-gated
+   *   - Google Analytics, consent-gated
    *     (src/components/AnalyticsLoader.tsx)
    *   - Cloudflare's injected email-protection/beacon scripts (the site is
    *     proxied through Cloudflare)

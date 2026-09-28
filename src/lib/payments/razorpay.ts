@@ -58,6 +58,30 @@ export function verifyCheckoutSignature(opts: {
 }
 
 /**
+ * Verify the HMAC signature returned by Razorpay Checkout after a one-off
+ * ORDER payment (used for ad bookings, which are a single flat charge up front
+ * rather than a recurring subscription).
+ *
+ * The signed payload for orders is `${orderId}|${paymentId}` — note the
+ * different order and meaning from the subscription variant above; using the
+ * wrong one silently fails every verification.
+ */
+export function verifyOrderSignature(opts: {
+  orderId: string;
+  paymentId: string;
+  signature: string;
+}): boolean {
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  if (!keySecret) return false;
+
+  const expected = createHmac("sha256", keySecret)
+    .update(`${opts.orderId}|${opts.paymentId}`)
+    .digest("hex");
+
+  return constantTimeEqual(expected, opts.signature);
+}
+
+/**
  * Verify the webhook signature sent in the `x-razorpay-signature` header.
  * Razorpay signs the raw request body with the webhook secret.
  */

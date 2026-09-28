@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 
 // Overridable so forks send analytics to their own property; falls back to the
 // canonical thebloggpt.com measurement id for the primary deployment.
@@ -11,14 +10,14 @@ const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-VWS6MTPDHT";
 /**
  * GDPR-compliant analytics loader.
  *
- * - Defaults to OFF and only loads GA / Vercel Analytics after the user has
- *   explicitly accepted analytics cookies (read from localStorage).
+ * - Defaults to OFF and only loads GA after the user has explicitly accepted
+ *   analytics cookies (read from localStorage).
  * - Listens for the "cookieConsentUpdated" event from CookiesBox so accepting
  *   starts analytics immediately, with no page reload.
- * - Crucially, handles WITHDRAWAL: once the third-party scripts are injected
- *   they can't be cleanly torn down at runtime (gtag/dataLayer and Vercel's
- *   injected script persist). So when consent flips from granted -> denied we
- *   set Google's kill switch and reload into a clean, analytics-free state.
+ * - Crucially, handles WITHDRAWAL: once the third-party script is injected it
+ *   can't be cleanly torn down at runtime (gtag/dataLayer persist). So when
+ *   consent flips from granted -> denied we set Google's kill switch and
+ *   reload into a clean, analytics-free state.
  *   This is what makes "Reject" actually stop tracking.
  */
 function readAnalyticsConsent(): boolean {
@@ -111,7 +110,6 @@ export default function AnalyticsLoader() {
     <>
       {/* Loaded only after explicit analytics consent. */}
       <GoogleAnalytics gaId={GA_ID} />
-      <VercelAnalytics />
     </>
   );
 }

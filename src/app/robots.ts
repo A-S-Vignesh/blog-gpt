@@ -15,6 +15,12 @@ export default function robots(): MetadataRoute.Robots {
         "/feed",
         "/post/create",
         "/post/generate",
+        "/admin",
+        // The /advertise sales page IS indexable; the advertiser-only surfaces
+        // beneath it are not.
+        "/advertise/dashboard",
+        "/advertise/new",
+        "/advertise/campaigns",
       ],
     },
     sitemap: "https://thebloggpt.com/sitemap.xml",

@@ -1,0 +1,2 @@
+# Everything here runs on Linux: a CRLF would break bash, cron and nginx.
+* text eol=lf

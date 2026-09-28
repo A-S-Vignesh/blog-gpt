@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import AdSlot from "@/components/ads/AdSlot";
 import {
   FaHeart,
   FaComment,
@@ -151,9 +152,13 @@ const RecentPosts = () => {
       </div>
 
       <div className="space-y-6">
-        {allPosts.map((post) => (
+        {allPosts.map((post, index) => (
+          <Fragment key={post._id}>
+          {/* One native ad after the third post — far enough down that the
+              feed still reads as a feed. Renders nothing at all when no
+              campaign is eligible, so the spacing simply closes up. */}
+          {index === 3 && <AdSlot placement="feed" />}
           <Link
-            key={post._id}
             href={`/${post.creator.username}/${post.slug}`}
             className="block bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 hover:shadow-lg hover:-translate-y-0.5 transition"
           >
@@ -247,6 +252,7 @@ const RecentPosts = () => {
               </div>
             </div>
           </Link>
+          </Fragment>
         ))}
       </div>
 

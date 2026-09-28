@@ -47,8 +47,8 @@ This isn't a toy demo — the codebase includes the hardening a public, paid pro
 | Images | Cloudinary |
 | Email | Resend (transactional) |
 | Payments | Razorpay (subscriptions) |
-| Analytics | Google Analytics + Vercel Analytics (consent-gated) |
-| Hosting | Vercel (with Cron) |
+| Analytics | Google Analytics (consent-gated) |
+| Hosting | Oracle Cloud VM (Next.js standalone + PM2 + Nginx) behind Cloudflare |
 
 ## 🚀 Getting started
 
@@ -93,10 +93,10 @@ Create `.env.local` (and set the same in your host's dashboard for production).
 | `RESEND_FROM_EMAIL` | Verified sender, e.g. `TheBlogGPT <no-reply@yourdomain.com>` |
 | `RESEND_REPLY_TO` | _(optional)_ reply-to address |
 
-### Required for scheduled jobs (Vercel Cron)
+### Required for scheduled jobs (server cron)
 | Variable | Description |
 |----------|-------------|
-| `CRON_SECRET` | Bearer token protecting the cron routes (deletion + plan downgrade) |
+| `CRON_SECRET` | Bearer token protecting the cron routes (deletion, plan downgrade, ad schedule) |
 
 ### Optional
 | Variable | Description |
@@ -124,10 +124,11 @@ Create `.env.local` (and set the same in your host's dashboard for production).
 
 ## ⏰ Scheduled jobs
 
-Two Vercel Crons are defined in [`vercel.json`](vercel.json) (both protected by `CRON_SECRET`):
+Three jobs are scheduled by the server cron in [`deploy/oracle/thebloggpt.cron`](deploy/oracle/thebloggpt.cron) (all protected by `CRON_SECRET`, times in UTC):
 
-- `/api/cron/process-deletions` — permanently deletes accounts whose grace period has elapsed.
-- `/api/cron/downgrade-plans` — downgrades canceled subscriptions to free once their paid period ends.
+- `/api/cron/process-deletions` — daily: permanently deletes accounts whose grace period has elapsed.
+- `/api/cron/downgrade-plans` — daily: downgrades canceled subscriptions to free once their paid period ends.
+- `/api/cron/ads-schedule` — hourly: starts approved, paid ad campaigns and completes ended ones.
 
 ## 📧 Transactional email
 
@@ -149,7 +150,7 @@ src/
 
 ## ☁️ Deployment
 
-Designed for **Vercel**. Set every environment variable in the project settings, ensure your MongoDB allows connections from Vercel, add your production domain to the Google OAuth authorized redirect URIs, and verify your sender domain in Resend. See [`LAUNCH.md`](LAUNCH.md) for the full go-live checklist.
+Self-hosted on an Oracle Cloud ARM VM behind Cloudflare. [`docs/DEPLOY-ORACLE.md`](docs/DEPLOY-ORACLE.md) is the step-by-step setup and day-to-day deploy guide; the scripts and configs it uses live in [`deploy/oracle/`](deploy/oracle/). See [`LAUNCH.md`](LAUNCH.md) for the go-live checklist.
 
 ## 🤝 Contributing
 

@@ -10,10 +10,8 @@ export const dynamic = "force-dynamic";
 /**
  * Cron-triggered processor for accounts whose grace period has elapsed.
  *
- * Configure as a Vercel Cron in vercel.json:
- *   {
- *     "crons": [{ "path": "/api/cron/process-deletions", "schedule": "0 * * * *" }]
- *   }
+ * Scheduled daily at 00:00 UTC by the server cron in
+ * deploy/oracle/thebloggpt.cron (see docs/DEPLOY-ORACLE.md).
  *
  * Protected by a shared bearer token in CRON_SECRET so external traffic
  * cannot trigger deletion runs.

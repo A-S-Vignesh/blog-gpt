@@ -13,7 +13,8 @@
     "migrate:backfill-users": "tsx migration/migrateUserBackfill.ts",
     "migrate:encrypt-keys": "tsx migration/encryptGeminiKeys.ts",
     "migrate:reading-time": "tsx migration/backfillReadingTime.ts",
-    "migrate:post-slug": "tsx migration/migrateslug.ts"
+    "migrate:post-slug": "tsx migration/migrateslug.ts",
+    "admin:promote": "tsx --env-file-if-exists=.env --env-file-if-exists=.env.local migration/promoteAdmin.ts"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",
@@ -33,7 +34,6 @@
     "@tiptap/extension-table-row": "^3.10.7",
     "@tiptap/react": "^3.10.7",
     "@tiptap/starter-kit": "^3.10.7",
-    "@vercel/analytics": "^1.5.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "cloudinary": "^2.7.0",
     "lowlight": "^2.9.0",

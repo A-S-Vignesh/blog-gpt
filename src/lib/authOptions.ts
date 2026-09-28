@@ -91,6 +91,7 @@ export const authOptions: NextAuthOptions = {
         if (dbUser) {
           token._id = dbUser._id.toString();
           token.username = dbUser.username;
+          token.role = dbUser.role;
           token.bannedCheckedAt = Date.now();
         }
         return token;
@@ -105,7 +106,7 @@ export const authOptions: NextAuthOptions = {
       if (token._id && Date.now() - lastChecked > RECHECK_MS) {
         await connectToDatabase();
         const dbUser = await User.findById(token._id).select(
-          "banned deletionScheduledFor username",
+          "banned deletionScheduledFor username role",
         );
         if (!dbUser || dbUser.banned || dbUser.deletionScheduledFor) {
           // Invalidate the session — every protected route keys off token._id,
@@ -113,8 +114,13 @@ export const authOptions: NextAuthOptions = {
           const t = token as Record<string, unknown>;
           delete t._id;
           delete t.username;
+          delete t.role;
         } else {
           token.username = dbUser.username;
+          // Re-mirror the role so a promotion — or, more importantly, a
+          // DEMOTION — lands within the same 5-minute window instead of
+          // waiting for the JWT to expire.
+          token.role = dbUser.role;
           token.bannedCheckedAt = Date.now();
         }
       }
@@ -125,6 +131,11 @@ export const authOptions: NextAuthOptions = {
       if (token && session.user) {
         session.user._id = token._id as string;
         session.user.username = token.username as string;
+        // Fall back to "user" so a missing/stripped claim can never read as
+        // elevated. This is a UI convenience only — every admin API route
+        // re-reads the role from MongoDB via requireAdmin().
+        session.user.role =
+          (token.role as "admin" | "author" | "user") ?? "user";
       }
       return session;
     },

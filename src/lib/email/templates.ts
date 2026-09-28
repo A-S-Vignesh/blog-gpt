@@ -234,3 +234,58 @@ export function accountDeletionCompletedEmail(opts: { name: string }) {
     }),
   };
 }
+
+/**
+ * Tell an advertiser what happened to their campaign review.
+ *
+ * The rejection reason is written by an admin but still passed through
+ * escapeHtml like every other interpolated value here — an email template is a
+ * place HTML injection quietly succeeds, and the rule should not depend on who
+ * typed the text.
+ */
+export function adDecisionEmail(opts: {
+  name: string;
+  campaignName: string;
+  decision: "approved" | "rejected";
+  reason?: string;
+  /** Formatted booking price, e.g. "$102.00". */
+  price: string;
+  days: number;
+  placement: string;
+  /** Formatted start date, e.g. "Mar 3, 2026". */
+  startDate: string;
+}) {
+  const safeName = escapeHtml(opts.name);
+  const safeCampaign = escapeHtml(opts.campaignName);
+  const safeReason = opts.reason ? escapeHtml(opts.reason) : "";
+  const approved = opts.decision === "approved";
+
+  return {
+    subject: approved
+      ? `Your campaign "${safeCampaign}" is approved`
+      : `Your campaign "${safeCampaign}" needs changes`,
+    html: layout({
+      title: approved ? "Campaign approved" : "Campaign needs changes",
+      preheader: approved
+        ? "Pay to lock in your dates."
+        : "Here's what to fix before resubmitting.",
+      bodyHtml: approved
+        ? `
+        <h1 style="margin:0 0 16px 0;font-size:22px;color:#111827;">Approved 🎉</h1>
+        <p style="margin:0 0 12px 0;">Hi ${safeName}, your campaign <strong>${safeCampaign}</strong> passed review.</p>
+        <p style="margin:0 0 12px 0;">One step left: pay <strong>${escapeHtml(opts.price)}</strong> for ${opts.days} days in the ${escapeHtml(opts.placement)} slot, starting ${escapeHtml(opts.startDate)}. That is the whole cost — one flat price, no per-view billing, nothing else to add later.</p>
+        <p style="margin:0 0 12px 0;">If your dates have already come around by the time you pay, we move the start to that day so you still get all ${opts.days} days.</p>
+      `
+        : `
+        <h1 style="margin:0 0 16px 0;font-size:22px;color:#111827;">Needs a change</h1>
+        <p style="margin:0 0 12px 0;">Hi ${safeName}, we couldn't approve <strong>${safeCampaign}</strong> as submitted.</p>
+        ${safeReason ? `<p style="margin:0 0 12px 0;padding:12px;background:#fef2f2;border-radius:8px;color:#991b1b;"><strong>Reason:</strong> ${safeReason}</p>` : ""}
+        <p style="margin:0 0 12px 0;">Edit the campaign and resubmit — you haven't been charged anything.</p>
+      `,
+      cta: {
+        label: approved ? "Pay and go live" : "Edit campaign",
+        url: `${SITE_URL}/advertise/dashboard`,
+      },
+    }),
+  };
+}

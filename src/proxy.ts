@@ -34,7 +34,25 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  return NextResponse.next();
+  // NOTE: the admin ROLE is deliberately NOT checked here.
+  //
+  // The obvious thing is to bounce non-admins on `token.role !== "admin"`, but
+  // that claim is a mirror of the User document refreshed only every ~5
+  // minutes. Checking it here means a just-promoted admin is redirected to
+  // /403 by their own stale cookie until the window elapses or they sign out —
+  // a confusing dead end, and the check buys nothing: /admin/layout.tsx calls
+  // getAdminActor() and every /api/admin route calls requireAdmin(), both of
+  // which read the role straight from MongoDB. A non-admin still lands on /403,
+  // just one render later, and a promotion takes effect on the next request.
+  const res = NextResponse.next();
+
+  // Belt-and-suspenders with robots.ts and the per-page `robots: { index:
+  // false }`: nothing under /admin may ever be indexed, even if a URL leaks.
+  if (req.nextUrl.pathname.startsWith("/admin")) {
+    res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
+
+  return res;
 }
 
 export const config = {
@@ -42,6 +60,12 @@ export const config = {
   // /:username, blog posts, /about, /pricing, /contact, ...) stays public and
   // is skipped entirely. `:path*` also matches the base path (zero segments).
   matcher: [
+    "/admin/:path*",
+    // NOT "/advertise/:path*" — that would also match /advertise itself,
+    // which is a public sales page and must stay reachable signed-out.
+    "/advertise/dashboard/:path*",
+    "/advertise/new/:path*",
+    "/advertise/campaigns/:path*",
     "/feed/:path*",
     "/bookmarks/:path*",
     "/settings/:path*",

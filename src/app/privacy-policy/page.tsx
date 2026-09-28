@@ -105,8 +105,8 @@ const PrivacyPolicyPage = () => {
         4. Cookies and Analytics
       </h2>
       <p className="mb-4 para">
-        We use cookies and analytics tools (such as Google Analytics and Vercel
-        Analytics) only after you have given explicit consent via the cookie
+        We use cookies and analytics tools (such as Google Analytics) only
+        after you have given explicit consent via the cookie
         consent banner shown on your first visit. You can change your
         preferences at any time using the <strong>Cookie Settings</strong> link
         in the footer of our website, or read our full{" "}
@@ -155,7 +155,6 @@ const PrivacyPolicyPage = () => {
         <li>Google (Gemini API): AI text and image generation</li>
         <li>Resend: transactional email (e.g., billing and account notices)</li>
         <li>Google Analytics (analytics, with consent)</li>
-        <li>Vercel Analytics (analytics, with consent)</li>
         <li>Hosting and database providers</li>
       </ul>
 
@@ -190,8 +189,8 @@ const PrivacyPolicyPage = () => {
           for support purposes
         </li>
         <li>
-          <strong>Analytics data</strong>: processed by Google/Vercel per their
-          own retention policies (typically 14 to 26 months)
+          <strong>Analytics data</strong>: processed by Google per its own
+          retention policies (typically 14 to 26 months)
         </li>
         <li>
           <strong>Subscription and payment records</strong>: retained after
@@ -207,10 +206,11 @@ const PrivacyPolicyPage = () => {
       </h2>
       <p className="mb-4 para">
         Your data may be processed by third-party service providers located
-        outside your country, including in the United States and India (Razorpay).
-        These transfers are made under appropriate safeguards, such as Standard
-        Contractual Clauses (SCCs) and the data processing agreements of our
-        providers (Google, Vercel, Cloudinary, Razorpay, and Resend), in
+        outside your country, including in the United States and India
+        (Razorpay and our hosting provider). These transfers are made under
+        appropriate safeguards, such as Standard Contractual Clauses (SCCs) and
+        the data processing agreements of our providers (Google, Oracle Cloud,
+        Cloudflare, Cloudinary, Razorpay, and Resend), in
         compliance with applicable data protection laws.
       </p>
 
@@ -256,8 +256,8 @@ const PrivacyPolicyPage = () => {
       <p className="mb-4 para">
         <strong>Do Not Sell or Share My Personal Information:</strong> We do not
         sell your personal information for monetary compensation. However, our
-        use of Google Analytics and Vercel Analytics may constitute "sharing"
-        under CCPA's broad definition. You can opt out at any time by clicking{" "}
+        use of Google Analytics may constitute "sharing" under CCPA's broad
+        definition. You can opt out at any time by clicking{" "}
         <strong>Cookie Settings</strong> in the footer and disabling analytics
         cookies.
       </p>
@@ -294,7 +294,7 @@ const PrivacyPolicyPage = () => {
         .
       </p>
 
-      <p className="mt-10 text-sm text-gray-500">Last updated: June 26, 2026</p>
+      <p className="mt-10 text-sm text-gray-500">Last updated: September 28, 2026</p>
     </section>
   );
 };

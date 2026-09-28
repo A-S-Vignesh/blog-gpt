@@ -23,6 +23,14 @@ export default async function sitemap(){
         priority: 0.9,
       },
       {
+        // Commercial landing page — worth indexing, unlike everything else
+        // under /advertise, which robots.ts disallows.
+        url: `${baseUrl}/advertise`,
+        lastModified: deploymentDate,
+        changeFrequency: "monthly",
+        priority: 0.8,
+      },
+      {
         url: `${baseUrl}/about`,
         lastModified: deploymentDate,
         changeFrequency: "yearly",

@@ -67,7 +67,6 @@ export default function CookiesPolicyPage() {
       <ul className="list-disc pl-6 mb-4 text-[#667085] dark:text-[#C0C5D0] space-y-2">
         <li>Google Authentication (OAuth)</li>
         <li>Google Analytics</li>
-        <li>Vercel Analytics</li>
         <li>Hosting and infrastructure providers</li>
       </ul>
 
@@ -105,7 +104,7 @@ export default function CookiesPolicyPage() {
         .
       </p>
 
-      <p className="mt-10 text-sm text-gray-500">Last updated: March 3, 2026</p>
+      <p className="mt-10 text-sm text-gray-500">Last updated: September 28, 2026</p>
     </section>
   );
 }

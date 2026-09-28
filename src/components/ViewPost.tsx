@@ -16,6 +16,7 @@ import { getRequest } from "@/utils/requestHandler";
 import { useDispatch } from "react-redux";
 import { PopulatedClientPost } from "@/types/post";
 import RelatedPosts from "./RelatedPosts";
+import AdSlot from "@/components/ads/AdSlot";
 import LikeButton from "./ui/LikeButton";
 import BookmarkButton from "./ui/BookmarkButton";
 import ConfirmDialog from "./ui/ConfirmDialog";
@@ -344,6 +345,13 @@ const ViewPost: React.FC<ViewPostProps> = ({
             __html: sanitizeForRender(post?.content || ""),
           }}
         />
+
+        {/* Sponsored slot, after the article body — the reader has finished
+            the piece, which is where an ad is least intrusive and most likely
+            to be acted on. Renders nothing when no campaign is eligible. */}
+        <div className="mt-8">
+          <AdSlot placement="article" />
+        </div>
 
         {/* slogan */}
         {post?.slug && (

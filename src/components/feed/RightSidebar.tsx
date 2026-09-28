@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FaLightbulb, FaQuestionCircle } from "react-icons/fa";
+import AdSlot from "@/components/ads/AdSlot";
 
 // Surfaced in the sidebar because the feed is an infinite scroll, so the page
 // footer is effectively unreachable (the same reason Instagram puts these here).
@@ -9,6 +10,7 @@ const FOOTER_LINKS = [
   { name: "About", href: "/about" },
   { name: "Pricing", href: "/billing" },
   { name: "Contact", href: "/contact" },
+  { name: "Advertise", href: "/advertise" },
   { name: "Privacy", href: "/privacy-policy" },
   { name: "Terms", href: "/terms-of-use" },
   { name: "Cookies", href: "/cookies-policy" },
@@ -23,6 +25,10 @@ const RightSidebar = () => {
 
   return (
     <div className="space-y-8">
+      {/* Sponsored slot. Renders nothing at all when no campaign is eligible,
+          so the rail simply closes up rather than showing an empty box. */}
+      <AdSlot placement="sidebar" />
+
       {/* AI Tips */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6">
         <div className="flex items-center mb-4">

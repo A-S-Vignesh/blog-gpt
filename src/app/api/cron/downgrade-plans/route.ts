@@ -16,8 +16,8 @@ export const dynamic = "force-dynamic";
  * any subscription still marked "canceled" whose endsAt has passed, and
  * downgrades the owning user to the free plan.
  *
- * Configure as a Vercel Cron in vercel.json:
- *   { "path": "/api/cron/downgrade-plans", "schedule": "0 3 * * *" }
+ * Scheduled daily at 03:00 UTC by the server cron in
+ * deploy/oracle/thebloggpt.cron (see docs/DEPLOY-ORACLE.md).
  *
  * Protected by CRON_SECRET (same bearer scheme as process-deletions) so
  * external traffic cannot trigger downgrades.

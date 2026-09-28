@@ -11,6 +11,8 @@ import {
   FaCog,
   FaTimes,
   FaPenAlt,
+  FaShieldAlt,
+  FaBullhorn,
 } from "react-icons/fa";
 
 const LeftSidebar = ({
@@ -47,6 +49,26 @@ const LeftSidebar = ({
       icon: <FaUser />,
     },
     { id: "settings", label: "Settings", href: "/settings", icon: <FaCog /> },
+    {
+      id: "advertise",
+      label: "Advertise",
+      href: "/advertise",
+      icon: <FaBullhorn />,
+    },
+    // Admin-only entry. The role comes from the session, which is a mirror of
+    // the DB refreshed every 5 minutes — good enough to decide whether to draw
+    // a link, and never relied on by /admin itself, which re-checks the role
+    // against MongoDB on both the page layout and every API call.
+    ...(user?.role === "admin"
+      ? [
+          {
+            id: "admin",
+            label: "Admin",
+            href: "/admin",
+            icon: <FaShieldAlt />,
+          },
+        ]
+      : []),
   ];
 
   const isActive = (href: string) => {

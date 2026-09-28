@@ -1,0 +1,11 @@
+# TheBlogGPT scheduled jobs (these replace the old vercel.json crons).
+# The server clock is UTC, so the times match what Vercel ran.
+#
+# Install:  sudo cp /home/ubuntu/blog-gpt/deploy/oracle/thebloggpt.cron /etc/cron.d/thebloggpt
+# (files in /etc/cron.d must be root-owned, not executable, and have no dot
+# in the name, hence the rename.)
+#
+# m  h  dom mon dow  user    command
+0    0  *   *   *    ubuntu  /bin/bash /home/ubuntu/blog-gpt/deploy/oracle/cron.sh process-deletions
+0    3  *   *   *    ubuntu  /bin/bash /home/ubuntu/blog-gpt/deploy/oracle/cron.sh downgrade-plans
+0    *  *   *   *    ubuntu  /bin/bash /home/ubuntu/blog-gpt/deploy/oracle/cron.sh ads-schedule
