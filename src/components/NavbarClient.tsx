@@ -18,10 +18,13 @@ import {
   FaInfoCircle,
   FaSignOutAlt,
   FaCompass,
+  FaCog,
+  FaBullhorn,
 } from "react-icons/fa";
 import { useTheme } from "next-themes";
 import { FaBell, FaBookmark, FaPenNib } from "react-icons/fa6";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import NotificationBell from "@/components/notifications/NotificationBell";
 // import { BuiltInProviderType } from "next-auth/providers/google";
 
 interface UserDataType {
@@ -155,6 +158,7 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
           {/* Conditional Buttons */}
           {userData ? (
             <>
+              <NotificationBell />
               <Link
                 href="/post/generate"
                 className="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
@@ -209,7 +213,7 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
                         className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                         href="/settings"
                       >
-                        <FaUser className="mr-3" /> Account Settings
+                        <FaCog className="mr-3" /> Account Settings
                       </Link>
                       <Link
                         onClick={() => setIsOpen(false)}
@@ -217,6 +221,21 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
                         href="/billing"
                       >
                         <FaRobot className="mr-3" /> Upgrade Plan
+                      </Link>
+                    </div>
+                    <div className="py-2 border-t border-gray-200 dark:border-gray-700">
+                      <Link
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-start px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        href="/advertise"
+                      >
+                        <FaBullhorn className="mr-3 mt-1 shrink-0" />
+                        <span>
+                          <span className="block">Advertise</span>
+                          <span className="block text-xs text-gray-500 dark:text-gray-400">
+                            Promote your product here
+                          </span>
+                        </span>
                       </Link>
                     </div>
                     <div className="p-2 border-t border-gray-200 dark:border-gray-700">
@@ -251,6 +270,8 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
           ) : (
             <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
           )}
+
+          {userData && <NotificationBell />}
 
           <button
             onClick={() => setIsOpen(true)}
@@ -370,7 +391,7 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
                   className="flex items-center py-3 px-4 mb-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
                   href="/settings"
                 >
-                  <FaUser className="mr-3" /> Account Settings
+                  <FaCog className="mr-3" /> Account Settings
                 </Link>
                 <Link
                   onClick={() => setIsOpen(false)}
@@ -378,6 +399,13 @@ const NavbarClient = ({ userData }: NavbarClientProps) => {
                   href="/billing"
                 >
                   <FaRobot className="mr-3" /> Upgrade Plan
+                </Link>
+                <Link
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center py-3 px-4 mb-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
+                  href="/advertise"
+                >
+                  <FaBullhorn className="mr-3" /> Advertise
                 </Link>
                 <button
                   onClick={() => {

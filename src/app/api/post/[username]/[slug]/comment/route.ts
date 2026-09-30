@@ -11,6 +11,7 @@ import { rateLimit } from "@/lib/rateLimit";
 import { checkCommentSpam } from "@/lib/comments/spamCheck";
 import { revalidateTag } from "next/cache";
 import { postDetailTag } from "@/lib/data/posts";
+import { notify, type NotifyInput } from "@/lib/notifications";
 
 const MAX_DEPTH = 5;
 
@@ -154,7 +155,9 @@ export async function POST(
 
     await connectToDatabase();
 
-    const post = await Post.findOne({ slug }).select("_id allowComments");
+    const post = await Post.findOne({ slug }).select(
+      "_id allowComments creator",
+    );
     if (!post) {
       throw new ApiError("NOT_FOUND", "Post not found.");
     }
@@ -170,12 +173,13 @@ export async function POST(
     // Threading: validate parent and compute depth.
     let depth = 0;
     let parentId: Types.ObjectId | null = null;
+    let parentAuthorId: string | null = null;
     if (body.parentCommentId) {
       if (!Types.ObjectId.isValid(body.parentCommentId)) {
         throw new ApiError("BAD_REQUEST", "Invalid parent comment id.");
       }
       const parent = await Comment.findById(body.parentCommentId).select(
-        "_id postId depth",
+        "_id postId depth userId",
       );
       if (!parent) {
         throw new ApiError("NOT_FOUND", "Parent comment not found.");
@@ -194,6 +198,7 @@ export async function POST(
       }
       depth = (parent.depth ?? 0) + 1;
       parentId = parent._id as Types.ObjectId;
+      parentAuthorId = parent.userId.toString();
     }
 
     const created = await Comment.create({
@@ -214,6 +219,34 @@ export async function POST(
     );
 
     revalidateTag(postDetailTag(slug), "default");
+
+    // A reply notifies the parent comment's author; the post's author hears
+    // about every comment on their post. When they're the same person they
+    // get just the (more specific) reply. notify() drops self-notifications
+    // and never throws.
+    const postAuthorId = post.creator.toString();
+    const notifications: NotifyInput[] = [];
+    if (parentAuthorId) {
+      notifications.push({
+        type: "reply",
+        recipient: parentAuthorId,
+        actor: userId,
+        post: post._id,
+        comment: created._id,
+        snippet: sanitized,
+      });
+    }
+    if (postAuthorId !== parentAuthorId) {
+      notifications.push({
+        type: "comment",
+        recipient: postAuthorId,
+        actor: userId,
+        post: post._id,
+        comment: created._id,
+        snippet: sanitized,
+      });
+    }
+    await notify(notifications);
 
     const populated = await created.populate("userId", "name username image");
     // Newly created comments have zero replies — surface the field so the

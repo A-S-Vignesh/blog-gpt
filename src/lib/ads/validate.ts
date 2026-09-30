@@ -67,7 +67,7 @@ export function parseUrlField(raw: unknown, label: string): string {
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     throw new ApiError(
       "VALIDATION_FAILED",
-      `${label} must be a http:// or https:// address.`,
+      `${label} must be an http:// or https:// address.`,
     );
   }
   // A scheme with no host ("https://") parses but is useless as a link.

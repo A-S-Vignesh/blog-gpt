@@ -153,7 +153,7 @@ export default function TrendChart({
               y1={PAD.top}
               y2={PAD.top + plotH}
               stroke="currentColor"
-              className="text-gray-400 dark:text-gray-600"
+              className="text-gray-500 dark:text-gray-400"
               strokeWidth="1"
               strokeDasharray="3 3"
             />
@@ -175,14 +175,14 @@ export default function TrendChart({
 
         {!hasData && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <p className="text-sm text-gray-400 dark:text-gray-500">
-              No delivery yet
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              No views yet
             </p>
           </div>
         )}
       </div>
 
-      <div className="mt-1 flex justify-between text-[11px] text-gray-400 dark:text-gray-500">
+      <div className="mt-1 flex justify-between text-[11px] text-gray-600 dark:text-gray-400">
         <span>{labels[0]}</span>
         <span>{labels[labels.length - 1]}</span>
       </div>

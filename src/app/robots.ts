@@ -12,6 +12,7 @@ export default function robots(): MetadataRoute.Robots {
         "/settings",
         "/billing",
         "/bookmarks",
+        "/notifications",
         "/feed",
         "/post/create",
         "/post/generate",

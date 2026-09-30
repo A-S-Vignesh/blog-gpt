@@ -6,6 +6,7 @@ import PostView from "@/models/PostView";
 import Like from "@/models/Like";
 import Bookmark from "@/models/Bookmark";
 import Follow from "@/models/Follow";
+import Notification from "@/models/Notification";
 import { Subscription } from "@/models/Subscription";
 import cloudinary from "@/lib/cloudinary";
 import { sendEmail } from "@/lib/email/send";
@@ -203,6 +204,21 @@ export async function executeUserDeletion(userId: string): Promise<DeletionResul
     } catch (err: any) {
       result.failures.push(`Bookmarks-on-posts cleanup failed: ${err?.message}`);
     }
+  }
+
+  // 5f. Notifications this user received, caused, or that point at their
+  //     (now deleted) posts, e.g. a reply notification someone else got on
+  //     one of this user's posts.
+  try {
+    await Notification.deleteMany({
+      $or: [
+        { recipient: user._id },
+        { actor: user._id },
+        ...(postIds.length > 0 ? [{ post: { $in: postIds } }] : []),
+      ],
+    });
+  } catch (err: any) {
+    result.failures.push(`Notifications cleanup failed: ${err?.message}`);
   }
 
   // 6. Archive subscription records (keep for financial audit, but anonymize).

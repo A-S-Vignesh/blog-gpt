@@ -68,6 +68,7 @@ export const config = {
     "/advertise/campaigns/:path*",
     "/feed/:path*",
     "/bookmarks/:path*",
+    "/notifications/:path*",
     "/settings/:path*",
     "/billing/:path*",
     "/post/create/:path*",

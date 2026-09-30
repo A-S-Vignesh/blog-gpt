@@ -111,7 +111,9 @@ export function sanitizeForRender(html: string) {
             ...attribs,
             href,
             target: "_blank",
-            rel: "nofollow noopener noreferrer",
+            // No `noreferrer`: destination sites should see thebloggpt.com as
+            // the referral source. Referrer-Policy limits it to the origin.
+            rel: "nofollow noopener",
           },
         };
       },

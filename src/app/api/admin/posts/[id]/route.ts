@@ -12,6 +12,7 @@ import Like from "@/models/Like";
 import Bookmark from "@/models/Bookmark";
 import Share from "@/models/Share";
 import PostView from "@/models/PostView";
+import Notification from "@/models/Notification";
 import { User } from "@/models/User";
 import cloudinary from "@/lib/cloudinary";
 import {
@@ -195,6 +196,7 @@ export async function DELETE(
       Bookmark.deleteMany({ post: postId }),
       Share.deleteMany({ post: postId }),
       PostView.deleteMany({ postId }),
+      Notification.deleteMany({ post: postId }),
     ]);
 
     if (bookmarkOwners.length > 0) {

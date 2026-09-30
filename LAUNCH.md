@@ -39,8 +39,8 @@ Set in your host (Vercel → Project → Settings → Environment Variables), `P
 Run once against the production database:
 
 ```bash
-npm run migrate:username-index   # case-insensitive unique username index
-npm run migrate                  # legacy plan-field migration (safe if already applied)
+pnpm migrate:username-index   # case-insensitive unique username index
+pnpm migrate                  # legacy plan-field migration (safe if already applied)
 ```
 
 ## 4. Cron jobs

@@ -17,6 +17,7 @@ import {
   AD_LIMITS,
   AD_PLACEMENTS,
   MAX_CAMPAIGN_DAYS,
+  MAX_LEAD_DAYS,
   MIN_CAMPAIGN_DAYS,
   endDateFor,
   formatCents,
@@ -26,7 +27,7 @@ import {
   type AdPlacement,
 } from "@/config/ads";
 
-const STEPS = ["Placement", "Schedule", "Creative", "Review"] as const;
+const STEPS = ["Placement", "Schedule", "Your ad", "Review"] as const;
 
 /** A YYYY-MM-DD string `days` from now, for the date input. */
 function dayInputValue(daysFromNow: number): string {
@@ -38,7 +39,7 @@ function dayInputValue(daysFromNow: number): string {
 /**
  * Format a booked day for display.
  *
- * Pinned to UTC because campaign days ARE UTC days — rendering them in the
+ * Pinned to UTC because campaign days ARE UTC days: rendering them in the
  * browser's zone would show a booking starting "Feb 28" to a reader in Los
  * Angeles when the slot they bought begins on March 1.
  */
@@ -58,49 +59,169 @@ type Availability = {
   isAvailable: boolean;
 };
 
+/** An existing draft or rejected campaign, opened for editing. */
+export type EditableCampaign = {
+  id: string;
+  name: string;
+  company: string;
+  website: string;
+  contactEmail: string;
+  placement: AdPlacement;
+  days: number;
+  /** YYYY-MM-DD (UTC). */
+  startDate: string;
+  headline: string;
+  body: string;
+  imageUrl: string;
+  destinationUrl: string;
+  ctaLabel: string;
+  /** The reviewer's reason, when the campaign was rejected. */
+  reviewNote?: string;
+};
+
+type Field =
+  | "name"
+  | "company"
+  | "contactEmail"
+  | "website"
+  | "days"
+  | "startDate"
+  | "headline"
+  | "body"
+  | "imageUrl"
+  | "destinationUrl"
+  | "ctaLabel";
+
+type FieldErrors = Partial<Record<Field, string>>;
+
+/** DOM id for a field, so errors can point at it and focus can land on it. */
+const fid = (field: Field) => `campaign-${field}`;
+
+/** Fields in page order, used to focus the first one that needs fixing. */
+const FIELD_ORDER: Field[] = [
+  "name",
+  "company",
+  "contactEmail",
+  "website",
+  "days",
+  "startDate",
+  "headline",
+  "body",
+  "imageUrl",
+  "destinationUrl",
+  "ctaLabel",
+];
+
 /**
- * Four-step campaign builder.
+ * Which step a server error belongs to, so the advertiser lands where the fix
+ * is instead of reading about a field on a screen that doesn't show it.
+ */
+function stepForServerMessage(message: string): number | null {
+  const m = message.toLowerCase();
+  if (/(headline|destination|image|button|body|creative)/.test(m)) return 2;
+  if (/(campaign name|company|email|website|start|days|booking|slot|date)/.test(m))
+    return 1;
+  return null;
+}
+
+/**
+ * Four-step campaign builder, used both to create a campaign and to edit a
+ * draft or rejected one.
  *
  * Split into steps rather than one long form because the four decisions are
  * genuinely independent, and a single wall of twelve fields is where self-serve
- * advertising loses people. Each step validates before it lets you move on, so
- * a mistake surfaces next to the field that caused it instead of as a server
- * error at the end.
+ * advertising loses people. Each step validates before it lets you move on, and
+ * a problem is shown next to the field that caused it (not in a toast that
+ * disappears before it has been read).
  *
- * Two panels on the right do the persuading: the live preview renders the exact
- * card a reader would see, and the quote shows the whole price — day rate,
- * length, discount, total — with no "estimated" anything. That honesty is the
- * point of flat pricing. The old builder could only promise an ESTIMATED number
- * of impressions for a budget, which is a guess dressed as a number and reads
- * worst on exactly the small site this is for.
+ * Two panels on the right do the persuading: the live preview renders the same
+ * card a reader would see, and the quote shows the whole price (day rate,
+ * length, discount, total) with no "estimated" anything.
  */
 export default function CampaignBuilder({
   defaultEmail,
+  existing,
 }: {
   defaultEmail: string;
+  existing?: EditableCampaign;
 }) {
   const router = useRouter();
   const { showToast } = useToast();
+  const isEdit = !!existing;
 
   const [step, setStep] = useState(0);
-  const [saving, setSaving] = useState(false);
+  // Furthest step reached. An existing campaign is already complete, so every
+  // step is open from the start.
+  const [maxReached, setMaxReached] = useState(isEdit ? STEPS.length - 1 : 0);
+  const [saving, setSaving] = useState<"draft" | "submit" | null>(null);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const [placement, setPlacement] = useState<AdPlacement>("feed");
-  const [days, setDays] = useState(30);
-  const [name, setName] = useState("");
-  const [company, setCompany] = useState("");
-  const [website, setWebsite] = useState("");
-  const [contactEmail, setContactEmail] = useState(defaultEmail);
-  const [startDate, setStartDate] = useState(dayInputValue(1));
+  const [placement, setPlacement] = useState<AdPlacement>(
+    existing?.placement ?? "feed",
+  );
+  const [days, setDays] = useState(existing?.days ?? 30);
+  const [name, setName] = useState(existing?.name ?? "");
+  const [company, setCompany] = useState(existing?.company ?? "");
+  const [website, setWebsite] = useState(existing?.website ?? "");
+  const [contactEmail, setContactEmail] = useState(
+    existing?.contactEmail || defaultEmail,
+  );
+  const [startDate, setStartDate] = useState(
+    existing?.startDate ?? dayInputValue(1),
+  );
 
-  const [headline, setHeadline] = useState("");
-  const [body, setBody] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [destinationUrl, setDestinationUrl] = useState("");
-  const [ctaLabel, setCtaLabel] = useState("Learn more");
+  const [headline, setHeadline] = useState(existing?.headline ?? "");
+  const [body, setBody] = useState(existing?.body ?? "");
+  const [imageUrl, setImageUrl] = useState(existing?.imageUrl ?? "");
+  const [destinationUrl, setDestinationUrl] = useState(
+    existing?.destinationUrl ?? "",
+  );
+  const [ctaLabel, setCtaLabel] = useState(existing?.ctaLabel || "Learn more");
 
   const [availability, setAvailability] = useState<Availability | null>(null);
   const [checkingSlot, setCheckingSlot] = useState(false);
+
+  // ── Unsaved-changes guard ────────────────────────────────────────────
+  const snapshot = JSON.stringify([
+    placement,
+    days,
+    name,
+    company,
+    website,
+    contactEmail,
+    startDate,
+    headline,
+    body,
+    imageUrl,
+    destinationUrl,
+    ctaLabel,
+  ]);
+  const [initialSnapshot] = useState(snapshot);
+  const dirty = snapshot !== initialSnapshot;
+  // Set once the campaign is safely stored, so navigating to it isn't blocked.
+  const savedRef = useRef(false);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      if (savedRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  function confirmLeave(e: React.MouseEvent) {
+    if (
+      dirty &&
+      !savedRef.current &&
+      !window.confirm("Leave without saving? Your changes will be lost.")
+    ) {
+      e.preventDefault();
+    }
+  }
 
   // The same function the server prices with, so the number on screen is the
   // number that gets charged rather than a lookalike computed twice.
@@ -118,7 +239,7 @@ export default function CampaignBuilder({
    * Ask the server whether this placement is free for these dates.
    *
    * Debounced, and every in-flight request is aborted when the inputs change
-   * again — otherwise a slow answer for last week's dates can land after a fast
+   * again. Otherwise a slow answer for last week's dates can land after a fast
    * one for this week's and quietly overwrite it with the wrong verdict.
    */
   const abortRef = useRef<AbortController | null>(null);
@@ -138,7 +259,7 @@ export default function CampaignBuilder({
         signal: controller.signal,
       });
       if (!res.ok) {
-        // Advisory only — a failed check must not block someone from booking.
+        // Advisory only: a failed check must not block someone from booking.
         // The submit handler re-checks server-side and is the real gate.
         setAvailability(null);
         return;
@@ -165,7 +286,7 @@ export default function CampaignBuilder({
    * with no scheme at all is touched, so "javascript:..." is passed through
    * unchanged and still rejected by the checks below and on the server.
    *
-   * The scheme test excludes dots deliberately — kept in step with the server
+   * The scheme test excludes dots deliberately, kept in step with the server
    * (src/lib/ads/validate.ts), where the reasoning is spelled out: a dot-free
    * prefix is a real scheme, a dotted one is a hostname like "example.com:8080".
    */
@@ -181,7 +302,7 @@ export default function CampaignBuilder({
   function urlError(value: string, label: string): string | null {
     const normalized = normalizeUrl(value);
     if (!/^https?:\/\//i.test(normalized)) {
-      return `${label} must be a http:// or https:// address.`;
+      return `${label} must be an http:// or https:// address.`;
     }
     try {
       const url = new URL(normalized);
@@ -194,237 +315,350 @@ export default function CampaignBuilder({
     return null;
   }
 
-  /** Per-step gate. Returns an error message, or null when the step is good. */
-  function stepError(index: number): string | null {
+  /** Every problem on one step, keyed by the field it belongs to. */
+  function stepErrors(index: number): FieldErrors {
+    const errs: FieldErrors = {};
     if (index === 1) {
-      if (!name.trim()) return "Give your campaign a name.";
-      if (!Number.isInteger(days) || days < MIN_CAMPAIGN_DAYS) {
-        return `The shortest booking is ${MIN_CAMPAIGN_DAYS} days.`;
+      if (!name.trim()) errs.name = "Give your campaign a name.";
+      if (
+        contactEmail.trim() &&
+        !/^\S+@\S+\.\S+$/.test(contactEmail.trim())
+      ) {
+        errs.contactEmail = "That email address doesn't look right.";
       }
-      if (days > MAX_CAMPAIGN_DAYS) {
-        return `The longest booking is ${MAX_CAMPAIGN_DAYS} days.`;
-      }
-      if (!startDate) return "Pick a start date.";
-      if (runWindow.start < utcMidnight(Date.now() - 86_400_000)) {
-        return "The start date can't be in the past.";
-      }
-      // Was missing entirely: an unschemed company website passed every client
-      // check and then failed on the server two steps later, with a message
-      // that named the destination URL instead.
+      // An unschemed website used to pass here and then fail on the server
+      // two steps later, with a message that named a different field.
       if (website.trim()) {
         const err = urlError(website, "Company website");
-        if (err) return err;
+        if (err) errs.website = err;
+      }
+      if (!Number.isInteger(days) || days < MIN_CAMPAIGN_DAYS) {
+        errs.days = `The shortest booking is ${MIN_CAMPAIGN_DAYS} days.`;
+      } else if (days > MAX_CAMPAIGN_DAYS) {
+        errs.days = `The longest booking is ${MAX_CAMPAIGN_DAYS} days.`;
+      }
+      if (!startDate) {
+        errs.startDate = "Pick a start date.";
+      } else if (runWindow.start < utcMidnight(Date.now() - 86_400_000)) {
+        errs.startDate = "The start date can't be in the past.";
+      } else if (
+        runWindow.start > utcMidnight(Date.now() + MAX_LEAD_DAYS * 86_400_000)
+      ) {
+        errs.startDate = `You can book up to ${MAX_LEAD_DAYS} days ahead.`;
       }
     }
     if (index === 2) {
-      if (!headline.trim()) return "Write a headline.";
-      if (!destinationUrl.trim()) return "Where should the click go?";
-      const destErr = urlError(destinationUrl, "Destination URL");
-      if (destErr) return destErr;
-      if (imageUrl.trim()) {
-        const imgErr = urlError(imageUrl, "Image URL");
-        if (imgErr) return imgErr;
+      if (!headline.trim()) errs.headline = "Write a headline.";
+      if (!destinationUrl.trim()) {
+        errs.destinationUrl = "Add the page people should land on.";
+      } else {
+        const err = urlError(destinationUrl, "Destination URL");
+        if (err) errs.destinationUrl = err;
       }
+      if (imageUrl.trim()) {
+        const err = urlError(imageUrl, "Image URL");
+        if (err) errs.imageUrl = err;
+      }
+      if (!ctaLabel.trim()) errs.ctaLabel = "Add a button label.";
     }
-    return null;
+    return errs;
+  }
+
+  function showErrors(errs: FieldErrors) {
+    setErrors(errs);
+    const first = FIELD_ORDER.find((f) => errs[f]);
+    if (first) {
+      // After React paints the step that holds the field.
+      requestAnimationFrame(() => document.getElementById(fid(first))?.focus());
+    }
+  }
+
+  /** Clear a field's error as soon as the advertiser starts fixing it. */
+  function clearError(field: Field) {
+    if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
+  }
+
+  function goTo(index: number) {
+    setFormError(null);
+    setStep(index);
   }
 
   function next() {
-    const err = stepError(step);
-    if (err) {
-      showToast(err, "error");
+    const errs = stepErrors(step);
+    if (Object.keys(errs).length > 0) {
+      showErrors(errs);
       return;
     }
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    const target = Math.min(step + 1, STEPS.length - 1);
+    setMaxReached((m) => Math.max(m, target));
+    goTo(target);
   }
 
-  async function submit(thenSubmitForReview: boolean) {
-    // Guard re-entry: without this a double-click fires two POSTs and shows
-    // the same validation toast twice.
+  async function save(submitForReview: boolean) {
+    // Guard re-entry: a double-click must not create two campaigns.
     if (saving) return;
+    setFormError(null);
 
     for (let i = 0; i < STEPS.length; i++) {
-      const err = stepError(i);
-      if (err) {
-        showToast(err, "error");
+      const errs = stepErrors(i);
+      if (Object.keys(errs).length > 0) {
         setStep(i);
+        showErrors(errs);
         return;
       }
     }
 
     // A draft can always be saved; only a submission needs a free slot. Saying
     // so here saves a round trip, though the server check is what binds.
-    if (thenSubmitForReview && availability && !availability.isAvailable) {
-      showToast(
-        `That ${AD_PLACEMENTS[placement].name} slot is fully booked for those dates. Change the dates or the placement, or save this as a draft.`,
-        "error",
-      );
+    if (submitForReview && availability && !availability.isAvailable) {
       setStep(1);
+      setFormError(
+        `The ${AD_PLACEMENTS[placement].name} spot is fully booked for those dates. Change the dates or the placement, or save this as a draft for now.`,
+      );
       return;
     }
 
-    setSaving(true);
+    setSaving(submitForReview ? "submit" : "draft");
+
+    // Placement and days are all the server needs to price this: it looks the
+    // rate up itself, so no total is sent and none could be forged. The URLs
+    // go normalized, so what gets stored is exactly what the preview showed.
+    const payload = {
+      name,
+      company,
+      website: normalizeUrl(website),
+      contactEmail,
+      placement,
+      days,
+      startDate,
+      creative: {
+        headline,
+        body,
+        imageUrl: normalizeUrl(imageUrl),
+        destinationUrl: normalizeUrl(destinationUrl),
+        ctaLabel,
+      },
+    };
+
+    let campaignId = existing?.id ?? null;
     try {
-      const res = await fetch("/api/ads/campaigns", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // Placement and days are all the server needs to price this — it looks
-        // the rate up itself, so no total is sent and none could be forged.
-        // The URLs go normalized, so what gets stored is exactly what the
-        // preview showed and the server has nothing left to reject.
-        body: JSON.stringify({
-          name,
-          company,
-          website: normalizeUrl(website),
-          contactEmail,
-          placement,
-          days,
-          startDate,
-          creative: {
-            headline,
-            body,
-            imageUrl: normalizeUrl(imageUrl),
-            destinationUrl: normalizeUrl(destinationUrl),
-            ctaLabel,
-          },
-        }),
-      });
+      const res = campaignId
+        ? await fetch(`/api/ads/campaigns/${campaignId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "update", ...payload }),
+          })
+        : await fetch("/api/ads/campaigns", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Could not save the campaign.");
+      campaignId = campaignId ?? data.id;
+    } catch (err: any) {
+      const message = err?.message || "Something went wrong. Please try again.";
+      const target = stepForServerMessage(message);
+      if (target !== null) setStep(target);
+      setFormError(message);
+      setSaving(null);
+      return;
+    }
 
-      if (thenSubmitForReview) {
-        const submitRes = await fetch(`/api/ads/campaigns/${data.id}`, {
+    // From here the campaign exists. Whatever happens next, go to it rather
+    // than staying on this form, where a retry would create a duplicate.
+    savedRef.current = true;
+
+    if (submitForReview) {
+      try {
+        const submitRes = await fetch(`/api/ads/campaigns/${campaignId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "submit" }),
         });
         const submitData = await submitRes.json();
         if (!submitRes.ok) {
-          // The campaign exists as a draft; say so rather than implying it was lost.
-          throw new Error(
-            submitData?.error ||
-              "Saved as a draft, but we couldn't submit it for review.",
-          );
+          throw new Error(submitData?.error || "It couldn't be submitted.");
         }
-        showToast("Submitted for review. We'll email you within 24 hours.", "success");
-      } else {
-        showToast("Saved as a draft.", "success");
+        showToast(
+          "Submitted for review. We'll email you within 24 hours.",
+          "success",
+        );
+      } catch (err: any) {
+        showToast(
+          `Your changes are saved, but the campaign wasn't submitted. ${err?.message ?? ""}`.trim(),
+          "error",
+        );
       }
-
-      router.push(`/advertise/campaigns/${data.id}`);
-    } catch (err: any) {
-      showToast(err?.message || "Something went wrong.", "error");
-    } finally {
-      setSaving(false);
+    } else {
+      showToast(isEdit ? "Changes saved." : "Draft saved.", "success");
     }
+
+    // `saving` stays set: the page is navigating away, and re-enabling the
+    // buttons now would only invite a second click.
+    router.push(`/advertise/campaigns/${campaignId}`);
+    router.refresh();
   }
 
-  const input =
-    "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white";
-  const label =
-    "mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-300";
+  const inputBase =
+    "w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:ring-2 dark:bg-gray-900 dark:text-white";
+  const inputClass = (field: Field) =>
+    `${inputBase} ${
+      errors[field]
+        ? "border-red-500 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500"
+        : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/20 dark:border-gray-700"
+    }`;
+  const labelClass =
+    "mb-1.5 flex items-baseline justify-between gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300";
+  const aria = (field: Field) => ({
+    id: fid(field),
+    "aria-invalid": errors[field] ? true : undefined,
+    "aria-describedby": errors[field] ? `${fid(field)}-error` : undefined,
+  });
 
   const isPackage = AD_DURATIONS.some((d) => d.days === days);
+  const isSidebar = placement === "sidebar";
+  const previewImage =
+    imageUrl.trim() && !urlError(imageUrl, "Image URL")
+      ? normalizeUrl(imageUrl)
+      : "";
+  const backHref = existing
+    ? `/advertise/campaigns/${existing.id}`
+    : "/advertise/dashboard";
 
   return (
     <>
       <div className="mb-6">
         <Link
-          href="/advertise/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+          href={backHref}
+          onClick={confirmLeave}
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
         >
-          <FaArrowLeft /> Back to campaigns
+          <FaArrowLeft /> {isEdit ? "Back to campaign" : "Back to campaigns"}
         </Link>
         <h1 className="mt-3 text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
-          New campaign
+          {isEdit ? "Edit campaign" : "New campaign"}
         </h1>
       </div>
 
+      {existing?.reviewNote && (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30">
+          <p className="font-semibold text-red-800 dark:text-red-300">
+            What our reviewer asked you to change
+          </p>
+          <p className="mt-1 text-sm text-red-700 dark:text-red-400">
+            {existing.reviewNote}
+          </p>
+        </div>
+      )}
+
       {/* ── STEPPER ──────────────────────────────────────────────────── */}
-      <ol className="mb-6 flex flex-wrap items-center gap-2">
-        {STEPS.map((s, i) => {
-          const done = i < step;
-          const current = i === step;
-          return (
-            <li key={s} className="flex items-center gap-2">
-              <button
-                onClick={() => i < step && setStep(i)}
-                disabled={i > step}
-                className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                  current
-                    ? "bg-blue-600 text-white"
-                    : done
-                      ? "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300"
-                      : "text-gray-400 dark:text-gray-600"
-                }`}
-              >
-                <span
-                  className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${
+      <nav aria-label="Campaign steps">
+        <ol className="mb-6 flex flex-wrap items-center gap-2">
+          {STEPS.map((s, i) => {
+            const done = i < step || (i <= maxReached && i !== step);
+            const current = i === step;
+            const reachable = i <= maxReached;
+            return (
+              <li key={s} className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => reachable && !current && goTo(i)}
+                  disabled={!reachable}
+                  aria-current={current ? "step" : undefined}
+                  className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                     current
-                      ? "bg-white text-blue-600"
+                      ? "bg-blue-600 text-white"
                       : done
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 text-gray-500 dark:bg-gray-800"
+                        ? "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300"
+                        : "text-gray-500 dark:text-gray-500"
                   }`}
                 >
-                  {done ? <FaCheck className="text-[9px]" /> : i + 1}
-                </span>
-                {s}
-              </button>
-              {i < STEPS.length - 1 && (
-                <span className="text-gray-300 dark:text-gray-700">/</span>
-              )}
-            </li>
-          );
-        })}
-      </ol>
+                  <span
+                    className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${
+                      current
+                        ? "bg-white text-blue-600"
+                        : done
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                    }`}
+                  >
+                    {done ? <FaCheck className="text-[9px]" /> : i + 1}
+                  </span>
+                  {s}
+                </button>
+                {i < STEPS.length - 1 && (
+                  <span aria-hidden="true" className="text-gray-300 dark:text-gray-700">
+                    /
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         {/* ── FORM ───────────────────────────────────────────────────── */}
-        <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+        <div className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6 dark:border-gray-800 dark:bg-gray-900">
           {step === 0 && (
             <>
               <h2 className="mb-1 text-lg font-bold text-gray-900 dark:text-white">
                 Where should it run?
               </h2>
               <p className="mb-5 text-sm text-gray-600 dark:text-gray-400">
-                One flat price per day. No impression counting, no bidding, no
-                spend to monitor.
+                One flat price per day. No bidding and no spend to watch. All
+                prices in USD.
               </p>
 
-              <div className="space-y-3">
-                {Object.values(AD_PLACEMENTS).map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setPlacement(p.id)}
-                    className={`w-full rounded-xl border p-4 text-left transition ${
-                      placement === p.id
-                        ? "border-blue-500 bg-blue-50 dark:border-blue-500 dark:bg-blue-950/30"
-                        : "border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {p.name}
-                      </span>
-                      <span className="shrink-0 text-sm font-bold text-gray-900 dark:text-white">
-                        {formatCentsShort(p.dayRateCents)}
-                        <span className="font-normal text-gray-500"> / day</span>
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      {p.description}
-                    </p>
-                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                      {p.surface} · only {p.maxConcurrent} advertiser
-                      {p.maxConcurrent === 1 ? "" : "s"} share this slot at a time
-                    </p>
-                  </button>
-                ))}
+              <div role="radiogroup" aria-label="Placement" className="space-y-3">
+                {Object.values(AD_PLACEMENTS).map((p) => {
+                  const selected = placement === p.id;
+                  return (
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      key={p.id}
+                      onClick={() => setPlacement(p.id)}
+                      className={`w-full rounded-xl border p-4 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
+                        selected
+                          ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500 dark:border-blue-500 dark:bg-blue-950/30"
+                          : "border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
+                          {selected ? (
+                            <FaCheckCircle className="text-blue-600 dark:text-blue-400" />
+                          ) : (
+                            <span className="h-4 w-4 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+                          )}
+                          {p.name}
+                        </span>
+                        <span className="shrink-0 text-sm font-bold text-gray-900 dark:text-white">
+                          {formatCentsShort(p.dayRateCents)}
+                          <span className="font-normal text-gray-500 dark:text-gray-400">
+                            {" "}
+                            / day
+                          </span>
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        {p.description}
+                      </p>
+                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        {p.surface} · at most {p.maxConcurrent} advertiser
+                        {p.maxConcurrent === 1 ? "" : "s"} share this spot at a
+                        time
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
 
               <p className="mt-5 rounded-lg bg-gray-50 px-3 py-2.5 text-xs text-gray-600 dark:bg-gray-800/60 dark:text-gray-400">
-                We cap how many campaigns run in a slot on purpose. A flat day
+                We cap how many campaigns run in a spot on purpose. A flat day
                 rate is only fair if the day you paid for isn&apos;t split
                 between a dozen advertisers.
               </p>
@@ -437,72 +671,128 @@ export default function CampaignBuilder({
                 How long, and from when?
               </h2>
               <p className="mb-5 text-sm text-gray-600 dark:text-gray-400">
-                You pay once, up front, and your ad runs for every day you
-                booked. Longer bookings cost less per day.
+                You pay once, after your ad is approved, and it runs for every
+                day you booked. Longer bookings cost less per day.
               </p>
+              <RequiredNote />
 
               <div className="space-y-4">
                 <div>
-                  <label className={label}>Campaign name</label>
+                  <label htmlFor={fid("name")} className={labelClass}>
+                    <span>
+                      Campaign name <Req />
+                    </span>
+                    <Counter value={name} max={AD_LIMITS.campaignName} />
+                  </label>
                   <input
+                    {...aria("name")}
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      clearError("name");
+                    }}
                     maxLength={AD_LIMITS.campaignName}
-                    placeholder="Spring launch — developer tools"
-                    className={input}
+                    placeholder="Spring launch: developer tools"
+                    className={inputClass("name")}
                   />
+                  <HelpText>Only you see this name.</HelpText>
+                  <FieldError field="name" errors={errors} />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className={label}>Company</label>
+                    <label htmlFor={fid("company")} className={labelClass}>
+                      <span>
+                        Company <Opt />
+                      </span>
+                      <Counter value={company} max={AD_LIMITS.company} />
+                    </label>
                     <input
+                      {...aria("company")}
                       value={company}
-                      onChange={(e) => setCompany(e.target.value)}
+                      onChange={(e) => {
+                        setCompany(e.target.value);
+                        clearError("company");
+                      }}
                       maxLength={AD_LIMITS.company}
                       placeholder="Acme Inc."
-                      className={input}
+                      className={inputClass("company")}
                     />
+                    <FieldError field="company" errors={errors} />
                   </div>
                   <div>
-                    <label className={label}>Contact email</label>
+                    <label htmlFor={fid("contactEmail")} className={labelClass}>
+                      <span>
+                        Contact email <Opt />
+                      </span>
+                    </label>
                     <input
+                      {...aria("contactEmail")}
                       type="email"
                       value={contactEmail}
-                      onChange={(e) => setContactEmail(e.target.value)}
-                      className={input}
+                      onChange={(e) => {
+                        setContactEmail(e.target.value);
+                        clearError("contactEmail");
+                      }}
+                      className={inputClass("contactEmail")}
                     />
+                    <HelpText>We send the review decision here.</HelpText>
+                    <FieldError field="contactEmail" errors={errors} />
                   </div>
                 </div>
 
                 <div>
-                  <label className={label}>Company website</label>
+                  <label htmlFor={fid("website")} className={labelClass}>
+                    <span>
+                      Company website <Opt />
+                    </span>
+                  </label>
                   <input
+                    {...aria("website")}
                     value={website}
-                    onChange={(e) => setWebsite(e.target.value)}
+                    onChange={(e) => {
+                      setWebsite(e.target.value);
+                      clearError("website");
+                    }}
                     onBlur={() => setWebsite(normalizeUrl(website))}
                     placeholder="https://acme.com"
-                    className={input}
+                    className={inputClass("website")}
                   />
+                  <FieldError field="website" errors={errors} />
                 </div>
 
                 {/* ── DURATION ─────────────────────────────────────── */}
-                <div>
-                  <span className={label}>How long should it run?</span>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <fieldset>
+                  <legend className="mb-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    How long should it run? <Req />
+                  </legend>
+                  <div
+                    role="radiogroup"
+                    aria-label="Booking length"
+                    className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+                  >
                     {AD_DURATIONS.map((option) => {
                       const optionQuote = quotePrice(placement, option.days);
                       const selected = days === option.days;
                       return (
                         <button
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
                           key={option.days}
-                          onClick={() => setDays(option.days)}
-                          className={`rounded-xl border p-3 text-left transition ${
+                          onClick={() => {
+                            setDays(option.days);
+                            clearError("days");
+                          }}
+                          className={`relative rounded-xl border p-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
                             selected
-                              ? "border-blue-500 bg-blue-50 dark:border-blue-500 dark:bg-blue-950/30"
+                              ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500 dark:border-blue-500 dark:bg-blue-950/30"
                               : "border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700"
                           }`}
                         >
+                          {selected && (
+                            <FaCheckCircle className="absolute right-2.5 top-2.5 text-sm text-blue-600 dark:text-blue-400" />
+                          )}
                           <p className="text-sm font-semibold text-gray-900 dark:text-white">
                             {option.label}
                           </p>
@@ -513,7 +803,7 @@ export default function CampaignBuilder({
                             <p
                               className={`mt-0.5 text-[11px] font-semibold ${
                                 option.discountPercent > 0
-                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  ? "text-emerald-700 dark:text-emerald-400"
                                   : "text-gray-500 dark:text-gray-400"
                               }`}
                             >
@@ -526,41 +816,61 @@ export default function CampaignBuilder({
                   </div>
 
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <label className="text-xs text-gray-500 dark:text-gray-400">
+                    <label
+                      htmlFor={fid("days")}
+                      className="text-xs text-gray-600 dark:text-gray-400"
+                    >
                       Or a custom length:
                     </label>
                     <input
+                      {...aria("days")}
                       type="number"
+                      inputMode="numeric"
                       min={MIN_CAMPAIGN_DAYS}
                       max={MAX_CAMPAIGN_DAYS}
                       value={days}
-                      onChange={(e) => setDays(Math.floor(Number(e.target.value)) || 0)}
-                      className="w-24 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      onChange={(e) => {
+                        setDays(Math.floor(Number(e.target.value)) || 0);
+                        clearError("days");
+                      }}
+                      className={`${inputClass("days")} w-24! py-1.5`}
                     />
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      days
+                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                      days ({MIN_CAMPAIGN_DAYS} to {MAX_CAMPAIGN_DAYS})
                       {!isPackage && quote.discountPercent > 0 && (
-                        <> — {quote.discountPercent}% off applied</>
+                        <>, {quote.discountPercent}% off applied</>
                       )}
                     </span>
                   </div>
-                </div>
+                  <FieldError field="days" errors={errors} />
+                </fieldset>
 
                 <div>
-                  <label className={label}>Start date</label>
+                  <label htmlFor={fid("startDate")} className={labelClass}>
+                    <span>
+                      Start date <Req />
+                    </span>
+                  </label>
                   <input
+                    {...aria("startDate")}
                     type="date"
                     value={startDate}
                     min={dayInputValue(0)}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className={input}
+                    max={dayInputValue(MAX_LEAD_DAYS)}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      clearError("startDate");
+                    }}
+                    className={inputClass("startDate")}
                   />
-                  {days >= MIN_CAMPAIGN_DAYS && startDate && (
-                    <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                      Runs {fmtDay(runWindow.start)} through {fmtDay(runWindow.lastDay)}
-                      , inclusive.
-                    </p>
+                  {days >= MIN_CAMPAIGN_DAYS && startDate && !errors.startDate && (
+                    <HelpText>
+                      Runs {fmtDay(runWindow.start)} through{" "}
+                      {fmtDay(runWindow.lastDay)}. Days start and end at
+                      midnight UTC.
+                    </HelpText>
                   )}
+                  <FieldError field="startDate" errors={errors} />
                 </div>
 
                 {/* ── SLOT AVAILABILITY ────────────────────────────── */}
@@ -579,74 +889,120 @@ export default function CampaignBuilder({
                 Your ad
               </h2>
               <p className="mb-5 text-sm text-gray-600 dark:text-gray-400">
-                Keep it short and specific. The preview on the right is exactly
-                what readers see.
+                Keep it short and specific. The preview shows the card readers
+                will see.
               </p>
+              <RequiredNote />
 
               <div className="space-y-4">
                 <div>
-                  <label className={label}>
-                    Headline{" "}
-                    <span className="font-normal text-gray-400">
-                      {headline.length}/{AD_LIMITS.headline}
+                  <label htmlFor={fid("headline")} className={labelClass}>
+                    <span>
+                      Headline <Req />
                     </span>
+                    <Counter value={headline} max={AD_LIMITS.headline} />
                   </label>
                   <input
+                    {...aria("headline")}
                     value={headline}
-                    onChange={(e) => setHeadline(e.target.value)}
+                    onChange={(e) => {
+                      setHeadline(e.target.value);
+                      clearError("headline");
+                    }}
                     maxLength={AD_LIMITS.headline}
                     placeholder="Ship your API docs in an afternoon"
-                    className={input}
+                    className={inputClass("headline")}
                   />
+                  <FieldError field="headline" errors={errors} />
                 </div>
 
                 <div>
-                  <label className={label}>
-                    Body{" "}
-                    <span className="font-normal text-gray-400">
-                      {body.length}/{AD_LIMITS.body}
+                  <label htmlFor={fid("body")} className={labelClass}>
+                    <span>
+                      Description <Opt />
                     </span>
+                    <Counter value={body} max={AD_LIMITS.body} />
                   </label>
                   <textarea
+                    {...aria("body")}
                     value={body}
-                    onChange={(e) => setBody(e.target.value)}
+                    onChange={(e) => {
+                      setBody(e.target.value);
+                      clearError("body");
+                    }}
                     maxLength={AD_LIMITS.body}
                     rows={3}
                     placeholder="Generate a full reference site from your OpenAPI spec. Free for open source."
-                    className={input}
+                    className={inputClass("body")}
                   />
+                  <HelpText>Readers see up to two lines.</HelpText>
+                  <FieldError field="body" errors={errors} />
                 </div>
 
                 <div>
-                  <label className={label}>Image URL (optional)</label>
+                  <label htmlFor={fid("imageUrl")} className={labelClass}>
+                    <span>
+                      Image link <Opt />
+                    </span>
+                  </label>
                   <input
+                    {...aria("imageUrl")}
                     value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
+                    onChange={(e) => {
+                      setImageUrl(e.target.value);
+                      clearError("imageUrl");
+                    }}
                     onBlur={() => setImageUrl(normalizeUrl(imageUrl))}
                     placeholder="https://acme.com/banner.png"
-                    className={input}
+                    className={inputClass("imageUrl")}
                   />
+                  <HelpText>
+                    A direct link to a JPG, PNG or WebP. Wide images (about
+                    1200 × 400) suit the feed and articles. The sidebar shows a
+                    small square crop.
+                  </HelpText>
+                  <FieldError field="imageUrl" errors={errors} />
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-[1fr_10rem]">
+                <div className="grid gap-4 sm:grid-cols-[1fr_11rem]">
                   <div>
-                    <label className={label}>Destination URL</label>
+                    <label htmlFor={fid("destinationUrl")} className={labelClass}>
+                      <span>
+                        Link to your site <Req />
+                      </span>
+                    </label>
                     <input
+                      {...aria("destinationUrl")}
                       value={destinationUrl}
-                      onChange={(e) => setDestinationUrl(e.target.value)}
+                      onChange={(e) => {
+                        setDestinationUrl(e.target.value);
+                        clearError("destinationUrl");
+                      }}
                       onBlur={() => setDestinationUrl(normalizeUrl(destinationUrl))}
                       placeholder="https://acme.com/pricing"
-                      className={input}
+                      className={inputClass("destinationUrl")}
                     />
+                    <HelpText>Where a click takes the reader.</HelpText>
+                    <FieldError field="destinationUrl" errors={errors} />
                   </div>
                   <div>
-                    <label className={label}>Button label</label>
+                    <label htmlFor={fid("ctaLabel")} className={labelClass}>
+                      <span>
+                        Button text <Req />
+                      </span>
+                      <Counter value={ctaLabel} max={AD_LIMITS.ctaLabel} />
+                    </label>
                     <input
+                      {...aria("ctaLabel")}
                       value={ctaLabel}
-                      onChange={(e) => setCtaLabel(e.target.value)}
+                      onChange={(e) => {
+                        setCtaLabel(e.target.value);
+                        clearError("ctaLabel");
+                      }}
                       maxLength={AD_LIMITS.ctaLabel}
-                      className={input}
+                      className={inputClass("ctaLabel")}
                     />
+                    <FieldError field="ctaLabel" errors={errors} />
                   </div>
                 </div>
               </div>
@@ -656,24 +1012,24 @@ export default function CampaignBuilder({
           {step === 3 && (
             <>
               <h2 className="mb-1 text-lg font-bold text-gray-900 dark:text-white">
-                Ready to submit
+                Check and submit
               </h2>
               <p className="mb-5 text-sm text-gray-600 dark:text-gray-400">
-                We review every campaign by hand, usually within 24 hours.
-                You&apos;re not charged until it&apos;s approved.
+                Submitting is free. You&apos;re only charged after a person
+                approves your ad.
               </p>
 
               <dl className="divide-y divide-gray-100 text-sm dark:divide-gray-800">
                 {[
-                  ["Campaign", name || "—"],
+                  ["Campaign", name || "Not set"],
                   ["Placement", AD_PLACEMENTS[placement].name],
                   [
                     "Length",
-                    `${days} days at ${formatCentsShort(quote.dayRateCents)}/day`,
+                    `${days} days at ${formatCentsShort(quote.dayRateCents)} a day`,
                   ],
                   [
                     "Runs",
-                    `${fmtDay(runWindow.start)} – ${fmtDay(runWindow.lastDay)}`,
+                    `${fmtDay(runWindow.start)} to ${fmtDay(runWindow.lastDay)}`,
                   ],
                   ...(quote.discountPercent > 0
                     ? [
@@ -683,32 +1039,60 @@ export default function CampaignBuilder({
                         ] as [string, string],
                       ]
                     : []),
-                  ["Total", formatCents(quote.priceCents)],
-                  ["Destination", destinationUrl || "—"],
+                  ["Total (USD)", formatCents(quote.priceCents)],
+                  ["Link", normalizeUrl(destinationUrl) || "Not set"],
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-4 py-2.5">
-                    <dt className="text-gray-500 dark:text-gray-400">{k}</dt>
-                    <dd className="truncate text-right font-medium text-gray-900 dark:text-white">
+                    <dt className="shrink-0 text-gray-600 dark:text-gray-400">
+                      {k}
+                    </dt>
+                    <dd className="min-w-0 break-all text-right font-medium text-gray-900 dark:text-white">
                       {v}
                     </dd>
                   </div>
                 ))}
               </dl>
 
-              <p className="mt-4 rounded-lg bg-gray-50 px-3 py-2.5 text-xs text-gray-600 dark:bg-gray-800/60 dark:text-gray-400">
-                {formatCents(quote.priceCents)} is the whole cost. Nothing is
-                metered and there is nothing further to pay. If review or
-                checkout runs past your start date, we move the start to the day
-                you pay so you still get all {days} days.
-              </p>
+              <div className="mt-5 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/60">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  What happens next
+                </p>
+                <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm text-gray-600 dark:text-gray-400">
+                  <li>
+                    A person reviews your ad, usually within 24 hours. We email{" "}
+                    {contactEmail.trim() || "you"} with the decision.
+                  </li>
+                  <li>
+                    Once it&apos;s approved, you pay{" "}
+                    {formatCents(quote.priceCents)} (USD) once, from your
+                    campaign page. Nothing renews.
+                  </li>
+                  <li>
+                    Your ad runs {fmtDay(runWindow.start)} to{" "}
+                    {fmtDay(runWindow.lastDay)}. If you pay after the start
+                    date, the dates move so you still get all {days} days.
+                  </li>
+                </ol>
+              </div>
             </>
           )}
 
+          {formError && (
+            <div
+              role="alert"
+              className="mt-5 flex gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300"
+            >
+              <FaExclamationTriangle className="mt-0.5 shrink-0" />
+              <p>{formError}</p>
+            </div>
+          )}
+
           {/* ── NAV ──────────────────────────────────────────────────── */}
-          <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-5 dark:border-gray-800">
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-5 dark:border-gray-800">
             <button
-              onClick={() => setStep((s) => Math.max(0, s - 1))}
-              disabled={step === 0 || saving}
+              type="button"
+              onClick={() => goTo(Math.max(0, step - 1))}
+              disabled={step === 0 || !!saving}
               className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 disabled:opacity-40 dark:text-gray-400 dark:hover:bg-gray-800"
             >
               Back
@@ -716,26 +1100,33 @@ export default function CampaignBuilder({
 
             {step < STEPS.length - 1 ? (
               <button
+                type="button"
                 onClick={next}
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
               >
                 Continue <FaArrowRight />
               </button>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
-                  onClick={() => submit(false)}
-                  disabled={saving}
+                  type="button"
+                  onClick={() => save(false)}
+                  disabled={!!saving}
                   className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                 >
-                  Save draft
+                  {saving === "draft"
+                    ? "Saving…"
+                    : isEdit
+                      ? "Save changes"
+                      : "Save draft"}
                 </button>
                 <button
-                  onClick={() => submit(true)}
-                  disabled={saving}
+                  type="button"
+                  onClick={() => save(true)}
+                  disabled={!!saving}
                   className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {saving ? "Submitting…" : "Submit for review"}
+                  {saving === "submit" ? "Submitting…" : "Submit for review"}
                 </button>
               </div>
             )}
@@ -743,35 +1134,45 @@ export default function CampaignBuilder({
         </div>
 
         {/* ── PREVIEW + QUOTE ────────────────────────────────────────── */}
-        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-              Preview
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
+              Preview · {AD_PLACEMENTS[placement].name}
             </p>
+            {/* Mirrors AdSlot's markup, so this is the card readers get. */}
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-              {imageUrl && placement !== "sidebar" && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={imageUrl}
-                  alt=""
-                  className="h-32 w-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
+              {previewImage && !isSidebar && (
+                <PreviewImage
+                  key={previewImage}
+                  src={previewImage}
+                  className="h-40 w-full object-cover"
                 />
               )}
               <div className="p-4">
-                <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-                  Sponsored
-                </span>
-                <h3 className="mt-2 font-semibold leading-snug text-gray-900 dark:text-white">
-                  {headline || "Your headline goes here"}
-                </h3>
-                {(body || !headline) && (
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    {body || "A sentence about what you're offering."}
-                  </p>
-                )}
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                    Sponsored
+                  </span>
+                </div>
+                <div className={isSidebar && previewImage ? "flex gap-3" : ""}>
+                  {previewImage && isSidebar && (
+                    <PreviewImage
+                      key={previewImage}
+                      src={previewImage}
+                      className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <h3 className="font-semibold leading-snug text-gray-900 dark:text-white">
+                      {headline || "Your headline goes here"}
+                    </h3>
+                    {(body || !headline) && (
+                      <p className="mt-1 line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
+                        {body || "A sentence about what you're offering."}
+                      </p>
+                    )}
+                  </div>
+                </div>
                 <span className="mt-3 inline-block text-sm font-semibold text-blue-600 dark:text-blue-400">
                   {ctaLabel || "Learn more"} →
                 </span>
@@ -779,48 +1180,164 @@ export default function CampaignBuilder({
             </div>
           </div>
 
-          {/* The quote. Every line is exact — this is what the card is charged. */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-              Your booking
-            </p>
-
-            <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-              {formatCents(quote.priceCents)}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {AD_PLACEMENTS[placement].name} · {days} day
-              {days === 1 ? "" : "s"}
-            </p>
-
-            <dl className="mt-4 space-y-1.5 border-t border-gray-100 pt-3 text-xs dark:border-gray-800">
-              <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">
-                  {formatCentsShort(quote.dayRateCents)} × {days} days
-                </dt>
-                <dd className="text-gray-700 dark:text-gray-300">
-                  {formatCents(quote.grossCents)}
-                </dd>
-              </div>
-              {quote.discountPercent > 0 && (
-                <div className="flex justify-between font-medium text-emerald-600 dark:text-emerald-400">
-                  <dt>Length discount ({quote.discountPercent}%)</dt>
-                  <dd>−{formatCents(quote.savingsCents)}</dd>
-                </div>
-              )}
-              <div className="flex justify-between border-t border-gray-100 pt-1.5 font-semibold text-gray-900 dark:border-gray-800 dark:text-white">
-                <dt>Total</dt>
-                <dd>{formatCents(quote.priceCents)}</dd>
-              </div>
-            </dl>
-
-            <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
-              <FaRegClock className="mt-0.5 shrink-0" />
-              Paid once. Nothing metered, nothing to top up.
-            </p>
+          {/* The quote. Every line is exact: this is what the card is charged. */}
+          <div className="hidden rounded-xl border border-gray-200 bg-white p-4 lg:block dark:border-gray-800 dark:bg-gray-900">
+            <QuoteDetails quote={quote} placement={placement} days={days} />
           </div>
         </aside>
       </div>
+
+      {/* Phones: the quote panel sits below the form, out of sight while
+          editing, so keep the total pinned to the bottom of the screen. */}
+      <div className="sticky bottom-0 z-10 -mx-4 mt-6 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden dark:border-gray-800 dark:bg-gray-900/95">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {AD_PLACEMENTS[placement].name} · {days} day{days === 1 ? "" : "s"}
+              {quote.discountPercent > 0 && ` · ${quote.discountPercent}% off`}
+            </p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">
+              {formatCents(quote.priceCents)}{" "}
+              <span className="text-xs font-normal text-gray-500 dark:text-gray-400">
+                USD, paid once after approval
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ──────────────────────────── small pieces ──────────────────────────── */
+
+function Req() {
+  return (
+    <span className="text-red-600 dark:text-red-400" aria-hidden="true">
+      *
+    </span>
+  );
+}
+
+function Opt() {
+  return (
+    <span className="font-normal text-gray-500 dark:text-gray-400">
+      (optional)
+    </span>
+  );
+}
+
+function RequiredNote() {
+  return (
+    <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
+      Fields marked <Req /> are required.
+    </p>
+  );
+}
+
+function HelpText({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{children}</p>
+  );
+}
+
+function Counter({ value, max }: { value: string; max: number }) {
+  const near = value.length >= max * 0.9;
+  return (
+    <span
+      className={`text-xs font-normal tabular-nums ${
+        near ? "text-amber-700 dark:text-amber-400" : "text-gray-500 dark:text-gray-400"
+      }`}
+    >
+      {value.length}/{max}
+    </span>
+  );
+}
+
+function FieldError({ field, errors }: { field: Field; errors: FieldErrors }) {
+  if (!errors[field]) return null;
+  return (
+    <p
+      id={`${fid(field)}-error`}
+      className="mt-1.5 flex items-start gap-1.5 text-xs font-medium text-red-600 dark:text-red-400"
+    >
+      <FaExclamationTriangle className="mt-0.5 shrink-0" />
+      {errors[field]}
+    </p>
+  );
+}
+
+/**
+ * Preview image that says so when it can't load, instead of silently
+ * vanishing. Keyed by URL by the caller, so fixing a broken link retries.
+ */
+function PreviewImage({ src, className }: { src: string; className: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <div
+        className={`${className} flex items-center justify-center bg-gray-100 p-1 text-center text-[10px] leading-tight text-gray-600 dark:bg-gray-800 dark:text-gray-400`}
+      >
+        Image couldn&apos;t load
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="" className={className} onError={() => setFailed(true)} />
+  );
+}
+
+function QuoteDetails({
+  quote,
+  placement,
+  days,
+}: {
+  quote: ReturnType<typeof quotePrice>;
+  placement: AdPlacement;
+  days: number;
+}) {
+  return (
+    <>
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
+        Your booking
+      </p>
+
+      <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+        {formatCents(quote.priceCents)}
+        <span className="ml-1 text-sm font-normal text-gray-500 dark:text-gray-400">
+          USD
+        </span>
+      </p>
+      <p className="text-xs text-gray-600 dark:text-gray-400">
+        {AD_PLACEMENTS[placement].name} · {days} day{days === 1 ? "" : "s"}
+      </p>
+
+      <dl className="mt-4 space-y-1.5 border-t border-gray-100 pt-3 text-xs dark:border-gray-800">
+        <div className="flex justify-between">
+          <dt className="text-gray-600 dark:text-gray-400">
+            {formatCentsShort(quote.dayRateCents)} × {days} days
+          </dt>
+          <dd className="text-gray-700 dark:text-gray-300">
+            {formatCents(quote.grossCents)}
+          </dd>
+        </div>
+        {quote.discountPercent > 0 && (
+          <div className="flex justify-between font-medium text-emerald-700 dark:text-emerald-400">
+            <dt>Length discount ({quote.discountPercent}%)</dt>
+            <dd>−{formatCents(quote.savingsCents)}</dd>
+          </div>
+        )}
+        <div className="flex justify-between border-t border-gray-100 pt-1.5 font-semibold text-gray-900 dark:border-gray-800 dark:text-white">
+          <dt>Total</dt>
+          <dd>{formatCents(quote.priceCents)}</dd>
+        </div>
+      </dl>
+
+      <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-relaxed text-gray-600 dark:text-gray-400">
+        <FaRegClock className="mt-0.5 shrink-0" />
+        Paid once, after approval. Nothing metered, nothing renews.
+      </p>
     </>
   );
 }
@@ -829,7 +1346,7 @@ export default function CampaignBuilder({
  * Live slot availability for the chosen window.
  *
  * Deliberately shown while the advertiser is still picking dates rather than as
- * a rejection after they have written their copy — a fully booked fortnight is
+ * a rejection after they have written their copy: a fully booked fortnight is
  * a scheduling problem, and it should read like one.
  */
 function SlotNotice({
@@ -843,7 +1360,7 @@ function SlotNotice({
 }) {
   if (checking && !availability) {
     return (
-      <p className="text-xs text-gray-500 dark:text-gray-400">
+      <p className="text-xs text-gray-600 dark:text-gray-400" aria-live="polite">
         Checking availability…
       </p>
     );
@@ -854,16 +1371,19 @@ function SlotNotice({
 
   if (!availability.isAvailable) {
     return (
-      <div className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/30">
-        <FaExclamationTriangle className="mt-0.5 shrink-0 text-amber-500" />
+      <div
+        aria-live="polite"
+        className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/30"
+      >
+        <FaExclamationTriangle className="mt-0.5 shrink-0 text-amber-600" />
         <div>
           <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
             Fully booked for those dates
           </p>
-          <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-400">
+          <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-400">
             All {availability.capacity} {placementName} spots are taken for part
             of that window. Try a later start date, a shorter run, or another
-            placement — you can still save this as a draft.
+            placement. You can still save this as a draft.
           </p>
         </div>
       </div>
@@ -871,11 +1391,14 @@ function SlotNotice({
   }
 
   return (
-    <div className="flex gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-900 dark:bg-emerald-950/30">
-      <FaCheckCircle className="mt-0.5 shrink-0 text-emerald-500" />
+    <div
+      aria-live="polite"
+      className="flex gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-900 dark:bg-emerald-950/30"
+    >
+      <FaCheckCircle className="mt-0.5 shrink-0 text-emerald-600" />
       <p className="text-xs text-emerald-800 dark:text-emerald-300">
-        <strong>Available</strong> — {availability.available} of{" "}
-        {availability.capacity} {placementName} spots open for those dates.
+        <strong>Available.</strong> {availability.available} of{" "}
+        {availability.capacity} {placementName} spots are open for those dates.
       </p>
     </div>
   );

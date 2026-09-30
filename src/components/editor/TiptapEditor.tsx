@@ -73,7 +73,7 @@ export default function TiptapEditor({ value, onChange }: any) {
       Link.configure({
         openOnClick: true,
         HTMLAttributes: {
-          rel: "noopener noreferrer nofollow",
+          rel: "noopener nofollow",
           target: "_blank",
           class: "text-blue-600 underline dark:text-blue-400",
         },

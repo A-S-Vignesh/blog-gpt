@@ -8,6 +8,57 @@ import { NextResponse } from "next/server";
 import { ApiError, apiErrorResponse } from "@/lib/api/errors";
 import { revalidateTag } from "next/cache";
 import { postDetailTag } from "@/lib/data/posts";
+import { deleteNotificationsForComments } from "@/lib/notifications";
+
+/**
+ * One comment on its own, for deep links (`/{user}/{slug}#comment-<id>`, used
+ * by notifications) whose target the post page didn't render: an older
+ * comment past the first page, or a reply inside a collapsed thread.
+ * Comments are public, so no session is required.
+ */
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    if (!Types.ObjectId.isValid(id)) {
+      throw new ApiError("BAD_REQUEST", "Invalid comment id.");
+    }
+
+    await connectToDatabase();
+
+    const comment = await Comment.findById(id)
+      .populate("userId", "name username image")
+      .lean<any>();
+    if (!comment || !comment.userId) {
+      throw new ApiError("NOT_FOUND", "Comment not found.");
+    }
+
+    const [replyCount, parent] = await Promise.all([
+      Comment.countDocuments({ parentCommentId: comment._id }),
+      comment.parentCommentId
+        ? Comment.findById(comment.parentCommentId)
+            .select("content userId")
+            .populate("userId", "username")
+            .lean<any>()
+        : null,
+    ]);
+
+    return NextResponse.json({
+      comment: { ...comment, replyCount },
+      parent: parent
+        ? {
+            _id: String(parent._id),
+            username: parent.userId?.username ?? null,
+            content: String(parent.content ?? "").slice(0, 200),
+          }
+        : null,
+    });
+  } catch (err) {
+    return apiErrorResponse(err);
+  }
+}
 
 export async function DELETE(
   req: Request,
@@ -57,10 +108,10 @@ export async function DELETE(
       for (const c of children) ids.add(String(c._id));
     }
 
-    const deleteRes = await Comment.deleteMany({
-      _id: { $in: Array.from(ids).map((s) => new Types.ObjectId(s)) },
-    });
+    const idList = Array.from(ids).map((s) => new Types.ObjectId(s));
+    const deleteRes = await Comment.deleteMany({ _id: { $in: idList } });
     const removed = deleteRes.deletedCount ?? 0;
+    await deleteNotificationsForComments(idList);
     if (removed > 0) {
       // `timestamps: false`: deleting a comment is engagement, not a content
       // edit, so it must not bump the post's `updatedAt`.

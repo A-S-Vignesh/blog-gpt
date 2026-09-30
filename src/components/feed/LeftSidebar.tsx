@@ -12,8 +12,10 @@ import {
   FaTimes,
   FaPenAlt,
   FaShieldAlt,
-  FaBullhorn,
+  FaBell,
 } from "react-icons/fa";
+import { formatUnreadBadge } from "@/types/notification";
+import { useUnreadNotificationCount } from "@/components/notifications/useUnreadCount";
 
 const LeftSidebar = ({
   user,
@@ -23,6 +25,7 @@ const LeftSidebar = ({
   onClose?: () => void;
 }) => {
   const pathname = usePathname();
+  const { data: unreadCount = 0 } = useUnreadNotificationCount(!!user);
 
   // The /[username] route canonicalizes to lowercase (mixed-case URLs 301 to
   // their lowercase form), so the live pathname is always lowercase. Build the
@@ -33,9 +36,22 @@ const LeftSidebar = ({
     ? `/${user.username.toLowerCase()}`
     : undefined;
 
-  const navItems = [
+  const navItems: {
+    id: string;
+    label: string;
+    href: string;
+    icon: React.ReactNode;
+    badge?: number;
+  }[] = [
     { id: "home", label: "Home", href: "/feed", icon: <FaHome /> },
     { id: "explore", label: "Explore", href: "/explore", icon: <FaCompass /> },
+    {
+      id: "notifications",
+      label: "Notifications",
+      href: "/notifications",
+      icon: <FaBell />,
+      badge: unreadCount,
+    },
     {
       id: "bookmarks",
       label: "Bookmarks",
@@ -49,12 +65,9 @@ const LeftSidebar = ({
       icon: <FaUser />,
     },
     { id: "settings", label: "Settings", href: "/settings", icon: <FaCog /> },
-    {
-      id: "advertise",
-      label: "Advertise",
-      href: "/advertise",
-      icon: <FaBullhorn />,
-    },
+    // Advertise is deliberately NOT here: it is for the few people buying ads,
+    // not for reading or writing. It lives in the avatar menu, the footer, and
+    // the empty sidebar ad slot on /feed instead.
     // Admin-only entry. The role comes from the session, which is a mirror of
     // the DB refreshed every 5 minutes — good enough to decide whether to draw
     // a link, and never relied on by /admin itself, which re-checks the role
@@ -132,8 +145,20 @@ const LeftSidebar = ({
                 {item.icon}
               </span>
               {item.label}
+              {!!item.badge && item.badge > 0 && (
+                <span
+                  aria-label={`${formatUnreadBadge(item.badge)} unread`}
+                  className="ml-auto min-w-[22px] h-[22px] px-1.5 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center"
+                >
+                  {formatUnreadBadge(item.badge)}
+                </span>
+              )}
               {active && (
-                <span className="ml-auto w-1.5 h-5 rounded-full bg-blue-600 dark:bg-blue-400" />
+                <span
+                  className={`${
+                    item.badge ? "ml-2" : "ml-auto"
+                  } w-1.5 h-5 rounded-full bg-blue-600 dark:bg-blue-400`}
+                />
               )}
             </Link>
           );

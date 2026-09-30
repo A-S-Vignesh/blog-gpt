@@ -50,7 +50,7 @@ const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
           ...attribs,
           href,
           target: "_blank",
-          rel: "nofollow noopener noreferrer",
+          rel: "nofollow noopener",
         },
       };
     },

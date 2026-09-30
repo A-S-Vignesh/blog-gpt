@@ -7,6 +7,13 @@ import CommonFooter from "@/components/CommonFooter";
 import { useState } from "react";
 import { FaBars } from "react-icons/fa";
 
+// Every page in the shell gets its side/top spacing and max width from here,
+// so pages must not add their own padding or max-w wrapper; that is how they
+// drifted apart. Shared by the guest and signed-in layouts so a public page
+// (profile, post, explore) lines up the same either way.
+const PAGE_GUTTERS = "px-4 sm:px-6 lg:px-8 py-6 sm:py-8";
+const PAGE_WIDTH = "max-w-6xl mx-auto";
+
 export default function AppShell({
   user,
   children,
@@ -27,7 +34,9 @@ export default function AppShell({
   if (!isLoggedIn) {
     return (
       <>
-        <main className="w-full flex-1">{children}</main>
+        <main className={`w-full flex-1 ${PAGE_GUTTERS}`}>
+          <div className={PAGE_WIDTH}>{children}</div>
+        </main>
         <CommonFooter inShell />
       </>
     );
@@ -65,8 +74,8 @@ export default function AppShell({
             INSIDE this column so it sits to the right of the sidebar and never
             slides under it. ──────────────────────────────────────────────── */}
       <div className="flex-1 min-w-0 lg:ml-64 flex flex-col">
-        <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 py-6">
-          <div className="flex gap-6 max-w-7xl mx-auto">
+        <main className={`flex-1 w-full ${PAGE_GUTTERS}`}>
+          <div className={`flex gap-6 ${PAGE_WIDTH}`}>
             <div className="flex-1 min-w-0">{children}</div>
 
             {/* ── RIGHT SIDEBAR — sticky, scrolls with page ─────────── */}

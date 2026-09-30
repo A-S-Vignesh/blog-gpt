@@ -8,12 +8,12 @@ import { User } from "../src/models/User";
  * hardcoded admin email anywhere in the app, and no env var that grants
  * privilege. This script is the one supported way to mint the first admin:
  *
- *   npm run admin:promote -- asvicki2002@gmail.com
- *   npm run admin:promote -- someone@example.com --role=user   # demote
- *   npm run admin:promote -- --list                            # show admins
+ *   pnpm admin:promote asvicki2002@gmail.com
+ *   pnpm admin:promote someone@example.com --role=user   # demote
+ *   pnpm admin:promote --list                            # show admins
  *
- * Requires MONGODB_URI in the environment. The npm script loads .env and
- * .env.local for you.
+ * Requires MONGODB_URI in the environment. The package.json script loads .env
+ * and .env.local for you.
  */
 
 const VALID_ROLES = ["admin", "author", "user"] as const;
@@ -39,9 +39,9 @@ async function main() {
   }
   if (!listOnly && !email) {
     console.error(
-      "Usage: npm run admin:promote -- <email> [--role=admin|author|user]",
+      "Usage: pnpm admin:promote <email> [--role=admin|author|user]",
     );
-    console.error("       npm run admin:promote -- --list");
+    console.error("       pnpm admin:promote --list");
     process.exit(1);
   }
 

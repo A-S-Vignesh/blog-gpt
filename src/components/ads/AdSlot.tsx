@@ -30,17 +30,22 @@ type ServedAd = {
  *    redirects. The destination never reaches the browser until then, so it
  *    cannot be scraped out of the feed.
  *
- * When there is no eligible campaign this renders null — no placeholder, no
- * layout shift, no "advertisement" label hanging over empty space.
+ * When there is no eligible campaign this renders `fallback` (default: null —
+ * no placeholder, no "advertisement" label hanging over empty space). The
+ * fallback only appears once the serve call has answered, so it never flashes
+ * in front of a paid ad that is still loading.
  */
 export default function AdSlot({
   placement,
   className = "",
+  fallback = null,
 }: {
   placement: AdPlacement;
   className?: string;
+  fallback?: React.ReactNode;
 }) {
   const [ad, setAd] = useState<ServedAd | null>(null);
+  const [settled, setSettled] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   const recorded = useRef(false);
 
@@ -53,6 +58,9 @@ export default function AdSlot({
       })
       .catch(() => {
         // A failed ad fetch is not worth surfacing to a reader.
+      })
+      .finally(() => {
+        if (!cancelled) setSettled(true);
       });
     return () => {
       cancelled = true;
@@ -85,7 +93,7 @@ export default function AdSlot({
     return () => observer.disconnect();
   }, [ad]);
 
-  if (!ad) return null;
+  if (!ad) return settled ? <>{fallback}</> : null;
 
   const isSidebar = ad.placement === "sidebar";
 

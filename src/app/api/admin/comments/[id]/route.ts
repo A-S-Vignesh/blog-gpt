@@ -9,6 +9,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import Comment from "@/models/Comment";
 import Post from "@/models/Post";
 import { postDetailTag } from "@/lib/data/posts";
+import { deleteNotificationsForComments } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -65,10 +66,10 @@ export async function DELETE(
       for (const c of children) ids.add(String(c._id));
     }
 
-    const deleteRes = await Comment.deleteMany({
-      _id: { $in: Array.from(ids).map((s) => new Types.ObjectId(s)) },
-    });
+    const idList = Array.from(ids).map((s) => new Types.ObjectId(s));
+    const deleteRes = await Comment.deleteMany({ _id: { $in: idList } });
     const removed = deleteRes.deletedCount ?? 0;
+    await deleteNotificationsForComments(idList);
 
     if (removed > 0) {
       // `timestamps: false`: removing a comment is engagement, not a content

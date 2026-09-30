@@ -45,14 +45,8 @@ export default async function ExplorePage() {
   const initialPage = await getPaginatedPosts({ skip: 0 });
 
   return (
-    <div className="min-h-screen bg-white dark:bg-dark-100 py-6">
-      {/* `max-w-7xl mx-auto` keeps content from stretching edge-to-edge on
-          wide monitors for guests (who don't get the AppShell sidebar offset
-          to constrain the layout). Side padding scales with breakpoint so
-          there's a comfortable gutter at every screen size. */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-12 xl:px-16">
-        <ExploreClient initialPage={initialPage as any} />
-      </div>
-    </div>
+    // Width and padding come from AppShell (for guests too), same as every
+    // other page.
+    <ExploreClient initialPage={initialPage as any} />
   );
 }

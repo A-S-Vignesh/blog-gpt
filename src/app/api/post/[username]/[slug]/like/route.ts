@@ -9,6 +9,11 @@ import { rateLimit } from "@/lib/rateLimit";
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { postDetailTag } from "@/lib/data/posts";
+import {
+  likeDedupeKey,
+  notify,
+  retractNotification,
+} from "@/lib/notifications";
 
 /**
  * Idempotent SET — the client tells us the desired state, not a toggle.
@@ -75,16 +80,30 @@ export async function POST(
     }
     const postId = owner._id as Types.ObjectId;
 
+    const postAuthorId = (owner.creator as any)._id as Types.ObjectId;
+
     if (desired) {
       // Idempotent insert: $setOnInsert + upsert never errors on duplicates.
-      await Like.updateOne(
+      const r = await Like.updateOne(
         { user: userId, post: postId },
         { $setOnInsert: { user: userId, post: postId } },
         { upsert: true },
       );
+      // Notify only on a NEW like, not on a repeat of an existing one.
+      if ((r.upsertedCount ?? 0) > 0) {
+        await notify({
+          type: "like",
+          recipient: postAuthorId,
+          actor: userId,
+          post: postId,
+        });
+      }
     } else {
       // Idempotent delete: ignored if no doc exists.
       await Like.deleteOne({ user: userId, post: postId });
+      // Unconditional, so a stale notification heals even if the Like row
+      // was already gone.
+      await retractNotification(likeDedupeKey(postId, userId));
     }
 
     // Recompute the count from the source of truth. This single extra

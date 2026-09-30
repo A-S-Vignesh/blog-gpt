@@ -18,6 +18,7 @@ const NON_APP_FIRST_SEGMENTS = new Set<string>([
   "", // root /
   "about",
   "account",
+  "advertise",
   "api",
   "auth",
   "contact",
@@ -53,6 +54,7 @@ const Footer = ({ inShell = false }: { inShell?: boolean }) => {
   if (!inShell && isAppShellRoute(pathname)) return null;
 
   const footerLinks = [
+    { name: "Advertise", href: "/advertise" },
     { name: "Terms of Use", href: "/terms-of-use" },
     { name: "Privacy Policy", href: "/privacy-policy" },
     { name: "Cookie Policy", href: "/cookies-policy" },

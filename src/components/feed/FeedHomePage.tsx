@@ -7,9 +7,10 @@ import RecentPosts from "@/components/feed/RecentPosts";
 
 export default function FeedHomepage({ user }: { user: any }) {
   return (
-    <div className="min-h-screen bg-white dark:bg-dark-100">
+    // Width and padding come from AppShell, same as every other page.
+    <div>
       {/* 📰 FEED */}
-      <div className="w-full max-w-4xl mx-auto px-4 py-6">
+      <div>
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Welcome back, {user?.name?.split(" ")[0] || "there"}! 👋

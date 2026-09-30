@@ -28,21 +28,20 @@ export default async function BookmarksPage() {
   const initialPage = await getUserBookmarks(session.user._id);
 
   return (
-    <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-6">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <FaBookmark className="text-yellow-500" />
-            Your bookmarks
-          </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Posts you've saved to read later. Removing a bookmark here doesn't
-            delete the post, only your saved copy of the link.
-          </p>
-        </header>
+    // Width and padding come from AppShell, same as every other page.
+    <div>
+      <header className="mb-8">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+          <FaBookmark className="text-yellow-500" />
+          Your bookmarks
+        </h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">
+          Posts you've saved to read later. Removing a bookmark here doesn't
+          delete the post, only your saved copy of the link.
+        </p>
+      </header>
 
-        <BookmarksClient initialPage={initialPage} />
-      </div>
+      <BookmarksClient initialPage={initialPage} />
     </div>
   );
 }

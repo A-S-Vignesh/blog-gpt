@@ -12,8 +12,8 @@ import Post from "../src/models/Post";
  * Writes use { timestamps: false } so the backfill never bumps `updatedAt`
  * (feeds sort by the immutable `date`, but we keep the invariant anyway).
  *
- *   DRY_RUN=1 npm run migrate:reading-time   # preview
- *   npm run migrate:reading-time             # apply
+ *   DRY_RUN=1 pnpm migrate:reading-time   # preview
+ *   pnpm migrate:reading-time             # apply
  */
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/blog";

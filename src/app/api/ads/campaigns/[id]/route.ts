@@ -8,7 +8,7 @@ import { rateLimit } from "@/lib/rateLimit";
 import AdCampaign from "@/models/AdCampaign";
 import Ad from "@/models/Ad";
 import { getCampaignDetail } from "@/lib/data/ads";
-import { parseCampaignInput } from "@/lib/ads/validate";
+import { parseCampaignInput, parseCreativeInput } from "@/lib/ads/validate";
 import { getSlotAvailability } from "@/lib/ads/serve";
 import { AD_PLACEMENTS, type AdPlacement } from "@/config/ads";
 
@@ -101,10 +101,44 @@ export async function PATCH(
             "Only a draft or rejected campaign can be edited. Book a new one to change the placement or dates.",
           );
         }
-        // Re-priced from the rate card on every edit — changing the placement
+        // A rejected campaign can be one that was paid, approved, then sent back
+        // to review by a new creative. Re-pricing it here would silently change
+        // what a paying customer bought, so paid bookings are not editable.
+        if (campaign.paymentStatus !== "unpaid") {
+          throw new ApiError(
+            "CONFLICT",
+            "This campaign is already paid for, so its booking can't be changed here. Contact us and we'll help.",
+          );
+        }
+        // Parse everything before writing anything, so a bad creative can't
+        // leave a half-updated campaign behind.
+        // Re-priced from the rate card on every edit: changing the placement
         // or the length changes what it costs, and the client never says so.
-        Object.assign(campaign, parseCampaignInput(body));
+        const campaignInput = parseCampaignInput(body);
+        const creativeInput = body?.creative
+          ? parseCreativeInput(body.creative)
+          : null;
+
+        Object.assign(campaign, campaignInput);
         await campaign.save();
+
+        if (creativeInput) {
+          // The builder edits a single creative. Update the first one in place
+          // (it keeps its id and any stats), or create it if none exists.
+          const first = await Ad.findOne({ campaign: campaign._id }).sort({
+            createdAt: 1,
+          });
+          if (first) {
+            Object.assign(first, creativeInput);
+            await first.save();
+          } else {
+            await Ad.create({
+              ...creativeInput,
+              campaign: campaign._id,
+              advertiser: userId,
+            });
+          }
+        }
         break;
       }
 
@@ -137,7 +171,7 @@ export async function PATCH(
         if (!slot.isAvailable) {
           throw new ApiError(
             "CONFLICT",
-            `The ${AD_PLACEMENTS[campaign.placement as AdPlacement]?.name ?? campaign.placement} slot is fully booked for those dates — all ${slot.capacity} spots are taken. Pick different dates or another placement, then submit again.`,
+            `The ${AD_PLACEMENTS[campaign.placement as AdPlacement]?.name ?? campaign.placement} slot is fully booked for those dates. All ${slot.capacity} spots are taken. Pick different dates or another placement, then submit again.`,
           );
         }
 
@@ -206,7 +240,7 @@ export async function DELETE(
     if (campaign.impressions > 0 || campaign.paymentStatus !== "unpaid") {
       throw new ApiError(
         "CONFLICT",
-        "A campaign that has been paid for or delivered can't be deleted — archive it instead, so its billing record survives.",
+        "A campaign that has been paid for or delivered can't be deleted. Archive it instead, so its billing record survives.",
       );
     }
     if (campaign.status === "pending_review") {

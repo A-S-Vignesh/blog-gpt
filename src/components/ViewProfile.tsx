@@ -66,8 +66,9 @@ const ViewProfile: React.FC<ViewProfileProps> = ({
           </p>
         </div>
       </section> */}
-      <section className="min-h-screen px-6 sm:px-16 md:px-20 lg:px-28 py-8 sm:py-10 bg-white dark:bg-dark-100">
-        <div className="max-w-6xl mx-auto">
+      {/* Width and padding come from AppShell, same as every other page. */}
+      <section>
+        <div>
           {/* Profile Card */}
           <div className="bg-white dark:bg-dark-100 rounded-2xl shadow-lg overflow-hidden mb-12 border-2 border-gray-200 dark:border-gray-700">
             <div className="relative">

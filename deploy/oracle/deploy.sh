@@ -47,12 +47,19 @@ echo "==> Pulling from GitHub"
 git pull --ff-only
 
 echo "==> Installing dependencies"
-npm ci --no-audit --no-fund
+# The repo uses pnpm (version pinned in package.json "packageManager").
+if ! command -v pnpm > /dev/null; then
+  echo "!! pnpm is not installed. Run once: sudo npm install -g pnpm@12.6.0" >&2
+  exit 1
+fi
+# --frozen-lockfile: install exactly what pnpm-lock.yaml says, and fail
+# instead of silently updating it (the pnpm equivalent of `npm ci`).
+pnpm install --frozen-lockfile
 
 # nice: the chat API shares these 2 cores; a lower priority keeps its
 # websockets responsive while Next compiles.
 echo "==> Building"
-nice -n 10 npm run build
+nice -n 10 pnpm run build
 
 RELEASE="$RELEASES_DIR/$(date -u +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)"
 echo "==> Assembling $RELEASE"

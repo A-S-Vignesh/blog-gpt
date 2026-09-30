@@ -1,15 +1,26 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { FaComments, FaCommentSlash } from "react-icons/fa";
+import { useCallback, useEffect, useState } from "react";
+import { FaComments, FaCommentSlash, FaTimes } from "react-icons/fa";
 import { useToast } from "@/provider/ToastProvider";
 import CommentForm from "./CommentForm";
 import CommentItem from "./CommentItem";
 import type { ClientComment } from "@/types/comment";
 
+type LinkedComment = {
+  comment: ClientComment;
+  parent: { _id: string; username: string | null; content: string } | null;
+};
+
+const COMMENT_HASH = /^#comment-([a-f0-9]{24})$/i;
+/** How long a deep-linked comment stays highlighted. */
+const HIGHLIGHT_MS = 4000;
+
 type Props = {
   username: string;
   slug: string;
+  /** Used to check that a deep-linked comment belongs to this post. */
+  postId?: string;
   postAuthorId: string;
   isPostOwner?: boolean;
   initialAllowComments?: boolean;
@@ -21,6 +32,7 @@ type Props = {
 export default function CommentList({
   username,
   slug,
+  postId,
   postAuthorId,
   isPostOwner = false,
   initialAllowComments = true,
@@ -35,6 +47,71 @@ export default function CommentList({
   const [loading, setLoading] = useState(false);
   const [allowComments, setAllowComments] = useState(initialAllowComments);
   const [togglingComments, setTogglingComments] = useState(false);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [linked, setLinked] = useState<LinkedComment | null>(null);
+
+  // Deep link to one comment (`#comment-<id>`, e.g. from a notification).
+  // If it's already on the page, scroll to it. If not (an older comment past
+  // the first page, or a reply in a collapsed thread), fetch it on its own
+  // and pin it above the list.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function focusFromHash() {
+      const match = COMMENT_HASH.exec(window.location.hash);
+      if (!match) return;
+      const id = match[1].toLowerCase();
+
+      const el = document.getElementById(`comment-${id}`);
+      if (el) {
+        setHighlightId(id);
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/comment/${id}`);
+        const data = (await res.json().catch(() => null)) as LinkedComment | null;
+        if (cancelled) return;
+        if (
+          !res.ok ||
+          !data?.comment ||
+          (postId && String(data.comment.postId) !== postId)
+        ) {
+          showToast("That comment is no longer available.", "info");
+          return;
+        }
+        setLinked(data);
+        setHighlightId(id);
+      } catch {
+        if (!cancelled) {
+          showToast("Couldn't load the linked comment.", "error");
+        }
+      }
+    }
+
+    void focusFromHash();
+    window.addEventListener("hashchange", focusFromHash);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("hashchange", focusFromHash);
+    };
+  }, [postId, showToast]);
+
+  // Scroll to the pinned comment once it has rendered.
+  useEffect(() => {
+    if (!linked) return;
+    document
+      .getElementById(`comment-${linked.comment._id}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [linked]);
+
+  // Let the highlight fade once the reader has found the comment.
+  useEffect(() => {
+    if (!highlightId) return;
+    const t = setTimeout(() => setHighlightId(null), HIGHLIGHT_MS);
+    return () => clearTimeout(t);
+  }, [highlightId]);
 
   const toggleComments = useCallback(async () => {
     if (togglingComments) return;
@@ -149,6 +226,48 @@ export default function CommentList({
         </div>
       )}
 
+      {linked && (
+        <div className="mb-6 rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/40 dark:bg-blue-950/20 px-4 pt-3">
+          <div className="flex items-center justify-between gap-3 text-xs font-semibold text-blue-700 dark:text-blue-300">
+            <span>
+              {linked.parent
+                ? `Linked reply${
+                    linked.parent.username
+                      ? ` to @${linked.parent.username}`
+                      : ""
+                  }`
+                : "Linked comment"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setLinked(null)}
+              aria-label="Dismiss linked comment"
+              className="p-1 rounded-md text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+            >
+              <FaTimes />
+            </button>
+          </div>
+          {linked.parent?.content && (
+            <p className="mt-2 text-xs text-gray-600 dark:text-gray-400 line-clamp-2 border-l-2 border-gray-300 dark:border-gray-700 pl-3">
+              {linked.parent.content}
+            </p>
+          )}
+          <CommentItem
+            comment={linked.comment}
+            username={username}
+            slug={slug}
+            postAuthorId={postAuthorId}
+            commentsEnabled={allowComments}
+            highlightedId={highlightId}
+            onDeleted={(id) => {
+              setLinked(null);
+              handleDeleted(id);
+            }}
+            onReplyPosted={handleReplyPosted}
+          />
+        </div>
+      )}
+
       {comments.length === 0 && allowComments ? (
         <p className="text-gray-500 dark:text-gray-400 text-sm italic py-6 text-center">
           Be the first to comment.
@@ -163,6 +282,7 @@ export default function CommentList({
               slug={slug}
               postAuthorId={postAuthorId}
               commentsEnabled={allowComments}
+              highlightedId={highlightId}
               onDeleted={handleDeleted}
               onReplyPosted={handleReplyPosted}
             />

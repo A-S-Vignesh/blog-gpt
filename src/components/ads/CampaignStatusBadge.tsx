@@ -50,6 +50,11 @@ const STATUS_META: Record<
   },
 };
 
+const SCHEDULED = {
+  label: "Scheduled",
+  className: "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
+};
+
 export default function CampaignStatusBadge({
   status,
   paymentStatus,
@@ -57,7 +62,12 @@ export default function CampaignStatusBadge({
   status: string;
   paymentStatus?: string;
 }) {
-  const meta = STATUS_META[status] ?? STATUS_META.draft;
+  // Approved AND paid means it is only waiting for its start date (the hourly
+  // job flips it to active then), so say that instead of a bare "Approved".
+  const meta =
+    status === "approved" && paymentStatus === "paid"
+      ? SCHEDULED
+      : (STATUS_META[status] ?? STATUS_META.draft);
   // An approved campaign that hasn't been paid for isn't running yet, and
   // saying only "Approved" would leave the advertiser waiting on us.
   const awaitingPayment =
@@ -71,7 +81,7 @@ export default function CampaignStatusBadge({
         {meta.label}
       </span>
       {awaitingPayment && (
-        <span className="rounded-full bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white">
+        <span className="rounded-full bg-amber-700 px-2 py-0.5 text-xs font-semibold text-white">
           Payment due
         </span>
       )}

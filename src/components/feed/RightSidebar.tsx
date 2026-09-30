@@ -1,8 +1,50 @@
 "use client";
 
 import Link from "next/link";
-import { FaLightbulb, FaQuestionCircle } from "react-icons/fa";
+import {
+  FaArrowRight,
+  FaBullhorn,
+  FaLightbulb,
+  FaQuestionCircle,
+} from "react-icons/fa";
 import AdSlot from "@/components/ads/AdSlot";
+import { AD_PLACEMENTS, formatCentsShort } from "@/config/ads";
+
+const SIDEBAR_DAY_RATE = formatCentsShort(AD_PLACEMENTS.sidebar.dayRateCents);
+
+/**
+ * House ad for the sidebar slot, shown only while no advertiser has booked it.
+ * It sits exactly where a paid ad would, so it explains itself, and it steps
+ * aside the moment a real campaign runs.
+ */
+function AdvertiseHereCard() {
+  return (
+    <Link
+      href="/advertise"
+      className="group block rounded-2xl border border-dashed border-blue-300 bg-linear-to-br from-blue-50 to-indigo-50 p-5 transition hover:border-blue-500 hover:shadow-md dark:border-blue-800 dark:from-blue-950/40 dark:to-indigo-950/30 dark:hover:border-blue-500"
+    >
+      <div className="flex items-center gap-2">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm text-white">
+          <FaBullhorn />
+        </span>
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">
+          Your ad here
+        </span>
+      </div>
+      <p className="mt-3 font-semibold leading-snug text-gray-900 dark:text-white">
+        Promote your product to The Blog GPT readers
+      </p>
+      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        Book this spot from {SIDEBAR_DAY_RATE} a day. One flat price, reviewed
+        by a person.
+      </p>
+      <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 dark:text-blue-400">
+        Advertise with us
+        <FaArrowRight className="text-xs transition group-hover:translate-x-0.5" />
+      </span>
+    </Link>
+  );
+}
 
 // Surfaced in the sidebar because the feed is an infinite scroll, so the page
 // footer is effectively unreachable (the same reason Instagram puts these here).
@@ -25,9 +67,10 @@ const RightSidebar = () => {
 
   return (
     <div className="space-y-8">
-      {/* Sponsored slot. Renders nothing at all when no campaign is eligible,
-          so the rail simply closes up rather than showing an empty box. */}
-      <AdSlot placement="sidebar" />
+      {/* Sponsored slot. When no campaign is eligible it shows our own
+          "advertise here" card, which is how advertisers find /advertise now
+          that it is no longer in the left nav. */}
+      <AdSlot placement="sidebar" fallback={<AdvertiseHereCard />} />
 
       {/* AI Tips */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6">

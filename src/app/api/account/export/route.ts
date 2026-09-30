@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { User } from "@/models/User";
 import Post from "@/models/Post";
 import Comment from "@/models/Comment";
+import Notification from "@/models/Notification";
 import { Subscription } from "@/models/Subscription";
 import { ApiError, apiErrorResponse } from "@/lib/api/errors";
 import { rateLimit } from "@/lib/rateLimit";
@@ -36,7 +37,7 @@ export async function GET() {
 
     await connectToDatabase();
 
-    const [user, posts, comments, subscriptions] = await Promise.all([
+    const [user, posts, comments, subscriptions, notifications] = await Promise.all([
       User.findById(userId)
         .select(
           "-__v -deletionCancelToken -razorpayCustomerId -razorpaySubscriptionId",
@@ -46,6 +47,10 @@ export async function GET() {
       Comment.find({ userId }).select("-__v").lean(),
       Subscription.find({ user: userId })
         .select("-__v -providerCustomerId")
+        .lean(),
+      Notification.find({ recipient: userId })
+        .select("-__v -dedupeKey")
+        .sort({ _id: -1 })
         .lean(),
     ]);
 
@@ -60,6 +65,7 @@ export async function GET() {
       posts,
       comments,
       subscriptions,
+      notifications,
     };
 
     return new Response(JSON.stringify(payload, null, 2), {

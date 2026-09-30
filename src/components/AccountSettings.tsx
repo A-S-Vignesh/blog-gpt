@@ -23,6 +23,7 @@ import {
   InfoModal,
 } from "@/components/ConformUsernameChage";
 import { getPlanById } from "@/config/plans";
+import NotificationPreferences from "@/components/notifications/NotificationPreferences";
 
 type ModalState = {
   type: "success" | "error";
@@ -40,8 +41,9 @@ function SettingsSkeleton() {
   const card =
     "rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-100 shadow-sm p-6";
   return (
-    <div className="min-h-screen bg-white dark:bg-dark-100">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10 animate-pulse">
+    // Width and padding come from AppShell, same as every other page.
+    <div>
+      <div className="animate-pulse">
         <header className="mb-8 space-y-2">
           <div className={`h-7 w-56 ${block}`} />
           <div className={`h-4 w-72 ${block}`} />
@@ -362,15 +364,16 @@ const AccountSettings = () => {
     "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
 
   return (
-    <div className="min-h-screen bg-white dark:bg-dark-100">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+    // Width and padding come from AppShell, same as every other page.
+    <div>
+      <div>
         {/* Page header */}
         <header className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Account settings
           </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Manage your profile, social links, and API key.
+            Manage your profile, social links, notifications, and API key.
           </p>
         </header>
 
@@ -772,6 +775,9 @@ const AccountSettings = () => {
                 </button>
               </div>
             </form>
+
+            {/* Saves on toggle, so it sits outside the profile form. */}
+            <NotificationPreferences />
           </div>
         </div>
       </div>

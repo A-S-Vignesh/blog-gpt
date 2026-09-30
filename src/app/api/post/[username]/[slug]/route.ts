@@ -24,6 +24,7 @@ import {
   dataUriByteSize,
   MAX_IMAGE_BYTES,
 } from "@/lib/postContent";
+import { deleteNotificationsForPost } from "@/lib/notifications";
 
 type UpdatePostBody = {
   title: string;
@@ -315,6 +316,7 @@ export async function DELETE(
     }
 
     await Post.deleteOne({ slug });
+    await deleteNotificationsForPost(post._id);
 
     revalidateTag(POST_LIST_TAG, "default");
     revalidateTag(postDetailTag(slug), "default");

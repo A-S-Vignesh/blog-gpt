@@ -1,0 +1,18 @@
+# pnpm settings for this single-package repo (not a monorepo).
+
+# pnpm does not run dependency install scripts unless they are listed here,
+# and an unlisted one fails the install. true = allowed, false = skipped.
+allowBuilds:
+  # Sets up the native binary that tsx (migration scripts) runs on.
+  esbuild: true
+  # Checks the native binding used by ESLint's import resolver.
+  unrs-resolver: true
+  # Only prints a version notice; nothing to build.
+  protobufjs: false
+
+# Pin the React type packages everywhere in the tree, including transitive
+# copies (e.g. @types/react-redux pulls in its own @types/react), so there is
+# only one version of the JSX types. Moved here from npm's "overrides" field.
+overrides:
+  "@types/react": 19.2.5
+  "@types/react-dom": 19.2.3

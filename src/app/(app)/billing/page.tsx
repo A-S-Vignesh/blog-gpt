@@ -77,7 +77,8 @@ export default async function BillingPage({
   const { upgraded } = await searchParams;
 
   return (
-    <div className="px-6 sm:px-10 md:px-16 py-10 max-w-6xl mx-auto">
+    // Width and padding come from AppShell, same as every other page.
+    <div>
       <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
         Billing &amp; Plans
       </h1>

@@ -273,14 +273,14 @@ export function adDecisionEmail(opts: {
         ? `
         <h1 style="margin:0 0 16px 0;font-size:22px;color:#111827;">Approved 🎉</h1>
         <p style="margin:0 0 12px 0;">Hi ${safeName}, your campaign <strong>${safeCampaign}</strong> passed review.</p>
-        <p style="margin:0 0 12px 0;">One step left: pay <strong>${escapeHtml(opts.price)}</strong> for ${opts.days} days in the ${escapeHtml(opts.placement)} slot, starting ${escapeHtml(opts.startDate)}. That is the whole cost — one flat price, no per-view billing, nothing else to add later.</p>
+        <p style="margin:0 0 12px 0;">One step left: pay <strong>${escapeHtml(opts.price)}</strong> for ${opts.days} days in the ${escapeHtml(opts.placement)} slot, starting ${escapeHtml(opts.startDate)}. That is the whole cost: one flat price, no per-view billing, nothing else to add later.</p>
         <p style="margin:0 0 12px 0;">If your dates have already come around by the time you pay, we move the start to that day so you still get all ${opts.days} days.</p>
       `
         : `
         <h1 style="margin:0 0 16px 0;font-size:22px;color:#111827;">Needs a change</h1>
         <p style="margin:0 0 12px 0;">Hi ${safeName}, we couldn't approve <strong>${safeCampaign}</strong> as submitted.</p>
         ${safeReason ? `<p style="margin:0 0 12px 0;padding:12px;background:#fef2f2;border-radius:8px;color:#991b1b;"><strong>Reason:</strong> ${safeReason}</p>` : ""}
-        <p style="margin:0 0 12px 0;">Edit the campaign and resubmit — you haven't been charged anything.</p>
+        <p style="margin:0 0 12px 0;">Edit the campaign and submit it again. You haven't been charged anything.</p>
       `,
       cta: {
         label: approved ? "Pay and go live" : "Edit campaign",

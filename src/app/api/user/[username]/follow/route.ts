@@ -7,6 +7,11 @@ import { Types } from "mongoose";
 import { ApiError, apiErrorResponse } from "@/lib/api/errors";
 import { rateLimit } from "@/lib/rateLimit";
 import { NextResponse } from "next/server";
+import {
+  followDedupeKey,
+  notify,
+  retractNotification,
+} from "@/lib/notifications";
 
 /**
  * Idempotent SET — the client declares the desired follow state.
@@ -86,6 +91,12 @@ export async function POST(
         following: followingId,
       });
       changed = (r.deletedCount ?? 0) > 0;
+    }
+
+    if (desired && changed) {
+      await notify({ type: "follow", recipient: followingId, actor: followerId });
+    } else if (!desired) {
+      await retractNotification(followDedupeKey(followingId, followerId));
     }
 
     // Counter strategy: on a real transition, apply an atomic `$inc` via an

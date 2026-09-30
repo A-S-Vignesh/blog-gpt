@@ -34,7 +34,7 @@ export async function POST(
     if (!isPaymentsEnabled()) {
       throw new ApiError(
         "FORBIDDEN",
-        "Card payments aren't switched on yet. We'll invoice you directly — reply to your approval email.",
+        "Card payments aren't switched on yet. We'll invoice you directly. Just reply to your approval email.",
       );
     }
 

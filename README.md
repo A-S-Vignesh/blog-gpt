@@ -16,7 +16,7 @@ An open-source, full-stack blogging platform with AI-assisted writing. Users sig
 
 - **Write & publish** — create, edit, and delete posts in a [Tiptap](https://tiptap.dev) rich text editor (headings, code blocks, tables, images).
 - **AI assistance** — generate a draft from a prompt, or generate a cover image, powered by Google Gemini.
-- **Social layer** — public profiles, follow/unfollow, likes, bookmarks, and threaded comments.
+- **Social layer** — public profiles, follow/unfollow, likes, bookmarks, threaded comments, and in-app notifications (comments, replies, likes, and new followers, with an unread badge and per-type mute settings).
 - **Discovery** — explore feed, trending and related posts, tag pages, and search.
 - **Accounts** — Google sign-in, profile settings, plan/usage billing page, and self-service account deletion with a grace period.
 - **SEO** — per-post metadata, Open Graph/Twitter cards, JSON-LD, canonical URLs, sitemap, and permanent redirects for legacy URLs.
@@ -52,7 +52,7 @@ This isn't a toy demo — the codebase includes the hardening a public, paid pro
 
 ## 🚀 Getting started
 
-**Prerequisites:** Node.js 20+, a MongoDB database (e.g. MongoDB Atlas), and a Google OAuth client. AI, image, email, and payment features each need their own provider key (see below).
+**Prerequisites:** Node.js 20.9+, pnpm (`npm install -g pnpm`), a MongoDB database (e.g. MongoDB Atlas), and a Google OAuth client. AI, image, email, and payment features each need their own provider key (see below).
 
 ```bash
 # 1. Clone
@@ -60,13 +60,13 @@ git clone https://github.com/A-S-Vignesh/blog-gpt.git
 cd blog-gpt
 
 # 2. Install
-npm install
+pnpm install
 
 # 3. Configure environment
 cp .env.example .env.local   # then fill in the values below
 
 # 4. Run
-npm run dev                  # http://localhost:3000
+pnpm dev                     # http://localhost:3000
 ```
 
 ## 🔑 Environment variables
@@ -114,13 +114,13 @@ Create `.env.local` (and set the same in your host's dashboard for production).
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start the dev server (Turbopack) |
-| `npm run build` | Production build |
-| `npm run start` | Start the production server |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | TypeScript type-check (no emit) |
-| `npm run migrate` | One-off: migrate legacy user plan fields |
-| `npm run migrate:username-index` | One-off: create the case-insensitive username index |
+| `pnpm dev` | Start the dev server (Turbopack) |
+| `pnpm build` | Production build |
+| `pnpm start` | Start the production server |
+| `pnpm lint` | ESLint |
+| `pnpm typecheck` | TypeScript type-check (no emit) |
+| `pnpm migrate` | One-off: migrate legacy user plan fields |
+| `pnpm migrate:username-index` | One-off: create the case-insensitive username index |
 
 ## ⏰ Scheduled jobs
 
@@ -154,7 +154,7 @@ Self-hosted on an Oracle Cloud ARM VM behind Cloudflare. Everything the server n
 
 ## 🤝 Contributing
 
-Contributions are welcome. Please open an issue to discuss substantial changes first. Before submitting a PR, run `npm run typecheck` and `npm run lint` — both should pass clean.
+Contributions are welcome. Please open an issue to discuss substantial changes first. Before submitting a PR, run `pnpm typecheck` and `pnpm lint` — both should pass clean.
 
 ## 📄 License
 

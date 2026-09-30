@@ -22,6 +22,8 @@ type Props = {
   slug: string;
   postAuthorId: string;
   commentsEnabled?: boolean;
+  /** Comment a deep link (`#comment-<id>`) points at; drawn highlighted. */
+  highlightedId?: string | null;
   onDeleted: (id: string) => void;
   onReplyPosted: (reply: ClientComment) => void;
 };
@@ -35,6 +37,7 @@ export default function CommentItem({
   slug,
   postAuthorId,
   commentsEnabled = true,
+  highlightedId = null,
   onDeleted,
   onReplyPosted,
 }: Props) {
@@ -140,8 +143,17 @@ export default function CommentItem({
       ? "pl-4 border-l-2 border-gray-100 dark:border-gray-800"
       : "";
 
+  const highlighted = highlightedId === comment._id;
+
   return (
-    <div className="flex gap-3 py-4 border-b border-gray-100 dark:border-gray-800 last:border-b-0">
+    <div
+      id={`comment-${comment._id}`}
+      className={`flex gap-3 py-4 border-b border-gray-100 dark:border-gray-800 last:border-b-0 scroll-mt-28 rounded-xl transition-[background-color,box-shadow] duration-700 ${
+        highlighted
+          ? "bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-300 dark:ring-blue-700 px-3"
+          : ""
+      }`}
+    >
       <Link
         href={`/${comment.userId.username}`}
         className="shrink-0"
@@ -257,6 +269,7 @@ export default function CommentItem({
                 slug={slug}
                 postAuthorId={postAuthorId}
                 commentsEnabled={commentsEnabled}
+                highlightedId={highlightedId}
                 onDeleted={(id) => {
                   handleReplyDeleted(id);
                   // Also notify the post-level count.

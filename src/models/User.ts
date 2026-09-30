@@ -49,6 +49,13 @@ export interface IUser extends Document {
   followersCount: number;
   followingCount: number;
   bookmarksCount: number;
+  /** Per-type opt-outs for in-app notifications. Missing/true = enabled. */
+  notificationPrefs?: {
+    comment?: boolean;
+    reply?: boolean;
+    like?: boolean;
+    follow?: boolean;
+  };
   geminiApiKey?: string;
   slug?: string;
   plan: PlanId;
@@ -144,6 +151,12 @@ export const UserSchema = new Schema<IUser>(
     followersCount: { type: Number, default: 0 },
     followingCount: { type: Number, default: 0 },
     bookmarksCount: { type: Number, default: 0 },
+    notificationPrefs: {
+      comment: { type: Boolean, default: true },
+      reply: { type: Boolean, default: true },
+      like: { type: Boolean, default: true },
+      follow: { type: Boolean, default: true },
+    },
     geminiApiKey: {
       type: String,
       default: "",

@@ -21,9 +21,9 @@ import Bookmark from "../src/models/Bookmark";
  *      website, geminiApiKey, socials).
  *
  * Run a DRY RUN first to see what it WOULD change:
- *   DRY_RUN=1 npm run migrate:backfill-users
+ *   DRY_RUN=1 pnpm migrate:backfill-users
  * Then for real:
- *   npm run migrate:backfill-users
+ *   pnpm migrate:backfill-users
  */
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/blog";

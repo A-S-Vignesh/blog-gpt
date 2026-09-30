@@ -11,8 +11,8 @@ import { encryptSecret, isEncrypted } from "../src/lib/crypto/secretBox";
  * IMPORTANT: run with the SAME `NEXTAUTH_SECRET` (or `ENCRYPTION_KEY`) the app
  * uses in production, or the encrypted values won't decrypt there.
  *
- *   DRY_RUN=1 npm run migrate:encrypt-keys   # preview
- *   npm run migrate:encrypt-keys             # apply
+ *   DRY_RUN=1 pnpm migrate:encrypt-keys   # preview
+ *   pnpm migrate:encrypt-keys             # apply
  */
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/blog";
